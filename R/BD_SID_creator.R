@@ -10,7 +10,7 @@
 #' Any row with a missing component yields `"Invalid SID"`.
 #'
 #' @details
-#' - Fully vectorized; works directly inside `dplyr::mutate()`.
+#' - Fully vectorized; works in base R assignments and data-frame workflows.
 #' - Accepts DOB as `Date`, `POSIXt`, character, or numeric (e.g. `20240101`).
 #' - Character DOBs are parsed against these formats:
 #'   `"%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y/%m/%d", "%Y%m%d", "%d-%b-%Y", "%b %d, %Y"`.
@@ -37,8 +37,8 @@
 #'                c("2000/01/02", "03/14/1999"),
 #'                c("M", "f"), strip_accents = TRUE)
 #'
-#' # Inside dplyr
-#' # dplyr::mutate(df, SID = BD_SID_creator(FIRST_NAME, LAST_NAME, DOB, SEX))
+#' # Inside a data frame
+#' # df$SID <- BD_SID_creator(df$FIRST_NAME, df$LAST_NAME, df$DOB, df$SEX)
 #'
 #' @export
 BD_SID_creator <- function(first_name, last_name, DOB_ready, gender, strip_accents = FALSE) {

@@ -13,14 +13,13 @@
 #' df <- data.frame("Col (1)" = 1:3, "Name's-Age" = c(20, 25, 30))
 #' BD_fix_colname(df)
 #'
-#' @importFrom stringr str_replace_all
 #' @export
 BD_fix_colname <- function(the_data) {
-  new_names <- colnames(the_data) |>
-    stringr::str_replace_all(" ", "_") |>
-    stringr::str_replace_all("[()]", "") |>
-    stringr::str_replace_all("'", "") |>
-    stringr::str_replace_all("-", "")
+  new_names <- colnames(the_data)
+  new_names <- gsub(" ", "_", new_names, fixed = TRUE)
+  new_names <- gsub("[()]", "", new_names)
+  new_names <- gsub("'", "", new_names, fixed = TRUE)
+  new_names <- gsub("-", "", new_names, fixed = TRUE)
 
   colnames(the_data) <- new_names
   the_data

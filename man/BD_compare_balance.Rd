@@ -26,7 +26,7 @@ BD_compare_balance(
 \item{include_smd}{Logical; if TRUE, include standardized mean difference (continuous only).}
 }
 \value{
-A tibble with one row per variable (continuous) or per level (categorical).
+A data frame with one row per variable (continuous) or per level (categorical).
 }
 \description{
 For each variable in \code{vars}, reports (a) for continuous variables:

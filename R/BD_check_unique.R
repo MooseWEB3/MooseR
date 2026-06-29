@@ -21,22 +21,32 @@
 #' BD_check_unique(iris, Species)
 #' BD_check_unique(iris, "Species", na.rm = TRUE)
 #'
-#' @importFrom rlang ensym as_string
-#' @importFrom dplyr pull n_distinct
 #' @export
 BD_check_unique <- function(data, var, na.rm = FALSE) {
   stopifnot(is.data.frame(data))
 
-  var <- rlang::ensym(var)
-  col_name <- rlang::as_string(var)
+  var_expr <- substitute(var)
+  if (is.name(var_expr)) {
+    col_name <- as.character(var_expr)
+  } else if (is.character(var_expr) && length(var_expr) == 1L) {
+    col_name <- var_expr
+  } else {
+    var_value <- eval(var_expr, parent.frame())
+    if (!is.character(var_value) || length(var_value) != 1L) {
+      stop("`var` must be an unquoted column name or a single column name string.", call. = FALSE)
+    }
+    col_name <- var_value
+  }
+
   if (!col_name %in% names(data)) {
     stop(sprintf("Column `%s` not found in `data`.", col_name), call. = FALSE)
   }
 
-  col <- dplyr::pull(data, !!var)
+  col <- data[[col_name]]
   n_rows   <- nrow(data)
   n_non_na <- sum(!is.na(col))
-  n_unique <- dplyr::n_distinct(col, na.rm = na.rm)
+  vals_for_unique <- if (na.rm) col[!is.na(col)] else col
+  n_unique <- length(unique(vals_for_unique))
 
   # Determine uniqueness criterion
   is_unique <- if (na.rm) {

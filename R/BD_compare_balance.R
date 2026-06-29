@@ -11,7 +11,7 @@
 #' @param digits Integer; number of decimal places for numeric outputs (default 4).
 #' @param include_smd Logical; if TRUE, include standardized mean difference (continuous only).
 #'
-#' @return A tibble with one row per variable (continuous) or per level (categorical).
+#' @return A data frame with one row per variable (continuous) or per level (categorical).
 #' @examples
 #' set.seed(1)
 #' a <- data.frame(x=rnorm(100), g=sample(c("M","F"),100,TRUE), z=runif(100))
@@ -19,9 +19,6 @@
 #' w1 <- runif(100); w2 <- runif(120)
 #' BD_compare_balance(a,b,vars=c("x","g","z"), weights1=w1, weights2=w2, include_smd=TRUE)
 #'
-#' @importFrom dplyr bind_rows mutate filter across all_of if_all n_distinct pull
-#' @importFrom tibble tibble
-#' @importFrom stats var
 #' @export
 BD_compare_balance <- function(df1, df2, vars, weights1 = NULL, weights2 = NULL,
                                digits = 4, include_smd = FALSE) {
@@ -70,6 +67,8 @@ BD_compare_balance <- function(df1, df2, vars, weights1 = NULL, weights2 = NULL,
   }
 
   # --- validate --------------------------------------------------------------
+  if (!is.data.frame(df1)) stop("`df1` must be a data.frame.")
+  if (!is.data.frame(df2)) stop("`df2` must be a data.frame.")
   if (!is.character(vars)) stop("`vars` must be a character vector of column names.")
   assert_weights(weights1, nrow(df1), "weights1")
   assert_weights(weights2, nrow(df2), "weights2")
@@ -80,12 +79,6 @@ BD_compare_balance <- function(df1, df2, vars, weights1 = NULL, weights2 = NULL,
     stop("These vars are not found in either df1 or df2: ", paste(missing_vars, collapse = ", "))
   }
 
-  # used for categorical level unioning even when a var is missing from one df
-  schema_src <- dplyr::bind_rows(
-    dplyr::mutate(df1[, intersect(vars, names(df1)), drop = FALSE], .src = "A"),
-    dplyr::mutate(df2[, intersect(vars, names(df2)), drop = FALSE], .src = "B")
-  )
-
   out_list <- lapply(vars, function(v) {
     x1 <- if (v %in% names(df1)) df1[[v]] else rep(NA, nrow(df1))
     x2 <- if (v %in% names(df2)) df2[[v]] else rep(NA, nrow(df2))
@@ -95,6 +88,41 @@ BD_compare_balance <- function(df1, df2, vars, weights1 = NULL, weights2 = NULL,
       if (is.logical(x)) return(factor(x, levels = c(FALSE, TRUE)))
       if (is.character(x) || is.factor(x) || is.ordered(x)) return(factor(x))
       NULL
+    }
+    level_union <- function(...) {
+      xs <- list(...)
+      lvls <- character()
+      for (x in xs) {
+        if (is.logical(x)) {
+          lvls <- c(lvls, c("FALSE", "TRUE"))
+        } else if (is.factor(x) || is.ordered(x)) {
+          lvls <- c(lvls, as.character(levels(x)))
+        } else {
+          lvls <- c(lvls, as.character(stats::na.omit(unique(x))))
+        }
+      }
+      unique(lvls)
+    }
+    make_row <- function(variable, type, level,
+                         prop1, prop2, diff,
+                         n1, mean1, sd1,
+                         n2, mean2, sd2,
+                         smd = NULL,
+                         miss_n1, miss_pct1, miss_n2, miss_pct2) {
+      row <- data.frame(
+        variable = variable, type = type, level = level,
+        prop1 = prop1, prop2 = prop2, diff = diff,
+        n1 = n1, mean1 = mean1, sd1 = sd1,
+        n2 = n2, mean2 = mean2, sd2 = sd2,
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      )
+      if (include_smd) row$smd <- smd
+      row$miss_n1 <- miss_n1
+      row$miss_pct1 <- miss_pct1
+      row$miss_n2 <- miss_n2
+      row$miss_pct2 <- miss_pct2
+      row
     }
 
     total1 <- length(x1); total2 <- length(x2)
@@ -115,19 +143,20 @@ BD_compare_balance <- function(df1, df2, vars, weights1 = NULL, weights2 = NULL,
         ifelse(is.finite(sp) && sp > 0, diff / sp, NA_real_)
       } else NA_real_
 
-      tibble::tibble(
+      make_row(
         variable = v, type = "continuous", level = NA_character_,
-        prop1 = NA_real_, prop2 = NA_real_, diff = ifelse(is.na(diff), NA_real_, diff),
+        prop1 = NA_real_, prop2 = NA_real_,
+        diff = ifelse(is.na(diff), NA_real_, diff),
         n1 = n1, mean1 = m1, sd1 = sd1,
         n2 = n2, mean2 = m2, sd2 = sd2,
-        smd = if (include_smd) smd else NULL,
+        smd = smd,
         miss_n1 = miss_n1, miss_pct1 = miss_pct1,
         miss_n2 = miss_n2, miss_pct2 = miss_pct2
       )
 
     } else {
       # categorical
-      lvls <- levels(to_cat(schema_src[[v]]))
+      lvls <- level_union(x1, x2)
       f1 <- factor(x1, levels = lvls)
       f2 <- factor(x2, levels = lvls)
 
@@ -141,23 +170,38 @@ BD_compare_balance <- function(df1, df2, vars, weights1 = NULL, weights2 = NULL,
 
       n1 <- sum(!is.na(f1)); n2 <- sum(!is.na(f2))
 
-      rows <- lapply(lvls, function(L) {
-        p1 <- w_prop(f1, weights1, L)
-        p2 <- w_prop(f2, weights2, L)
-        tibble::tibble(
-          variable = v, type = "categorical", level = L,
-          prop1 = p1, prop2 = p2, diff = ifelse(is.na(p1) | is.na(p2), NA_real_, p2 - p1),
+      rows <- if (length(lvls) == 0L) {
+        list(make_row(
+          variable = v, type = "categorical", level = NA_character_,
+          prop1 = NA_real_, prop2 = NA_real_, diff = NA_real_,
           n1 = n1, mean1 = NA_real_, sd1 = NA_real_,
           n2 = n2, mean2 = NA_real_, sd2 = NA_real_,
+          smd = NA_real_,
           miss_n1 = miss_n1, miss_pct1 = miss_pct1,
           miss_n2 = miss_n2, miss_pct2 = miss_pct2
-        )
-      })
-      dplyr::bind_rows(rows)
+        ))
+      } else {
+        lapply(lvls, function(L) {
+          p1 <- w_prop(f1, weights1, L)
+          p2 <- w_prop(f2, weights2, L)
+          make_row(
+            variable = v, type = "categorical", level = L,
+            prop1 = p1, prop2 = p2,
+            diff = ifelse(is.na(p1) | is.na(p2), NA_real_, p2 - p1),
+            n1 = n1, mean1 = NA_real_, sd1 = NA_real_,
+            n2 = n2, mean2 = NA_real_, sd2 = NA_real_,
+            smd = NA_real_,
+            miss_n1 = miss_n1, miss_pct1 = miss_pct1,
+            miss_n2 = miss_n2, miss_pct2 = miss_pct2
+          )
+        })
+      }
+      do.call(rbind, rows)
     }
   })
 
-  out <- dplyr::bind_rows(out_list)
+  out <- do.call(rbind, out_list)
+  row.names(out) <- NULL
 
   # rounding (only on numeric columns)
   num_cols <- vapply(out, is.numeric, logical(1))

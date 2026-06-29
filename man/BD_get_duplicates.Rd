@@ -17,7 +17,7 @@ BD_get_duplicates(
 \arguments{
 \item{data}{A data.frame or tibble.}
 
-\item{...}{Columns used as the duplicate keys (tidyselect supported).}
+\item{...}{Columns used as the duplicate keys, as unquoted names or strings.}
 
 \item{.min_n}{Minimum frequency to keep (default 2).}
 
@@ -31,7 +31,7 @@ If FALSE, return one row per key with the count only.}
 \item{.sort}{If TRUE, sort descending by count (then keys).}
 }
 \value{
-A tibble with duplicates and a count column.
+A data frame with duplicates and a count column.
 }
 \description{
 Find duplicates based on selected columns. If no columns are selected,

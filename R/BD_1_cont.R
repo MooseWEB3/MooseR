@@ -1,6 +1,6 @@
 #' One-line summary for a continuous variable
 #'
-#' Produces a single display-ready \code{tibble} row summarizing a numeric column:
+#' Produces a single display-ready data frame row summarizing a numeric column:
 #' mean (sd), median, min–max, selected percentiles, and missingness counts.
 #'
 #' @param dataset A data frame containing \code{var_name}.
@@ -12,7 +12,7 @@
 #' @param probs Numeric vector of quantile probabilities in the order you want reported.
 #'   Defaults to \code{c(0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)}.
 #'
-#' @returns A one-row \code{tibble} with columns:
+#' @returns A one-row data frame with columns:
 #' \itemize{
 #'   \item \code{Variable}, \code{Mean_SD}, \code{Median}, \code{Min_Max},
 #'   \item \code{P1}, \code{P5}, \code{P10}, \code{Q1}, \code{Q2}, \code{Q3}, \code{P90}, \code{P95}, \code{P99},
@@ -27,8 +27,6 @@
 #' x <- data.frame(a = c(rnorm(100), NA, Inf))
 #' BD_1_cont(x, "a", display_name = "My Var")
 #'
-#' @importFrom tibble tibble
-#' @importFrom stats quantile sd median
 #' @export
 BD_1_cont <- function(dataset,
                       var_name,
@@ -56,7 +54,7 @@ BD_1_cont <- function(dataset,
 
   # Early return if nothing to summarize
   if (non_missing_n == 0L) {
-    return(tibble::tibble(
+    return(data.frame(
       Variable = display_name,
       Mean_SD  = NA_character_,
       Median   = NA_character_,
@@ -67,7 +65,9 @@ BD_1_cont <- function(dataset,
       Missing    = missing_n,
       N          = length(x),
       NonMissing = non_missing_n,
-      MissingPct = round(100 * missing_n / length(x), 1)
+      MissingPct = round(100 * missing_n / length(x), 1),
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     ))
   }
 
@@ -83,12 +83,12 @@ BD_1_cont <- function(dataset,
 
   # Map quantiles to labels (expects the default probs order shown above)
   # If you change probs, labels may not match; keep default for standard table output.
-  q_labels <- setNames(qs, c("P1","P5","P10","Q1","Q2","Q3","P90","P95","P99")[seq_along(qs)])
+  q_labels <- stats::setNames(qs, c("P1","P5","P10","Q1","Q2","Q3","P90","P95","P99")[seq_along(qs)])
 
   # Formatter
   fmt <- function(v) sprintf(paste0("%.", digits, "f"), v)
 
-  tibble::tibble(
+  data.frame(
     Variable = display_name,
     Mean_SD  = sprintf("%s (%s)", fmt(m), fmt(sdv)),
     Median   = fmt(med),
@@ -105,6 +105,8 @@ BD_1_cont <- function(dataset,
     Missing    = missing_n,
     N          = length(x),
     NonMissing = non_missing_n,
-    MissingPct = round(100 * missing_n / length(x), 1)
+    MissingPct = round(100 * missing_n / length(x), 1),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
   )
 }

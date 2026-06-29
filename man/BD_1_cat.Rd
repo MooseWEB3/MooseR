@@ -40,11 +40,11 @@ levels and collapses the rest into an \code{"Other"} column (after sorting).}
 \item{other_label}{String label used when collapsing to "Other" (default "Other").}
 }
 \value{
-A one-row \code{tibble}: first column is \code{display_name},
+A one-row data frame: first column is \code{display_name},
 then one column per level showing \code{"n (p\%)"}, ending with \code{Total}.
 }
 \description{
-Builds a single, display-ready \code{tibble} row of counts and percentages
+Builds a single, display-ready data frame row of counts and percentages
 for each level of a categorical variable, plus a \code{Total} column.
 }
 \examples{

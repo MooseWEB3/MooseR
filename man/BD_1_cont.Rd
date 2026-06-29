@@ -29,7 +29,7 @@ Defaults to \code{var_name}.}
 Defaults to \code{c(0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)}.}
 }
 \value{
-A one-row \code{tibble} with columns:
+A one-row data frame with columns:
 \itemize{
 \item \code{Variable}, \code{Mean_SD}, \code{Median}, \code{Min_Max},
 \item \code{P1}, \code{P5}, \code{P10}, \code{Q1}, \code{Q2}, \code{Q3}, \code{P90}, \code{P95}, \code{P99},
@@ -37,7 +37,7 @@ A one-row \code{tibble} with columns:
 }
 }
 \description{
-Produces a single display-ready \code{tibble} row summarizing a numeric column:
+Produces a single display-ready data frame row summarizing a numeric column:
 mean (sd), median, min–max, selected percentiles, and missingness counts.
 }
 \details{

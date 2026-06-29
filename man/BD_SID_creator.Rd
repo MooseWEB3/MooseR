@@ -32,7 +32,7 @@ Any row with a missing component yields \code{"Invalid SID"}.
 }
 \details{
 \itemize{
-\item Fully vectorized; works directly inside \code{dplyr::mutate()}.
+\item Fully vectorized; works in base R assignments and data-frame workflows.
 \item Accepts DOB as \code{Date}, \code{POSIXt}, character, or numeric (e.g. \code{20240101}).
 \item Character DOBs are parsed against these formats:
 \verb{"\%Y-\%m-\%d", "\%m/\%d/\%Y", "\%d/\%m/\%Y", "\%Y/\%m/\%d", "\%Y\%m\%d", "\%d-\%b-\%Y", "\%b \%d, \%Y"}.
@@ -54,7 +54,7 @@ BD_SID_creator(c("Li", "Élodie"), c("Xu", "Brûlé"),
                c("2000/01/02", "03/14/1999"),
                c("M", "f"), strip_accents = TRUE)
 
-# Inside dplyr
-# dplyr::mutate(df, SID = BD_SID_creator(FIRST_NAME, LAST_NAME, DOB, SEX))
+# Inside a data frame
+# df$SID <- BD_SID_creator(df$FIRST_NAME, df$LAST_NAME, df$DOB, df$SEX)
 
 }
