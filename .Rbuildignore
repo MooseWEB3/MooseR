@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^development\.R$
+^LICENSE\.md$
+^\.github$
+^\.git
+^\.r-lib$
+^\.agents$
+^\.codex$
+^.*\.Rcheck$
+^.*\.tar\.gz$
+^\.Rhistory$
