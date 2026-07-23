@@ -1,6 +1,6 @@
 # MooseR
 
-[English](#english) | [Français](#francais)
+[English](#english) | [Français](#francais) | [Português](#portugues)
 
 <a id="english"></a>
 
@@ -508,3 +508,262 @@ garantit pas que tous les noms de personnes seront détectés.
 ### Licence
 
 Licence MIT. Copyright (c) 2026 LisbonBulldog.
+
+---
+
+<a id="portugues"></a>
+
+## Português
+
+MooseR é um pequeno pacote utilitário de R para tarefas comuns de limpeza de
+dados e criação de tabelas de resumo. Inclui funções para limpar nomes de
+colunas, detetar duplicados, verificar a unicidade, remover aspas, produzir
+resumos numa única linha para variáveis categóricas e contínuas, comparar o
+equilíbrio das covariáveis, gerar identificadores SID estáveis e
+desidentificados, e converter datas.
+
+As principais funções de limpeza de dados são intencionalmente leves. O
+processo de mascaramento de nomes de pessoas pode utilizar `reticulate` e spaCy
+quando Python está disponível. Também inclui uma alternativa integralmente em
+R, baseada em expressões regulares, para computadores de trabalho bloqueados
+onde Python não pode ser alterado. MooseR requer R 4.1.0 ou uma versão
+posterior.
+
+### Instalação
+
+Instale a versão de desenvolvimento a partir do GitHub:
+
+```r
+install.packages("remotes")
+remotes::install_github("MooseWEB3/MooseR", upgrade = "never")
+```
+
+Carregue o pacote:
+
+```r
+library(MooseR)
+```
+
+Para reinstalar a versão mais recente do GitHub sobre uma cópia local
+existente:
+
+```r
+remotes::install_github("MooseWEB3/MooseR", force = TRUE, upgrade = "never")
+```
+
+### Carregamento de pacotes no arranque
+
+Carregue o conjunto predefinido de pacotes do fluxo de trabalho MooseR na
+sessão R atual:
+
+```r
+Moose_load_mooser_packages()
+```
+
+Para ver a lista predefinida:
+
+```r
+Moose_default_mooser_packages()
+```
+
+Para que R ou RStudio carregue automaticamente estes pacotes sempre que
+iniciar, execute este comando uma única vez:
+
+```r
+Moose_enable_mooser_startup_packages()
+```
+
+Este comando adiciona um bloco gerido pelo MooseR ao ficheiro `~/.Rprofile`.
+Reinicie R ou RStudio após a ativação. Para desativar posteriormente o
+carregamento automático:
+
+```r
+Moose_disable_mooser_startup_packages()
+```
+
+### Funções
+
+MooseR mantém os nomes originais das funções para garantir a
+retrocompatibilidade. O código novo deve utilizar os nomes com o prefixo
+`Moose_`. Os nomes antigos continuam disponíveis para não interromper scripts
+existentes.
+
+| Função recomendada | Nome antigo compatível | Finalidade |
+| --- | --- | --- |
+| `Moose_fix_colname()` | `BD_fix_colname()` | Limpar nomes de colunas, substituindo espaços e removendo determinados caracteres especiais. |
+| `Moose_get_duplicates()` | `BD_get_duplicates()` | Encontrar linhas duplicadas através de uma ou mais colunas-chave. |
+| `Moose_check_unique()` | `BD_check_unique()` | Verificar se uma coluna contém valores únicos. |
+| `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Contar as categorias únicas de uma variável. |
+| `Moose_quote_rm()` | `BD_quote_rm()` | Remover caracteres comuns de aspas das colunas de texto e fator. |
+| `Moose_1_cat()` | `BD_1_cat()` | Criar uma tabela de contagens e percentagens numa única linha para uma variável categórica. |
+| `Moose_1_cont()` | `BD_1_cont()` | Criar uma tabela de resumo numa única linha para uma variável contínua. |
+| `Moose_compare_balance()` | `BD_compare_balance()` | Comparar o equilíbrio das covariáveis entre dois conjuntos de dados. |
+| `Moose_SID_creator()` | `BD_SID_creator()` | Criar um SID estável e desidentificado a partir do nome, data de nascimento e género. |
+| `Moose_today()` | `BD_today()` | Devolver a data atual nos formatos com sublinhados e compacto. |
+| `Moose_read_csv()` | - | Ler um ficheiro CSV e limpar os respetivos nomes de colunas. |
+| `Moose_setup_name_masking()` | `setup_name_masking()` | Preparar o motor spaCy quando disponível, ou a alternativa em R baseada em expressões regulares. |
+| `Moose_check_name_masking()` | `check_name_masking()` | Apresentar o estado atual da configuração de Python, spaCy e do modelo. |
+| `Moose_mask_person_names()` | `mask_person_names()` | Substituir os nomes de pessoas detetados num texto por uma cadeia de substituição. |
+| `Moose_detect_person_names()` | `detect_person_names()` | Devolver uma tabela de auditoria dos nomes detetados e das respetivas posições no texto. |
+| `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Aplicar regras adicionais de mascaramento de nomes com expressões regulares. |
+| `Moose_todate()` | - | Converter formatos comuns de data em valores R `Date`. |
+| `Moose_todatetime()` | - | Converter formatos comuns de data e hora em valores R `POSIXct`. |
+| `Moose_boost_data()` | - | Detetar e converter colunas semelhantes a datas num conjunto de dados. |
+| `Moose_load_packages()` | `load_packages()` | Instalar os pacotes em falta e carregar uma lista de pacotes. |
+| `Moose_load_mooser_packages()` | `load_mooser_packages()` | Carregar o conjunto predefinido de pacotes MooseR. |
+| `Moose_enable_mooser_startup_packages()` | `enable_mooser_startup_packages()` | Ativar o carregamento automático de pacotes no arranque do R. |
+| `Moose_disable_mooser_startup_packages()` | `disable_mooser_startup_packages()` | Desativar o carregamento automático de pacotes no arranque do R. |
+
+### Exemplos
+
+Limpar nomes de colunas:
+
+```r
+df <- data.frame("Col (1)" = 1:3, "Name's-Age" = c(20, 25, 30))
+Moose_fix_colname(df)
+```
+
+Resumir uma variável categórica:
+
+```r
+df <- data.frame(group = c("A", "B", "A", NA, "C", "B", "B"))
+Moose_1_cat(df, "group", display_name = "Group")
+```
+
+Resumir uma variável contínua:
+
+```r
+df <- data.frame(age = c(21, 34, 45, 52, NA, 63))
+Moose_1_cont(df, "age", display_name = "Age")
+```
+
+Encontrar linhas duplicadas através de colunas-chave:
+
+```r
+Moose_get_duplicates(mtcars, cyl, gear, .keep_all = FALSE)
+```
+
+Verificar a unicidade:
+
+```r
+Moose_check_unique(iris, Species)
+Moose_check_unique(iris, "Species", na.rm = TRUE)
+```
+
+Criar SID estáveis e desidentificados:
+
+```r
+Moose_SID_creator(
+  first_name = c("Ann", "Marie"),
+  last_name = c("Martin", "Dubois"),
+  DOB_ready = c("1990-07-03", "2000/01/02"),
+  gender = c("F", "M")
+)
+```
+
+Comparar o equilíbrio entre dois conjuntos de dados:
+
+```r
+set.seed(1)
+a <- data.frame(x = rnorm(100), g = sample(c("M", "F"), 100, TRUE))
+b <- data.frame(x = rnorm(120, 0.2, 1.1), g = sample(c("M", "F"), 120, TRUE))
+
+Moose_compare_balance(a, b, vars = c("x", "g"), include_smd = TRUE)
+```
+
+Obter a data atual:
+
+```r
+Moose_today()
+```
+
+Converter formatos comuns de data e de data e hora:
+
+```r
+Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c(20240105, 45296))
+
+Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+Moose_todatetime(c(202401051330, 1704450600))
+```
+
+Converter automaticamente colunas semelhantes a datas:
+
+```r
+raw_data <- data.frame(
+  visit_date = c("2024-01-05", "2024/01/06"),
+  created_at = c("2024-01-05 13:30", "2024-01-06 08:05"),
+  note = c("First visit", "Follow-up")
+)
+
+boosted_data <- Moose_boost_data(raw_data)
+str(boosted_data)
+```
+
+Preparar o mascaramento de nomes de pessoas. Num computador normal,
+`engine = "auto"` tenta utilizar spaCy e recorre às expressões regulares se
+Python não puder ser inicializado:
+
+```r
+Moose_setup_name_masking()
+Moose_check_name_masking()
+```
+
+Num computador de trabalho bloqueado onde Python não pode ser alterado, utilize
+diretamente o motor integralmente em R:
+
+```r
+Moose_setup_name_masking(engine = "regex")
+Moose_check_name_masking()
+```
+
+No modo regex, `Moose_check_name_masking()` deve apresentar `Engine: regex`.
+Python, spaCy e o modelo spaCy não são utilizados neste modo.
+
+Mascarar nomes num vetor de texto:
+
+```r
+comments <- c(
+  "John Smith spoke with Sarah Johnson in Vancouver.",
+  "The patient was transported to Vancouver.",
+  "Reviewed by Michael Brown.",
+  "",
+  NA
+)
+
+Moose_mask_person_names(comments)
+```
+
+Forçar a utilização do motor integralmente em R:
+
+```r
+Moose_mask_person_names(comments, engine = "regex")
+```
+
+Manter o texto original e o texto mascarado lado a lado:
+
+```r
+Moose_mask_person_names(comments, keep_original = TRUE)
+```
+
+Criar uma tabela de auditoria dos nomes detetados:
+
+```r
+Moose_detect_person_names(comments)
+```
+
+Aplicar regras adicionais depois do mascaramento com spaCy:
+
+```r
+masked <- Moose_mask_person_names(comments)
+Moose_apply_name_masking_rules(masked)
+```
+
+Para dados médicos reais ou dados sensíveis em termos de privacidade, mantenha
+a tabela de auditoria e reveja uma amostra do resultado. O reconhecimento de
+entidades nomeadas é útil, mas não garante que todos os nomes de pessoas sejam
+detetados.
+
+### Licença
+
+Licença MIT. Copyright (c) 2026 LisbonBulldog.
