@@ -84,6 +84,8 @@ existing scripts do not break.
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Return an audit table of detected names and character offsets. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Apply supplementary regex-based name-masking rules. |
+| `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
+| `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
 | `Moose_load_packages()` | `load_packages()` | Install missing packages and load a package list. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Load the default MooseR startup package set. |
 | `Moose_enable_mooser_startup_packages()` | `enable_mooser_startup_packages()` | Enable automatic package loading at R startup. |
@@ -150,6 +152,16 @@ Get today's date:
 
 ```r
 Moose_today()
+```
+
+Convert common date and date-time inputs:
+
+```r
+Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c(20240105, 45296))
+
+Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+Moose_todatetime(c(202401051330, 1704450600))
 ```
 
 Set up personal-name masking. On normal computers, `engine = "auto"` tries spaCy
