@@ -1,0 +1,20 @@
+Package: MooseR
+Title: Data Cleaning and Summary Utility Functions
+Version: 0.0.0.9000
+Authors@R:
+    person("LisbonBulldog", email = "develop@lisbonbulldog.xyz", role = c("aut", "cre"))
+Description: A collection of utility functions for common data wrangling tasks,
+    including column name cleaning, duplicate detection, uniqueness checks,
+    quote removal, one-row summary tables for categorical and continuous variables,
+    covariate balance comparison, stable de-identified ID generation, date helpers,
+    and personal-name detection and masking with spaCy or a pure R regex fallback.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
+Suggests:
+    reticulate (>= 1.41)
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/MooseWEB3/MooseR
+BugReports: https://github.com/MooseWEB3/MooseR/issues
