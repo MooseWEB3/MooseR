@@ -85,6 +85,8 @@ existing scripts do not break.
 | `Moose_SID_creator()` | `BD_SID_creator()` | Create a stable de-identified SID from name, date of birth, and gender. |
 | `Moose_today()` | `BD_today()` | Return today's date in underscore and compact formats. |
 | `Moose_read_csv()` | - | Read a CSV file and clean its column names. |
+| `Moose_SRds()` | - | Save an R object to an RDS file. |
+| `Moose_LRds()` | - | Restore an R object from an RDS file. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Prepare the spaCy engine when available, or the pure R regex fallback. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Report the current Python, spaCy, and model setup status. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
@@ -182,6 +184,13 @@ raw_data <- data.frame(
 
 boosted_data <- Moose_boost_data(raw_data)
 str(boosted_data)
+```
+
+Save and restore an R object in RDS format:
+
+```r
+Moose_SRds(boosted_data, "boosted_data")
+restored_data <- Moose_LRds("boosted_data")
 ```
 
 Set up personal-name masking. On normal computers, `engine = "auto"` tries spaCy
@@ -342,6 +351,8 @@ scripts existants.
 | `Moose_SID_creator()` | `BD_SID_creator()` | Créer un SID stable et désidentifié à partir du nom, de la date de naissance et du genre. |
 | `Moose_today()` | `BD_today()` | Retourner la date du jour avec des traits de soulignement et dans un format compact. |
 | `Moose_read_csv()` | - | Lire un fichier CSV et nettoyer ses noms de colonnes. |
+| `Moose_SRds()` | - | Enregistrer un objet R dans un fichier RDS. |
+| `Moose_LRds()` | - | Restaurer un objet R à partir d'un fichier RDS. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Préparer le moteur spaCy lorsqu'il est disponible, ou la solution de rechange en expressions régulières R. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Afficher l'état actuel de la configuration Python, spaCy et du modèle. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Remplacer les noms de personnes détectés dans un texte par une chaîne de remplacement. |
@@ -439,6 +450,13 @@ raw_data <- data.frame(
 
 boosted_data <- Moose_boost_data(raw_data)
 str(boosted_data)
+```
+
+Enregistrer et restaurer un objet R au format RDS :
+
+```r
+Moose_SRds(boosted_data, "boosted_data")
+restored_data <- Moose_LRds("boosted_data")
 ```
 
 Préparer le masquage des noms de personnes. Sur un ordinateur standard,
@@ -601,6 +619,8 @@ existentes.
 | `Moose_SID_creator()` | `BD_SID_creator()` | Criar um SID estável e desidentificado a partir do nome, data de nascimento e género. |
 | `Moose_today()` | `BD_today()` | Devolver a data atual nos formatos com sublinhados e compacto. |
 | `Moose_read_csv()` | - | Ler um ficheiro CSV e limpar os respetivos nomes de colunas. |
+| `Moose_SRds()` | - | Guardar um objeto R num ficheiro RDS. |
+| `Moose_LRds()` | - | Restaurar um objeto R a partir de um ficheiro RDS. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Preparar o motor spaCy quando disponível, ou a alternativa em R baseada em expressões regulares. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Apresentar o estado atual da configuração de Python, spaCy e do modelo. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Substituir os nomes de pessoas detetados num texto por uma cadeia de substituição. |
@@ -698,6 +718,13 @@ raw_data <- data.frame(
 
 boosted_data <- Moose_boost_data(raw_data)
 str(boosted_data)
+```
+
+Guardar e restaurar um objeto R no formato RDS:
+
+```r
+Moose_SRds(boosted_data, "boosted_data")
+restored_data <- Moose_LRds("boosted_data")
 ```
 
 Preparar o mascaramento de nomes de pessoas. Num computador normal,
