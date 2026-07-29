@@ -2,49 +2,38 @@
 % Please edit documentation in R/Moose_name_flag.R
 \name{Moose_name_flag}
 \alias{Moose_name_flag}
-\title{Flag rows containing a detected personal name}
+\title{Flag text values containing a detected personal name}
 \usage{
 Moose_name_flag(
-  data,
-  column,
-  flag_column = "name_flag",
+  text,
   batch_size = 100L,
   engine = c("auto", "spacy", "regex")
 )
 }
 \arguments{
-\item{data}{A data frame or data-frame subclass.}
-
-\item{column}{Text column to inspect. Supply a bare column name or a single
-character column name.}
-
-\item{flag_column}{Name of the output flag column.}
+\item{text}{A character or factor vector, usually a column from a data frame.}
 
 \item{batch_size}{Number of documents processed per spaCy batch.}
 
 \item{engine}{Character. One of \code{"auto"}, \code{"spacy"}, or \code{"regex"}.}
 }
 \value{
-A copy of \code{data} with an integer flag column added. An existing
-column named by \code{flag_column} is replaced.
+An integer vector with the same length as \code{text}, containing \code{1L}
+when a personal name is detected and \code{0L} otherwise.
 }
 \description{
 Uses the same spaCy or pure R regex engine as
-\code{\link[=Moose_detect_person_names]{Moose_detect_person_names()}} to inspect one text column. A new integer
-column is added to a copy of the input data: \code{1L} means at least one personal
-name was detected in that row, and \code{0L} means no name was detected. Missing
-and blank text values receive \code{0L}.
+\code{\link[=Moose_detect_person_names]{Moose_detect_person_names()}} to inspect a character or factor vector.
+The returned integer vector can be assigned directly inside
+\code{dplyr::mutate()}. \code{1L} means at least one personal name was detected in the
+corresponding value, and \code{0L} means no name was detected. Missing and blank
+values receive \code{0L}.
 }
 \examples{
-example_data <- data.frame(
-  comment = c("John Smith reviewed the file.", "No name is included.", NA)
+comments <- c(
+  "John Smith reviewed the file.",
+  "nothing to report",
+  NA
 )
-
-Moose_name_flag(example_data, comment, engine = "regex")
-Moose_name_flag(
-  example_data,
-  "comment",
-  flag_column = "has_name",
-  engine = "regex"
-)
+Moose_name_flag(comments, engine = "regex")
 }

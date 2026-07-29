@@ -91,7 +91,7 @@ existing scripts do not break.
 | `Moose_check_name_masking()` | `check_name_masking()` | Report the current Python, spaCy, and model setup status. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Return an audit table of detected names and character offsets. |
-| `Moose_name_flag()` | - | Add a 1/0 flag showing whether each row contains a detected personal name. |
+| `Moose_name_flag()` | - | Return a 1/0 vector showing whether each text value contains a detected personal name. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Apply supplementary regex-based name-masking rules. |
 | `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
 | `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
@@ -249,7 +249,10 @@ Add a row-level flag for detected personal names:
 
 ```r
 records <- data.frame(comments = comments)
-flagged_records <- Moose_name_flag(records, comments)
+flagged_records <- dplyr::mutate(
+  records,
+  name_flag = Moose_name_flag(comments)
+)
 flagged_records
 ```
 
@@ -366,7 +369,7 @@ scripts existants.
 | `Moose_check_name_masking()` | `check_name_masking()` | Afficher l'état actuel de la configuration Python, spaCy et du modèle. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Remplacer les noms de personnes détectés dans un texte par une chaîne de remplacement. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Retourner un tableau d'audit des noms détectés et de leur position dans le texte. |
-| `Moose_name_flag()` | - | Ajouter un indicateur 1/0 précisant si chaque ligne contient un nom de personne détecté. |
+| `Moose_name_flag()` | - | Retourner un vecteur 1/0 précisant si chaque texte contient un nom de personne détecté. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Appliquer des règles supplémentaires de masquage des noms avec des expressions régulières. |
 | `Moose_todate()` | - | Convertir les formats de date courants en valeurs R `Date`. |
 | `Moose_todatetime()` | - | Convertir les formats courants de date et heure en valeurs R `POSIXct`. |
@@ -525,7 +528,10 @@ Ajouter un indicateur par ligne pour les noms de personnes détectés :
 
 ```r
 records <- data.frame(comments = comments)
-flagged_records <- Moose_name_flag(records, comments)
+flagged_records <- dplyr::mutate(
+  records,
+  name_flag = Moose_name_flag(comments)
+)
 flagged_records
 ```
 
@@ -643,7 +649,7 @@ existentes.
 | `Moose_check_name_masking()` | `check_name_masking()` | Apresentar o estado atual da configuração de Python, spaCy e do modelo. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Substituir os nomes de pessoas detetados num texto por uma cadeia de substituição. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Devolver uma tabela de auditoria dos nomes detetados e das respetivas posições no texto. |
-| `Moose_name_flag()` | - | Adicionar um indicador 1/0 que mostra se cada linha contém um nome de pessoa detetado. |
+| `Moose_name_flag()` | - | Devolver um vetor 1/0 que mostra se cada texto contém um nome de pessoa detetado. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Aplicar regras adicionais de mascaramento de nomes com expressões regulares. |
 | `Moose_todate()` | - | Converter formatos comuns de data em valores R `Date`. |
 | `Moose_todatetime()` | - | Converter formatos comuns de data e hora em valores R `POSIXct`. |
@@ -802,7 +808,10 @@ Adicionar um indicador por linha para nomes de pessoas detetados:
 
 ```r
 records <- data.frame(comments = comments)
-flagged_records <- Moose_name_flag(records, comments)
+flagged_records <- dplyr::mutate(
+  records,
+  name_flag = Moose_name_flag(comments)
+)
 flagged_records
 ```
 
