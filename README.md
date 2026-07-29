@@ -256,6 +256,17 @@ flagged_records <- dplyr::mutate(
 flagged_records
 ```
 
+For large data sets, remove grouping first so the complete column is processed
+in one call:
+
+```r
+flagged_records <- records |>
+  dplyr::ungroup() |>
+  dplyr::mutate(
+    name_flag = Moose_name_flag(comments, batch_size = 2000L)
+  )
+```
+
 Use supplementary regex rules after spaCy masking:
 
 ```r
@@ -533,6 +544,17 @@ flagged_records <- dplyr::mutate(
   name_flag = Moose_name_flag(comments)
 )
 flagged_records
+```
+
+Pour les grands jeux de données, supprimez d'abord les regroupements afin que
+la colonne complète soit traitée en un seul appel :
+
+```r
+flagged_records <- records |>
+  dplyr::ungroup() |>
+  dplyr::mutate(
+    name_flag = Moose_name_flag(comments, batch_size = 2000L)
+  )
 ```
 
 Appliquer des règles supplémentaires après le masquage spaCy :
@@ -813,6 +835,17 @@ flagged_records <- dplyr::mutate(
   name_flag = Moose_name_flag(comments)
 )
 flagged_records
+```
+
+Para conjuntos de dados grandes, remova primeiro os agrupamentos para que a
+coluna completa seja processada numa única chamada:
+
+```r
+flagged_records <- records |>
+  dplyr::ungroup() |>
+  dplyr::mutate(
+    name_flag = Moose_name_flag(comments, batch_size = 2000L)
+  )
 ```
 
 Aplicar regras adicionais depois do mascaramento com spaCy:
