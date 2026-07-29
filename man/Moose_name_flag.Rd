@@ -29,6 +29,11 @@ The returned integer vector can be assigned directly inside
 corresponding value, and \code{0L} means no name was detected. Missing and blank
 values receive \code{0L}.
 }
+\details{
+For large data sets, call this function on an ungrouped data frame so
+\code{dplyr::mutate()} evaluates the complete column once rather than once per
+group.
+}
 \examples{
 comments <- c(
   "John Smith reviewed the file.",

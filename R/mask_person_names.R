@@ -311,15 +311,7 @@ detect_person_names_regex <- function(text) {
     return(empty_result)
   }
 
-  patterns <- c(
-    paste0(
-      "\\b",
-      "(?:Mr|Mrs|Ms|Miss|Dr|Doctor|RN|Paramedic|EMT)",
-      "\\.?\\s+",
-      "(?:(?:[A-Z]\\.|[A-Z][A-Za-z'-]*)\\s*){1,3}"
-    ),
-    "\\b[A-Z][A-Za-z'-]+\\s+(?:[A-Z]\\.?\\s+)?[A-Z][A-Za-z'-]+\\b"
-  )
+  patterns <- name_person_regex_patterns()
 
   result <- vector("list", length(text))
 
@@ -380,6 +372,18 @@ detect_person_names_regex <- function(text) {
   out <- do.call(rbind, result)
   row.names(out) <- NULL
   out
+}
+
+name_person_regex_patterns <- function() {
+  c(
+    paste0(
+      "\\b",
+      "(?:Mr|Mrs|Ms|Miss|Dr|Doctor|RN|Paramedic|EMT)",
+      "\\.?\\s+",
+      "(?:(?:[A-Z]\\.|[A-Z][A-Za-z'-]*)\\s*){1,3}"
+    ),
+    "\\b[A-Z][A-Za-z'-]+\\s+(?:[A-Z]\\.?\\s+)?[A-Z][A-Za-z'-]+\\b"
+  )
 }
 
 trim_detected_name_bounds <- function(matches) {

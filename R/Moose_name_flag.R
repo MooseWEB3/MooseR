@@ -7,6 +7,10 @@
 #' corresponding value, and `0L` means no name was detected. Missing and blank
 #' values receive `0L`.
 #'
+#' For large data sets, call this function on an ungrouped data frame so
+#' `dplyr::mutate()` evaluates the complete column once rather than once per
+#' group.
+#'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
 #' @param engine Character. One of `"auto"`, `"spacy"`, or `"regex"`.
@@ -36,23 +40,123 @@ Moose_name_flag <- function(text,
     stop("`text` must be a character or factor vector.", call. = FALSE)
   }
 
-  detected <- detect_person_names(
-    text,
+  validate_name_masking_inputs(
+    text = text,
+    replacement = "[NAME]",
     batch_size = batch_size,
-    engine = engine
+    keep_original = FALSE
   )
 
-  flag <- integer(length(text))
+  if (length(text) == 0L) {
+    return(integer())
+  }
 
-  if (nrow(detected)) {
-    detected_rows <- unique(detected$row_id)
-    detected_rows <- detected_rows[
-      !is.na(detected_rows) &
-        detected_rows >= 1L &
-        detected_rows <= length(text)
-    ]
-    flag[detected_rows] <- 1L
+  state <- get_name_masking_state()
+
+  if (
+    !isTRUE(state$setup_complete) ||
+      (engine == "spacy" && !identical(state$engine, "spacy")) ||
+      (engine == "regex" && !identical(state$engine, "regex"))
+  ) {
+    setup_name_masking(engine = engine)
+    state <- get_name_masking_state()
+  }
+
+  if (!identical(state$engine, "spacy") || is.null(state$model)) {
+    return(moose_name_flag_regex(text))
+  }
+
+  moose_name_flag_spacy(
+    text = text,
+    batch_size = batch_size,
+    model = state$model
+  )
+}
+
+moose_name_flag_regex <- function(text) {
+  flag <- integer(length(text))
+  remaining <- which(!is.na(text) & nzchar(trimws(text)))
+
+  if (!length(remaining)) {
+    return(flag)
+  }
+
+  for (pattern in name_person_regex_patterns()) {
+    matched <- grepl(pattern, text[remaining], perl = TRUE)
+
+    if (any(matched)) {
+      flag[remaining[matched]] <- 1L
+      remaining <- remaining[!matched]
+    }
+
+    if (!length(remaining)) {
+      break
+    }
   }
 
   flag
+}
+
+moose_name_flag_spacy <- function(text, batch_size, model) {
+  flag <- integer(length(text))
+  valid_indices <- which(!is.na(text) & nzchar(trimws(text)))
+
+  if (!length(valid_indices)) {
+    return(flag)
+  }
+
+  batch_size <- as.integer(batch_size)
+  chunk_size <- as.integer(max(
+    10000,
+    min(100000, as.double(batch_size) * 25)
+  ))
+
+  chunk_starts <- seq.int(
+    from = 1L,
+    to = length(valid_indices),
+    by = chunk_size
+  )
+
+  for (chunk_start in chunk_starts) {
+    chunk_end <- min(chunk_start + chunk_size - 1L, length(valid_indices))
+    chunk_rows <- valid_indices[seq.int(chunk_start, chunk_end)]
+
+    documents <- model$pipe(
+      reticulate::r_to_py(
+        as.list(text[chunk_rows]),
+        convert = FALSE
+      ),
+      batch_size = batch_size
+    )
+
+    chunk_flag <- reticulate::iterate(
+      documents,
+      f = moose_spacy_document_has_person,
+      simplify = TRUE
+    )
+    chunk_flag <- as.logical(chunk_flag)
+
+    if (length(chunk_flag) != length(chunk_rows)) {
+      stop(
+        "spaCy returned an unexpected number of documents.",
+        call. = FALSE
+      )
+    }
+
+    flag[chunk_rows] <- as.integer(chunk_flag)
+  }
+
+  flag
+}
+
+moose_spacy_document_has_person <- function(document) {
+  labels <- reticulate::iterate(
+    document$ents,
+    f = function(entity) {
+      identical(reticulate::py_to_r(entity$label_), "PERSON")
+    },
+    simplify = TRUE
+  )
+
+  any(labels)
 }
