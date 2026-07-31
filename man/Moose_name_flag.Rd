@@ -42,7 +42,8 @@ In regex mode, standalone all-uppercase phrases are ignored. All-uppercase
 names are accepted only after a supported title or, when \code{apply_rules} is
 \code{TRUE}, a supported workflow phrase such as \code{Reviewed by}.
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
-\code{Centre}, \code{Health}, or \code{Foundation} are excluded.
+\code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
+such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, are excluded.
 }
 \examples{
 comments <- c(

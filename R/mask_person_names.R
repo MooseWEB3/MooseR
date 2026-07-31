@@ -9,7 +9,9 @@
 #' `RN` or `Dr.`, or after a supported workflow phrase when `apply_rules` is
 #' `TRUE`.
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
-#' `Centre`, `Health`, or `Foundation` are excluded from regex name matching.
+#' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
+#' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, are excluded from regex
+#' name matching.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -382,7 +384,7 @@ detect_person_names_regex <- function(text) {
 }
 
 name_person_regex_patterns <- function() {
-  person_word <- name_nonorganization_title_case_word_pattern()
+  person_word <- name_person_title_case_word_pattern()
 
   c(
     name_title_regex_pattern(),
@@ -392,7 +394,7 @@ name_person_regex_patterns <- function() {
       "\\s+(?:[A-Z]\\.\\s+)?",
       person_word,
       "(?![A-Za-z'-])",
-      name_organization_suffix_guard()
+      name_nonperson_suffix_guard()
     )
   )
 }
@@ -408,7 +410,7 @@ name_title_case_word_pattern <- function() {
 
 name_context_word_pattern <- function() {
   paste0(
-    "(?!", name_organization_word_pattern(), "\\b)",
+    "(?!", name_nonperson_word_pattern(), "\\b)",
     "(?:",
     "[A-Z]\\.",
     "|", name_title_case_word_pattern(),
@@ -418,9 +420,9 @@ name_context_word_pattern <- function() {
   )
 }
 
-name_nonorganization_title_case_word_pattern <- function() {
+name_person_title_case_word_pattern <- function() {
   paste0(
-    "(?!", name_organization_word_pattern(), "\\b)",
+    "(?!", name_nonperson_word_pattern(), "\\b)",
     name_title_case_word_pattern()
   )
 }
@@ -440,14 +442,41 @@ name_organization_word_pattern <- function() {
   )
 }
 
-name_organization_suffix_guard <- function() {
+name_clinical_word_pattern <- function() {
+  paste0(
+    "(?i:(?:",
+    paste(
+      c(
+        "Acute", "Chronic", "Severe", "Cardia", "Cardiac", "Chest",
+        "Abdominal", "Respiratory", "Renal", "Clinical", "Emergency",
+        "Trauma", "Pain", "Disease", "Syndrome", "Disorder", "Injury",
+        "Failure", "Fracture", "Cancer", "Infection", "Symptom", "Symptoms",
+        "Diagnosis", "Treatment", "Therapy", "Surgery", "Procedure"
+      ),
+      collapse = "|"
+    ),
+    "))"
+  )
+}
+
+name_nonperson_word_pattern <- function() {
+  paste0(
+    "(?:",
+    name_organization_word_pattern(),
+    "|",
+    name_clinical_word_pattern(),
+    ")"
+  )
+}
+
+name_nonperson_suffix_guard <- function() {
   context_word <- name_context_word_pattern()
 
   paste0(
     "(?!\\s+(?:",
     context_word,
     "\\s+){0,2}",
-    name_organization_word_pattern(),
+    name_nonperson_word_pattern(),
     "\\b)"
   )
 }
@@ -461,7 +490,7 @@ name_title_regex_pattern <- function() {
     word,
     "(?:\\s+", word, "){0,2}",
     "(?![A-Za-z'-])",
-    name_organization_suffix_guard()
+    name_nonperson_suffix_guard()
   )
 }
 
@@ -474,7 +503,7 @@ name_workflow_regex_pattern <- function() {
     word,
     "(?:\\s+", word, "){0,2}",
     "(?![A-Za-z'-])",
-    name_organization_suffix_guard()
+    name_nonperson_suffix_guard()
   )
 }
 

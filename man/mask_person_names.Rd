@@ -43,7 +43,9 @@ names. All-uppercase names are accepted after a supported title, such as
 \code{RN} or \code{Dr.}, or after a supported workflow phrase when \code{apply_rules} is
 \code{TRUE}.
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
-\code{Centre}, \code{Health}, or \code{Foundation} are excluded from regex name matching.
+\code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
+such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, are excluded from regex
+name matching.
 }
 \examples{
 \dontrun{
