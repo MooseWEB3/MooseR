@@ -220,6 +220,8 @@ supported title, such as `RN SMITH`, or a workflow phrase, such as
 Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 `Centre`, `Health`, or `Foundation` are not treated as personal names. For
 example, `St Mary Hospital` and `Vancouver General Hospital` are preserved.
+Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
+`Syndrome` are also preserved; for example, `Cardia Chest Pain` is not masked.
 
 Mask names in a character vector:
 
@@ -519,6 +521,9 @@ Les noms d'organismes de santé se terminant par des mots comme `Hospital`,
 `Clinic`, `Centre`, `Health` ou `Foundation` ne sont pas considérés comme des
 noms de personnes. Par exemple, `St Mary Hospital` et
 `Vancouver General Hospital` sont conservés.
+Les expressions cliniques contenant des mots comme `Chest`, `Pain`, `Disease`
+ou `Syndrome` sont également conservées ; par exemple, `Cardia Chest Pain`
+n'est pas masqué.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -819,6 +824,9 @@ Os nomes de organizações de saúde terminados em palavras como `Hospital`,
 `Clinic`, `Centre`, `Health` ou `Foundation` não são tratados como nomes de
 pessoas. Por exemplo, `St Mary Hospital` e `Vancouver General Hospital` são
 preservados.
+As expressões clínicas que contêm palavras como `Chest`, `Pain`, `Disease` ou
+`Syndrome` também são preservadas; por exemplo, `Cardia Chest Pain` não é
+mascarado.
 
 Mascarar nomes num vetor de texto:
 

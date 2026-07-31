@@ -14,7 +14,8 @@
 #' names are accepted only after a supported title or, when `apply_rules` is
 #' `TRUE`, a supported workflow phrase such as `Reviewed by`.
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
-#' `Centre`, `Health`, or `Foundation` are excluded.
+#' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
+#' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, are excluded.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
