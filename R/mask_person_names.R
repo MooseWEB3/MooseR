@@ -11,7 +11,8 @@
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
-#' as `Normal Saline IV`, are excluded from name matching in both engines.
+#' as `Normal Saline IV`, and clinical document labels such as `RN Report`, are
+#' excluded from name matching in both engines.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -451,7 +452,9 @@ name_clinical_word_pattern <- function() {
         "Failure", "Fracture", "Cancer", "Infection", "Symptom", "Symptoms",
         "Diagnosis", "Treatment", "Therapy", "Surgery", "Procedure",
         "Normal", "Saline", "IV", "Intravenous", "Infusion", "Bolus", "Dose",
-        "Medication", "Solution"
+        "Medication", "Solution", "Report", "Reports", "Assessment",
+        "Documentation", "Note", "Notes", "Record", "Records", "Chart",
+        "Charts", "Form", "Forms", "Summary", "Summaries", "Handover"
       ),
       collapse = "|"
     ),
