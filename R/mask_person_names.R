@@ -8,6 +8,8 @@
 #' names. All-uppercase names are accepted after a supported title, such as
 #' `RN` or `Dr.`, or after a supported workflow phrase when `apply_rules` is
 #' `TRUE`.
+#' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
+#' `Centre`, `Health`, or `Foundation` are excluded from regex name matching.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -380,14 +382,17 @@ detect_person_names_regex <- function(text) {
 }
 
 name_person_regex_patterns <- function() {
+  person_word <- name_nonorganization_title_case_word_pattern()
+
   c(
     name_title_regex_pattern(),
     paste0(
       "\\b",
-      name_title_case_word_pattern(),
+      person_word,
       "\\s+(?:[A-Z]\\.\\s+)?",
-      name_title_case_word_pattern(),
-      "(?![A-Za-z'-])"
+      person_word,
+      "(?![A-Za-z'-])",
+      name_organization_suffix_guard()
     )
   )
 }
@@ -403,12 +408,47 @@ name_title_case_word_pattern <- function() {
 
 name_context_word_pattern <- function() {
   paste0(
+    "(?!", name_organization_word_pattern(), "\\b)",
     "(?:",
     "[A-Z]\\.",
     "|", name_title_case_word_pattern(),
     "|[A-Z]{2,}(?:[-'][A-Z]+)*",
     "|[A-Z](?:['-][A-Z]+)+",
     ")"
+  )
+}
+
+name_nonorganization_title_case_word_pattern <- function() {
+  paste0(
+    "(?!", name_organization_word_pattern(), "\\b)",
+    name_title_case_word_pattern()
+  )
+}
+
+name_organization_word_pattern <- function() {
+  paste0(
+    "(?i:(?:",
+    paste(
+      c(
+        "Hospital", "Hospitals", "Clinic", "Clinics", "Centre", "Centres",
+        "Center", "Centers", "Health", "Healthcare", "Medical", "Care",
+        "Authority", "Hospice", "Foundation"
+      ),
+      collapse = "|"
+    ),
+    "))"
+  )
+}
+
+name_organization_suffix_guard <- function() {
+  context_word <- name_context_word_pattern()
+
+  paste0(
+    "(?!\\s+(?:",
+    context_word,
+    "\\s+){0,2}",
+    name_organization_word_pattern(),
+    "\\b)"
   )
 }
 
@@ -420,7 +460,8 @@ name_title_regex_pattern <- function() {
     "\\.?\\s+",
     word,
     "(?:\\s+", word, "){0,2}",
-    "(?![A-Za-z'-])"
+    "(?![A-Za-z'-])",
+    name_organization_suffix_guard()
   )
 }
 
@@ -432,7 +473,8 @@ name_workflow_regex_pattern <- function() {
     "\\K",
     word,
     "(?:\\s+", word, "){0,2}",
-    "(?![A-Za-z'-])"
+    "(?![A-Za-z'-])",
+    name_organization_suffix_guard()
   )
 }
 
