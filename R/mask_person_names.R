@@ -11,7 +11,7 @@
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
-#' as `Normal Saline IV`, are excluded from regex name matching.
+#' as `Normal Saline IV`, are excluded from name matching in both engines.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -212,6 +212,7 @@ detect_person_names <- function(text,
   )
 
   for (i in seq_along(document_list)) {
+    document_text <- reticulate::py_to_r(document_list[[i]]$text)
     entities <- reticulate::iterate(
       document_list[[i]]$ents,
       simplify = FALSE
@@ -219,10 +220,7 @@ detect_person_names <- function(text,
 
     entities <- Filter(
       function(entity) {
-        identical(
-          reticulate::py_to_r(entity$label_),
-          "PERSON"
-        )
+        spacy_entity_is_person(entity, document_text)
       },
       entities
     )
@@ -483,6 +481,44 @@ name_nonperson_suffix_guard <- function() {
   )
 }
 
+is_nonperson_name_candidate <- function(text, start, end) {
+  candidate <- substr(text, start, end)
+  nonperson_word <- name_nonperson_word_pattern()
+
+  if (grepl(paste0("\\b", nonperson_word, "\\b"), candidate, perl = TRUE)) {
+    return(TRUE)
+  }
+
+  if (end >= nchar(text)) {
+    return(FALSE)
+  }
+
+  suffix <- substr(text, end + 1L, nchar(text))
+
+  grepl(
+    paste0(
+      "^\\s+(?:",
+      name_context_word_pattern(),
+      "\\s+){0,2}",
+      nonperson_word,
+      "\\b"
+    ),
+    suffix,
+    perl = TRUE
+  )
+}
+
+spacy_entity_is_person <- function(entity, document_text) {
+  if (!identical(reticulate::py_to_r(entity$label_), "PERSON")) {
+    return(FALSE)
+  }
+
+  start <- as.integer(reticulate::py_to_r(entity$start_char)) + 1L
+  end <- as.integer(reticulate::py_to_r(entity$end_char))
+
+  !is_nonperson_name_candidate(document_text, start, end)
+}
+
 name_title_regex_pattern <- function() {
   word <- name_context_word_pattern()
 
@@ -571,10 +607,7 @@ mask_single_spacy_document <- function(document, replacement) {
 
   person_entities <- Filter(
     function(entity) {
-      identical(
-        reticulate::py_to_r(entity$label_),
-        "PERSON"
-      )
+      spacy_entity_is_person(entity, original_text)
     },
     entities
   )

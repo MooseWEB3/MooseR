@@ -223,6 +223,7 @@ example, `St Mary Hospital` and `Vancouver General Hospital` are preserved.
 Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
 `Syndrome` are also preserved; for example, `Cardia Chest Pain` is not masked.
 Treatment phrases such as `Normal Saline IV` are also preserved.
+These exclusions are applied to both the regex and spaCy engines.
 
 Mask names in a character vector:
 
@@ -526,6 +527,7 @@ Les expressions cliniques contenant des mots comme `Chest`, `Pain`, `Disease`
 ou `Syndrome` sont également conservées ; par exemple, `Cardia Chest Pain`
 n'est pas masqué.
 Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
+Ces exclusions s'appliquent aux moteurs regex et spaCy.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -830,6 +832,7 @@ As expressões clínicas que contêm palavras como `Chest`, `Pain`, `Disease` ou
 `Syndrome` também são preservadas; por exemplo, `Cardia Chest Pain` não é
 mascarado.
 As expressões de tratamento como `Normal Saline IV` também são preservadas.
+Estas exclusões aplicam-se aos motores regex e spaCy.
 
 Mascarar nomes num vetor de texto:
 
