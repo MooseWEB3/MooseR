@@ -50,6 +50,10 @@ excluded from name matching in both engines.
 The 334 official Alberta municipality names are also excluded in both
 engines, including names such as \code{Medicine Hat}, \code{Red Deer}, and
 \code{Rocky Mountain House}.
+The 1,150 unique facility names in the Alberta Health Services Find
+Healthcare directory are excluded when the complete facility name occurs
+in the text, including \code{Peter Lougheed Centre}, \code{Grand Manor}, and
+\code{Chartwell Griesbach}.
 }
 \examples{
 \dontrun{

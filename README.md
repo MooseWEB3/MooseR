@@ -229,6 +229,12 @@ MooseR also preserves all 334 official Alberta municipality names, including
 `Medicine Hat`, `Red Deer`, and `Rocky Mountain House`. The registry follows
 the Government of Alberta 2024 Municipal Codes and excludes the administrative
 `Special Areas Board`.
+MooseR also excludes the 1,150 unique facility names in the Alberta Health
+Services [Find Healthcare directory](https://www.albertahealthservices.ca/findhealth/search.aspx),
+including hospitals, health centres, clinics, continuing-care sites, and other
+official service locations. The complete facility name must occur in the text:
+`Peter Lougheed Centre`, `Grand Manor`, and `Chartwell Griesbach` are preserved,
+while a standalone personal name is still detected.
 
 Mask names in a character vector:
 
@@ -538,6 +544,13 @@ MooseR conserve également les 334 noms officiels des municipalités de
 l'Alberta, notamment `Medicine Hat`, `Red Deer` et `Rocky Mountain House`. Le
 registre suit les codes municipaux 2024 du gouvernement de l'Alberta et exclut
 l'organisme administratif `Special Areas Board`.
+MooseR exclut aussi les 1 150 noms uniques du répertoire
+[Find Healthcare](https://www.albertahealthservices.ca/findhealth/search.aspx)
+d'Alberta Health Services, notamment les hôpitaux, centres de santé, cliniques,
+établissements de soins continus et autres lieux de service officiels. Le nom
+complet de l'établissement doit figurer dans le texte : `Peter Lougheed Centre`,
+`Grand Manor` et `Chartwell Griesbach` sont conservés, tandis qu'un nom de
+personne isolé reste détecté.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -848,6 +861,13 @@ O MooseR também preserva os 334 nomes oficiais dos municípios de Alberta,
 incluindo `Medicine Hat`, `Red Deer` e `Rocky Mountain House`. O registo segue
 os Códigos Municipais de 2024 do Governo de Alberta e exclui o órgão
 administrativo `Special Areas Board`.
+O MooseR também exclui os 1.150 nomes únicos do diretório
+[Find Healthcare](https://www.albertahealthservices.ca/findhealth/search.aspx)
+da Alberta Health Services, incluindo hospitais, centros de saúde, clínicas,
+unidades de cuidados continuados e outros locais oficiais de serviço. O nome
+completo da instituição deve aparecer no texto: `Peter Lougheed Centre`,
+`Grand Manor` e `Chartwell Griesbach` são preservados, enquanto um nome pessoal
+isolado continua a ser detetado.
 
 Mascarar nomes num vetor de texto:
 
