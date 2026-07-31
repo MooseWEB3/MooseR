@@ -48,6 +48,9 @@ as \code{Normal Saline IV}, and clinical document labels such as \code{RN Report
 excluded in both engines.
 The 334 official Alberta municipality names are also excluded in both
 engines.
+The 1,150 unique facility names in the Alberta Health Services Find
+Healthcare directory are excluded when the complete facility name occurs
+in the text.
 }
 \examples{
 comments <- c(

@@ -16,6 +16,10 @@
 #' The 334 official Alberta municipality names are also excluded in both
 #' engines, including names such as `Medicine Hat`, `Red Deer`, and
 #' `Rocky Mountain House`.
+#' The 1,150 unique facility names in the Alberta Health Services Find
+#' Healthcare directory are excluded when the complete facility name occurs
+#' in the text, including `Peter Lougheed Centre`, `Grand Manor`, and
+#' `Chartwell Griesbach`.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -506,6 +510,10 @@ name_nonperson_suffix_guard <- function() {
 is_nonperson_name_candidate <- function(text, start, end) {
   candidate <- substr(text, start, end)
   if (is_alberta_municipality_candidate(candidate)) {
+    return(TRUE)
+  }
+
+  if (is_alberta_health_facility_candidate(text, start, end)) {
     return(TRUE)
   }
 

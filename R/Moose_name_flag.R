@@ -20,6 +20,9 @@
 #' excluded in both engines.
 #' The 334 official Alberta municipality names are also excluded in both
 #' engines.
+#' The 1,150 unique facility names in the Alberta Health Services Find
+#' Healthcare directory are excluded when the complete facility name occurs
+#' in the text.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
@@ -143,33 +146,38 @@ moose_name_flag_patterns <- function(text, patterns) {
         starts + lengths - 1L
       )
       municipalities <- is_alberta_municipality_candidate(candidates)
-      people <- matched_pending[!municipalities]
+      facilities <- is_alberta_health_facility_candidate_values(
+        text = text[remaining[matched_pending]],
+        candidate = candidates
+      )
+      nonpeople <- municipalities | facilities
+      people <- matched_pending[!nonpeople]
 
       if (length(people)) {
         flag[remaining[people]] <- 1L
       }
 
-      municipality_rows <- matched_pending[municipalities]
+      nonperson_rows <- matched_pending[nonpeople]
 
-      if (!length(municipality_rows)) {
+      if (!length(nonperson_rows)) {
         break
       }
 
-      municipality_starts <- starts[municipalities]
-      municipality_lengths <- lengths[municipalities]
-      municipality_values <- screened[municipality_rows]
+      nonperson_starts <- starts[nonpeople]
+      nonperson_lengths <- lengths[nonpeople]
+      nonperson_values <- screened[nonperson_rows]
       left <- ifelse(
-        municipality_starts > 1L,
-        substr(municipality_values, 1L, municipality_starts - 1L),
+        nonperson_starts > 1L,
+        substr(nonperson_values, 1L, nonperson_starts - 1L),
         ""
       )
       right <- substr(
-        municipality_values,
-        municipality_starts + municipality_lengths,
-        nchar(municipality_values)
+        nonperson_values,
+        nonperson_starts + nonperson_lengths,
+        nchar(nonperson_values)
       )
-      screened[municipality_rows] <- paste0(left, " | ", right)
-      pending <- municipality_rows
+      screened[nonperson_rows] <- paste0(left, " | ", right)
+      pending <- nonperson_rows
     }
 
     active <- active[flag[remaining[active]] == 0L]
