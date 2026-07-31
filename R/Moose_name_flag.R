@@ -10,10 +10,16 @@
 #' For large data sets, call this function on an ungrouped data frame so
 #' `dplyr::mutate()` evaluates the complete column once rather than once per
 #' group.
+#' In regex mode, standalone all-uppercase phrases are ignored. All-uppercase
+#' names are accepted only after a supported title or, when `apply_rules` is
+#' `TRUE`, a supported workflow phrase such as `Reviewed by`.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
 #' @param engine Character. One of `"auto"`, `"spacy"`, or `"regex"`.
+#' @param apply_rules Logical. If `TRUE`, include title-based and workflow-based
+#'   supplementary rules, matching the default behavior of
+#'   [Moose_mask_person_names()].
 #'
 #' @return An integer vector with the same length as `text`, containing `1L`
 #'   when a personal name is detected and `0L` otherwise.
@@ -29,7 +35,8 @@
 #' @export
 Moose_name_flag <- function(text,
                             batch_size = 100L,
-                            engine = c("auto", "spacy", "regex")) {
+                            engine = c("auto", "spacy", "regex"),
+                            apply_rules = TRUE) {
   engine <- match.arg(engine)
 
   if (is.factor(text)) {
@@ -47,6 +54,12 @@ Moose_name_flag <- function(text,
     keep_original = FALSE
   )
 
+  if (!is.logical(apply_rules) ||
+      length(apply_rules) != 1L ||
+      is.na(apply_rules)) {
+    stop("`apply_rules` must be TRUE or FALSE.", call. = FALSE)
+  }
+
   if (length(text) == 0L) {
     return(integer())
   }
@@ -63,14 +76,20 @@ Moose_name_flag <- function(text,
   }
 
   if (!identical(state$engine, "spacy") || is.null(state$model)) {
-    return(moose_name_flag_regex(text))
+    flag <- moose_name_flag_regex(text)
+  } else {
+    flag <- moose_name_flag_spacy(
+      text = text,
+      batch_size = batch_size,
+      model = state$model
+    )
   }
 
-  moose_name_flag_spacy(
-    text = text,
-    batch_size = batch_size,
-    model = state$model
-  )
+  if (isTRUE(apply_rules)) {
+    flag <- pmax.int(flag, moose_name_flag_supplementary(text))
+  }
+
+  flag
 }
 
 moose_name_flag_regex <- function(text) {
@@ -92,6 +111,26 @@ moose_name_flag_regex <- function(text) {
     if (!length(remaining)) {
       break
     }
+  }
+
+  flag
+}
+
+moose_name_flag_supplementary <- function(text) {
+  flag <- integer(length(text))
+  valid <- which(!is.na(text) & nzchar(trimws(text)))
+
+  if (!length(valid)) {
+    return(flag)
+  }
+
+  patterns <- c(
+    name_title_regex_pattern(),
+    name_workflow_regex_pattern()
+  )
+
+  for (pattern in patterns) {
+    flag[valid[grepl(pattern, text[valid], perl = TRUE)]] <- 1L
   }
 
   flag

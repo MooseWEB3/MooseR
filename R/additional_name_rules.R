@@ -22,12 +22,7 @@ apply_name_masking_rules <- function(text, replacement = "[NAME]") {
 
   # Titles followed by likely names, such as "Dr. J. Brown" or "RN Johnson".
   output <- gsub(
-    pattern = paste0(
-      "\\b",
-      "(Mr|Mrs|Ms|Miss|Dr|Doctor|RN|Paramedic|EMT)",
-      "\\.?\\s+",
-      "(?:(?:[A-Z]\\.|[A-Z][A-Za-z'-]*)\\s*){1,3}"
-    ),
+    pattern = name_title_regex_pattern(),
     replacement = replacement,
     x = output,
     perl = TRUE
@@ -35,16 +30,10 @@ apply_name_masking_rules <- function(text, replacement = "[NAME]") {
 
   # Workflow phrases such as "Reviewed by Firstname Lastname".
   output <- gsub(
-    pattern = paste0(
-      "\\b",
-      "(reviewed|assessed|signed|completed|reported)",
-      "\\s+by\\s+",
-      "(?:[A-Z][A-Za-z'-]*\\s*){1,3}"
-    ),
-    replacement = paste0("\\1 by ", replacement),
+    pattern = name_workflow_regex_pattern(),
+    replacement = replacement,
     x = output,
-    perl = TRUE,
-    ignore.case = TRUE
+    perl = TRUE
   )
 
   output

@@ -4,6 +4,11 @@
 #' computers where Python cannot be initialized, \code{engine = "auto"} falls
 #' back to a pure R regular-expression engine.
 #'
+#' In regex mode, uncontextualized all-uppercase phrases are not treated as
+#' names. All-uppercase names are accepted after a supported title, such as
+#' `RN` or `Dr.`, or after a supported workflow phrase when `apply_rules` is
+#' `TRUE`.
+#'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
 #' @param batch_size Number of documents processed in each spaCy batch.
@@ -376,13 +381,58 @@ detect_person_names_regex <- function(text) {
 
 name_person_regex_patterns <- function() {
   c(
+    name_title_regex_pattern(),
     paste0(
       "\\b",
-      "(?:Mr|Mrs|Ms|Miss|Dr|Doctor|RN|Paramedic|EMT)",
-      "\\.?\\s+",
-      "(?:(?:[A-Z]\\.|[A-Z][A-Za-z'-]*)\\s*){1,3}"
-    ),
-    "\\b[A-Z][A-Za-z'-]+\\s+(?:[A-Z]\\.?\\s+)?[A-Z][A-Za-z'-]+\\b"
+      name_title_case_word_pattern(),
+      "\\s+(?:[A-Z]\\.\\s+)?",
+      name_title_case_word_pattern(),
+      "(?![A-Za-z'-])"
+    )
+  )
+}
+
+name_title_case_word_pattern <- function() {
+  paste0(
+    "(?:",
+    "[A-Z][a-z]+(?:[A-Z][a-z]+)*(?:[-'][A-Z]?[a-z]+)*",
+    "|[A-Z](?:['-][A-Z]?[a-z]+)+",
+    ")"
+  )
+}
+
+name_context_word_pattern <- function() {
+  paste0(
+    "(?:",
+    "[A-Z]\\.",
+    "|", name_title_case_word_pattern(),
+    "|[A-Z]{2,}(?:[-'][A-Z]+)*",
+    "|[A-Z](?:['-][A-Z]+)+",
+    ")"
+  )
+}
+
+name_title_regex_pattern <- function() {
+  word <- name_context_word_pattern()
+
+  paste0(
+    "\\b(?:Mr|Mrs|Ms|Miss|Dr|Doctor|RN|Paramedic|EMT)",
+    "\\.?\\s+",
+    word,
+    "(?:\\s+", word, "){0,2}",
+    "(?![A-Za-z'-])"
+  )
+}
+
+name_workflow_regex_pattern <- function() {
+  word <- name_context_word_pattern()
+
+  paste0(
+    "(?i:\\b(?:reviewed|assessed|signed|completed|reported)\\s+by\\s+)",
+    "\\K",
+    word,
+    "(?:\\s+", word, "){0,2}",
+    "(?![A-Za-z'-])"
   )
 }
 

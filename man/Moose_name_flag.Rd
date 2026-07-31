@@ -7,7 +7,8 @@
 Moose_name_flag(
   text,
   batch_size = 100L,
-  engine = c("auto", "spacy", "regex")
+  engine = c("auto", "spacy", "regex"),
+  apply_rules = TRUE
 )
 }
 \arguments{
@@ -16,6 +17,10 @@ Moose_name_flag(
 \item{batch_size}{Number of documents processed per spaCy batch.}
 
 \item{engine}{Character. One of \code{"auto"}, \code{"spacy"}, or \code{"regex"}.}
+
+\item{apply_rules}{Logical. If \code{TRUE}, include title-based and workflow-based
+supplementary rules, matching the default behavior of
+\code{\link[=Moose_mask_person_names]{Moose_mask_person_names()}}.}
 }
 \value{
 An integer vector with the same length as \code{text}, containing \code{1L}
@@ -33,6 +38,9 @@ values receive \code{0L}.
 For large data sets, call this function on an ungrouped data frame so
 \code{dplyr::mutate()} evaluates the complete column once rather than once per
 group.
+In regex mode, standalone all-uppercase phrases are ignored. All-uppercase
+names are accepted only after a supported title or, when \code{apply_rules} is
+\code{TRUE}, a supported workflow phrase such as \code{Reviewed by}.
 }
 \examples{
 comments <- c(
