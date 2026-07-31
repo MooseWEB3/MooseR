@@ -16,7 +16,8 @@
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
-#' as `Normal Saline IV`, are excluded in both engines.
+#' as `Normal Saline IV`, and clinical document labels such as `RN Report`, are
+#' excluded in both engines.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
