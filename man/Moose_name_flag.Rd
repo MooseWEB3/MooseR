@@ -44,7 +44,7 @@ names are accepted only after a supported title or, when \code{apply_rules} is
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
 \code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such
-as \code{Normal Saline IV}, are excluded.
+as \code{Normal Saline IV}, are excluded in both engines.
 }
 \examples{
 comments <- c(

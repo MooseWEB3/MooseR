@@ -16,7 +16,7 @@
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
-#' as `Normal Saline IV`, are excluded.
+#' as `Normal Saline IV`, are excluded in both engines.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
@@ -193,10 +193,11 @@ moose_name_flag_spacy <- function(text, batch_size, model) {
 }
 
 moose_spacy_document_has_person <- function(document) {
+  document_text <- reticulate::py_to_r(document$text)
   labels <- reticulate::iterate(
     document$ents,
     f = function(entity) {
-      identical(reticulate::py_to_r(entity$label_), "PERSON")
+      spacy_entity_is_person(entity, document_text)
     },
     simplify = TRUE
   )

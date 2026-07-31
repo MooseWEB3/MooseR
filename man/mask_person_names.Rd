@@ -45,7 +45,7 @@ names. All-uppercase names are accepted after a supported title, such as
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
 \code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such
-as \code{Normal Saline IV}, are excluded from regex name matching.
+as \code{Normal Saline IV}, are excluded from name matching in both engines.
 }
 \examples{
 \dontrun{
