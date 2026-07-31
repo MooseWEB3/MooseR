@@ -37,6 +37,11 @@ A character vector, or a data frame when
 Uses spaCy named-entity recognition when available. On locked-down
 computers where Python cannot be initialized, \code{engine = "auto"} falls
 back to a pure R regular-expression engine.
+
+In regex mode, uncontextualized all-uppercase phrases are not treated as
+names. All-uppercase names are accepted after a supported title, such as
+\code{RN} or \code{Dr.}, or after a supported workflow phrase when \code{apply_rules} is
+\code{TRUE}.
 }
 \examples{
 \dontrun{

@@ -213,6 +213,11 @@ Moose_check_name_masking()
 In regex mode, `Moose_check_name_masking()` should show `Engine: regex`. Python,
 spaCy, and the spaCy model are not used in that mode.
 
+The regex engine ignores standalone all-uppercase phrases such as
+`MEDICAL RECORDS` or `THE PATIENT`. It accepts all-uppercase names only after a
+supported title, such as `RN SMITH`, or a workflow phrase, such as
+`Reviewed by JOHN SMITH`.
+
 Mask names in a character vector:
 
 ```r
@@ -502,6 +507,11 @@ Moose_check_name_masking()
 
 En mode regex, `Moose_check_name_masking()` devrait afficher `Engine: regex`.
 Python, spaCy et le modèle spaCy ne sont pas utilisés dans ce mode.
+
+Le moteur regex ignore les expressions autonomes entièrement en majuscules,
+comme `MEDICAL RECORDS` ou `THE PATIENT`. Il accepte les noms entièrement en
+majuscules uniquement après un titre reconnu, comme `RN SMITH`, ou une phrase
+de travail, comme `Reviewed by JOHN SMITH`.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -793,6 +803,11 @@ Moose_check_name_masking()
 
 No modo regex, `Moose_check_name_masking()` deve apresentar `Engine: regex`.
 Python, spaCy e o modelo spaCy não são utilizados neste modo.
+
+O motor regex ignora expressões isoladas totalmente em maiúsculas, como
+`MEDICAL RECORDS` ou `THE PATIENT`. Aceita nomes totalmente em maiúsculas
+apenas depois de um título reconhecido, como `RN SMITH`, ou de uma expressão de
+trabalho, como `Reviewed by JOHN SMITH`.
 
 Mascarar nomes num vetor de texto:
 
