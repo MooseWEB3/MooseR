@@ -42,6 +42,8 @@ In regex mode, uncontextualized all-uppercase phrases are not treated as
 names. All-uppercase names are accepted after a supported title, such as
 \code{RN} or \code{Dr.}, or after a supported workflow phrase when \code{apply_rules} is
 \code{TRUE}.
+Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
+\code{Centre}, \code{Health}, or \code{Foundation} are excluded from regex name matching.
 }
 \examples{
 \dontrun{

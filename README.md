@@ -217,6 +217,9 @@ The regex engine ignores standalone all-uppercase phrases such as
 `MEDICAL RECORDS` or `THE PATIENT`. It accepts all-uppercase names only after a
 supported title, such as `RN SMITH`, or a workflow phrase, such as
 `Reviewed by JOHN SMITH`.
+Healthcare organization names ending in words such as `Hospital`, `Clinic`,
+`Centre`, `Health`, or `Foundation` are not treated as personal names. For
+example, `St Mary Hospital` and `Vancouver General Hospital` are preserved.
 
 Mask names in a character vector:
 
@@ -512,6 +515,10 @@ Le moteur regex ignore les expressions autonomes entièrement en majuscules,
 comme `MEDICAL RECORDS` ou `THE PATIENT`. Il accepte les noms entièrement en
 majuscules uniquement après un titre reconnu, comme `RN SMITH`, ou une phrase
 de travail, comme `Reviewed by JOHN SMITH`.
+Les noms d'organismes de santé se terminant par des mots comme `Hospital`,
+`Clinic`, `Centre`, `Health` ou `Foundation` ne sont pas considérés comme des
+noms de personnes. Par exemple, `St Mary Hospital` et
+`Vancouver General Hospital` sont conservés.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -808,6 +815,10 @@ O motor regex ignora expressões isoladas totalmente em maiúsculas, como
 `MEDICAL RECORDS` ou `THE PATIENT`. Aceita nomes totalmente em maiúsculas
 apenas depois de um título reconhecido, como `RN SMITH`, ou de uma expressão de
 trabalho, como `Reviewed by JOHN SMITH`.
+Os nomes de organizações de saúde terminados em palavras como `Hospital`,
+`Clinic`, `Centre`, `Health` ou `Foundation` não são tratados como nomes de
+pessoas. Por exemplo, `St Mary Hospital` e `Vancouver General Hospital` são
+preservados.
 
 Mascarar nomes num vetor de texto:
 
