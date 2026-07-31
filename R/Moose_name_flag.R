@@ -18,6 +18,8 @@
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
 #' as `Normal Saline IV`, and clinical document labels such as `RN Report`, are
 #' excluded in both engines.
+#' The 334 official Alberta municipality names are also excluded in both
+#' engines.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
@@ -80,7 +82,9 @@ Moose_name_flag <- function(text,
     state <- get_name_masking_state()
   }
 
-  if (!identical(state$engine, "spacy") || is.null(state$model)) {
+  using_spacy <- identical(state$engine, "spacy") && !is.null(state$model)
+
+  if (!using_spacy) {
     flag <- moose_name_flag_regex(text)
   } else {
     flag <- moose_name_flag_spacy(
@@ -91,13 +95,23 @@ Moose_name_flag <- function(text,
   }
 
   if (isTRUE(apply_rules)) {
-    flag <- pmax.int(flag, moose_name_flag_supplementary(text))
+    flag <- pmax.int(
+      flag,
+      moose_name_flag_supplementary(
+        text,
+        include_title = using_spacy
+      )
+    )
   }
 
   flag
 }
 
 moose_name_flag_regex <- function(text) {
+  moose_name_flag_patterns(text, name_person_regex_patterns())
+}
+
+moose_name_flag_patterns <- function(text, patterns) {
   flag <- integer(length(text))
   remaining <- which(!is.na(text) & nzchar(trimws(text)))
 
@@ -105,15 +119,62 @@ moose_name_flag_regex <- function(text) {
     return(flag)
   }
 
-  for (pattern in name_person_regex_patterns()) {
-    matched <- grepl(pattern, text[remaining], perl = TRUE)
+  screened <- text[remaining]
+  active <- seq_along(remaining)
 
-    if (any(matched)) {
-      flag[remaining[matched]] <- 1L
-      remaining <- remaining[!matched]
+  for (pattern in patterns) {
+    pending <- active
+
+    repeat {
+      values <- screened[pending]
+      matches <- regexpr(pattern, values, perl = TRUE)
+      matched <- matches != -1L
+
+      if (!any(matched)) {
+        break
+      }
+
+      matched_pending <- pending[matched]
+      starts <- as.integer(matches[matched])
+      lengths <- attr(matches, "match.length")[matched]
+      candidates <- substr(
+        values[matched],
+        starts,
+        starts + lengths - 1L
+      )
+      municipalities <- is_alberta_municipality_candidate(candidates)
+      people <- matched_pending[!municipalities]
+
+      if (length(people)) {
+        flag[remaining[people]] <- 1L
+      }
+
+      municipality_rows <- matched_pending[municipalities]
+
+      if (!length(municipality_rows)) {
+        break
+      }
+
+      municipality_starts <- starts[municipalities]
+      municipality_lengths <- lengths[municipalities]
+      municipality_values <- screened[municipality_rows]
+      left <- ifelse(
+        municipality_starts > 1L,
+        substr(municipality_values, 1L, municipality_starts - 1L),
+        ""
+      )
+      right <- substr(
+        municipality_values,
+        municipality_starts + municipality_lengths,
+        nchar(municipality_values)
+      )
+      screened[municipality_rows] <- paste0(left, " | ", right)
+      pending <- municipality_rows
     }
 
-    if (!length(remaining)) {
+    active <- active[flag[remaining[active]] == 0L]
+
+    if (!length(active)) {
       break
     }
   }
@@ -121,24 +182,17 @@ moose_name_flag_regex <- function(text) {
   flag
 }
 
-moose_name_flag_supplementary <- function(text) {
-  flag <- integer(length(text))
-  valid <- which(!is.na(text) & nzchar(trimws(text)))
+moose_name_flag_supplementary <- function(text, include_title = TRUE) {
+  patterns <- name_workflow_regex_pattern(exclude_municipalities = FALSE)
 
-  if (!length(valid)) {
-    return(flag)
+  if (isTRUE(include_title)) {
+    patterns <- c(
+      name_title_regex_pattern(exclude_municipalities = FALSE),
+      patterns
+    )
   }
 
-  patterns <- c(
-    name_title_regex_pattern(),
-    name_workflow_regex_pattern()
-  )
-
-  for (pattern in patterns) {
-    flag[valid[grepl(pattern, text[valid], perl = TRUE)]] <- 1L
-  }
-
-  flag
+  moose_name_flag_patterns(text, patterns)
 }
 
 moose_name_flag_spacy <- function(text, batch_size, model) {

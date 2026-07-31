@@ -225,6 +225,10 @@ Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
 Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
 These exclusions are applied to both the regex and spaCy engines.
+MooseR also preserves all 334 official Alberta municipality names, including
+`Medicine Hat`, `Red Deer`, and `Rocky Mountain House`. The registry follows
+the Government of Alberta 2024 Municipal Codes and excludes the administrative
+`Special Areas Board`.
 
 Mask names in a character vector:
 
@@ -530,6 +534,10 @@ n'est pas masqué.
 Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
 Ces exclusions s'appliquent aux moteurs regex et spaCy.
+MooseR conserve également les 334 noms officiels des municipalités de
+l'Alberta, notamment `Medicine Hat`, `Red Deer` et `Rocky Mountain House`. Le
+registre suit les codes municipaux 2024 du gouvernement de l'Alberta et exclut
+l'organisme administratif `Special Areas Board`.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -836,6 +844,10 @@ mascarado.
 As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
 Estas exclusões aplicam-se aos motores regex e spaCy.
+O MooseR também preserva os 334 nomes oficiais dos municípios de Alberta,
+incluindo `Medicine Hat`, `Red Deer` e `Rocky Mountain House`. O registo segue
+os Códigos Municipais de 2024 do Governo de Alberta e exclui o órgão
+administrativo `Special Areas Board`.
 
 Mascarar nomes num vetor de texto:
 

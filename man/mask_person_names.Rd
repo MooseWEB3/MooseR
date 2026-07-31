@@ -47,6 +47,9 @@ Healthcare organization names ending in words such as \code{Hospital}, \code{Cli
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such
 as \code{Normal Saline IV}, and clinical document labels such as \code{RN Report}, are
 excluded from name matching in both engines.
+The 334 official Alberta municipality names are also excluded in both
+engines, including names such as \code{Medicine Hat}, \code{Red Deer}, and
+\code{Rocky Mountain House}.
 }
 \examples{
 \dontrun{
