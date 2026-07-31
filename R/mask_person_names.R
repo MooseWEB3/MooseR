@@ -13,6 +13,9 @@
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
 #' as `Normal Saline IV`, and clinical document labels such as `RN Report`, are
 #' excluded from name matching in both engines.
+#' The 334 official Alberta municipality names are also excluded in both
+#' engines, including names such as `Medicine Hat`, `Red Deer`, and
+#' `Rocky Mountain House`.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -367,6 +370,20 @@ detect_person_names_regex <- function(text) {
 
     row_result <- do.call(rbind, row_matches)
     row_result <- trim_detected_name_bounds(row_result)
+    keep <- !mapply(
+      is_nonperson_name_candidate,
+      text = value,
+      start = row_result$start,
+      end = row_result$end,
+      USE.NAMES = FALSE
+    )
+    row_result <- row_result[keep, , drop = FALSE]
+
+    if (nrow(row_result) == 0L) {
+      result[[row_id]] <- NULL
+      next
+    }
+
     row_result <- remove_overlapping_name_matches(row_result)
     result[[row_id]] <- row_result
   }
@@ -386,7 +403,7 @@ name_person_regex_patterns <- function() {
   person_word <- name_person_title_case_word_pattern()
 
   c(
-    name_title_regex_pattern(),
+    name_title_regex_pattern(exclude_municipalities = FALSE),
     paste0(
       "\\b",
       person_word,
@@ -433,7 +450,9 @@ name_organization_word_pattern <- function() {
       c(
         "Hospital", "Hospitals", "Clinic", "Clinics", "Centre", "Centres",
         "Center", "Centers", "Health", "Healthcare", "Medical", "Care",
-        "Authority", "Hospice", "Foundation"
+        "Authority", "Hospice", "Foundation", "City", "Town", "Village",
+        "Municipal", "Municipality", "County", "District", "Improvement",
+        "Special", "Areas"
       ),
       collapse = "|"
     ),
@@ -486,6 +505,10 @@ name_nonperson_suffix_guard <- function() {
 
 is_nonperson_name_candidate <- function(text, start, end) {
   candidate <- substr(text, start, end)
+  if (is_alberta_municipality_candidate(candidate)) {
+    return(TRUE)
+  }
+
   nonperson_word <- name_nonperson_word_pattern()
 
   if (grepl(paste0("\\b", nonperson_word, "\\b"), candidate, perl = TRUE)) {
@@ -522,12 +545,18 @@ spacy_entity_is_person <- function(entity, document_text) {
   !is_nonperson_name_candidate(document_text, start, end)
 }
 
-name_title_regex_pattern <- function() {
+name_title_regex_pattern <- function(exclude_municipalities = TRUE) {
   word <- name_context_word_pattern()
+  municipality_guard <- if (isTRUE(exclude_municipalities)) {
+    alberta_municipality_exact_guard()
+  } else {
+    ""
+  }
 
   paste0(
     "\\b(?:Mr|Mrs|Ms|Miss|Dr|Doctor|RN|Paramedic|EMT)",
     "\\.?\\s+",
+    municipality_guard,
     word,
     "(?:\\s+", word, "){0,2}",
     "(?![A-Za-z'-])",
@@ -535,12 +564,18 @@ name_title_regex_pattern <- function() {
   )
 }
 
-name_workflow_regex_pattern <- function() {
+name_workflow_regex_pattern <- function(exclude_municipalities = TRUE) {
   word <- name_context_word_pattern()
+  municipality_guard <- if (isTRUE(exclude_municipalities)) {
+    alberta_municipality_exact_guard()
+  } else {
+    ""
+  }
 
   paste0(
     "(?i:\\b(?:reviewed|assessed|signed|completed|reported)\\s+by\\s+)",
     "\\K",
+    municipality_guard,
     word,
     "(?:\\s+", word, "){0,2}",
     "(?![A-Za-z'-])",
