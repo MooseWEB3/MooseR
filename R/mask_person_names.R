@@ -487,7 +487,8 @@ name_clinical_terms <- function() {
     # Clinical context and documentation
     "Clinical", "Emergency", "Diagnosis", "Treatment", "Therapy", "Surgery",
     "Procedure", "Complain", "Complaint", "Complaints", "Transplant",
-    "Transplants", "Transplantation",
+    "Transplants", "Transplantation", "Nursing", "Nurse", "Nurses",
+    "Practitioner", "Practitioners",
     "Assessment", "Documentation", "Report", "Reports", "Note", "Notes",
     "Record", "Records", "Chart", "Charts", "Form", "Forms", "Summary",
     "Summaries", "Handover", "Triage", "Transport", "Transfer", "Arrival",
