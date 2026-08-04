@@ -227,7 +227,7 @@ Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
 `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
 `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
-`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Patient Demographics`,
+`Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
 and `Opioid Overdose`.
 This whitelist intentionally takes precedence over the title-case name pattern;
@@ -562,7 +562,7 @@ La liste blanche médicale intégrée conserve aussi les expressions avec
 majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`,
 `On Arrival`, `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`,
 `Altered Mental Status`,
-`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Patient Demographics`,
+`Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
 `Opioid Overdose`.
 Cette liste blanche a volontairement priorité sur le modèle de nom avec
@@ -901,7 +901,7 @@ Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
 como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
 `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
-`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Patient Demographics`,
+`Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`,
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
 Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
