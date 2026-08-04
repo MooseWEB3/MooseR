@@ -10,7 +10,7 @@
 #' `TRUE`.
 #' Comma-separated names such as `Smith, John`, `SMITH, JOHN`, and
 #' `St-Pierre, Anne-Marie` are detected in both engines. Canadian geographic
-#' forms such as `Edmonton, Alberta` are excluded.
+#' forms such as `Edmonton, Alberta` and `Avenue, Calgary` are excluded.
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
@@ -589,6 +589,25 @@ is_canadian_geographic_comma_candidate <- function(candidate) {
   )
 }
 
+is_alberta_municipality_comma_candidate <- function(candidate) {
+  has_comma <- !is.na(candidate) & grepl(",", candidate, fixed = TRUE)
+  result <- rep.int(FALSE, length(candidate))
+
+  if (!any(has_comma)) {
+    return(result)
+  }
+
+  suffix <- sub("^.*,\\s*", "", candidate[has_comma], perl = TRUE)
+  suffix <- gsub(
+    "^[[:punct:][:space:]]+|[[:punct:][:space:]]+$",
+    "",
+    suffix,
+    perl = TRUE
+  )
+  result[has_comma] <- is_alberta_municipality_name(suffix)
+  result
+}
+
 is_canadian_geographic_name_candidate <- function(candidate) {
   grepl(
     paste0("^", name_canadian_geographic_suffix_pattern(), "\\.?$"),
@@ -819,6 +838,7 @@ is_nonperson_name_candidate <- function(text, start, end) {
 
   if (
     is_canadian_geographic_comma_candidate(candidate) ||
+      is_alberta_municipality_comma_candidate(candidate) ||
       is_canadian_geographic_name_candidate(candidate)
   ) {
     return(TRUE)

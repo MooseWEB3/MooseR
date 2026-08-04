@@ -54,7 +54,7 @@ names. All-uppercase names are accepted after a supported title, such as
 \code{TRUE}.
 Comma-separated names such as \code{Smith, John}, \code{SMITH, JOHN}, and
 \code{St-Pierre, Anne-Marie} are detected in both engines. Canadian geographic
-forms such as \code{Edmonton, Alberta} are excluded.
+forms such as \code{Edmonton, Alberta} and \code{Avenue, Calgary} are excluded.
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
 \code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such

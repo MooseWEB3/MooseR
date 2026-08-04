@@ -15,7 +15,7 @@
 #' `TRUE`, a supported workflow phrase such as `Reviewed by`.
 #' Comma-separated names such as `Smith, John`, `SMITH, JOHN`, and
 #' `St-Pierre, Anne-Marie` are detected. Canadian geographic forms such as
-#' `Edmonton, Alberta` are excluded.
+#' `Edmonton, Alberta` and `Avenue, Calgary` are excluded.
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
@@ -207,6 +207,7 @@ moose_name_flag_patterns <- function(text, patterns) {
       )
       geographic <-
         is_canadian_geographic_comma_candidate(candidates) |
+        is_alberta_municipality_comma_candidate(candidates) |
         is_canadian_geographic_name_candidate(candidates)
       municipalities <- is_alberta_municipality_candidate(candidates)
       facilities <- is_alberta_health_facility_candidate_values(
