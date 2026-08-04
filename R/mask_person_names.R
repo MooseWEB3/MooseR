@@ -522,6 +522,7 @@ name_clinical_terms <- function() {
     "Transplants", "Transplantation", "Nursing", "Nurse", "Nurses",
     "Practitioner", "Practitioners",
     "Assessment", "Documentation", "Report", "Reports", "Note", "Notes",
+    "Event", "Events",
     "Cause", "Causes", "Caused", "Causation",
     "Record", "Records", "Chart", "Charts", "Form", "Forms", "Summary",
     "Summaries", "Demographic", "Demographics", "Handover", "Triage",
