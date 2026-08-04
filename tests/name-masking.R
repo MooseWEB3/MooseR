@@ -135,6 +135,30 @@ stopifnot(
   Moose_name_flag("Pt John Smith", engine = "regex") == 1L
 )
 
+patient_abbreviation_examples <- c(
+  "Pt",
+  "Pt Syncopal",
+  "Pt Smith",
+  "Pt John Smith",
+  "Pt. Sarah Johnson"
+)
+
+stopifnot(
+  identical(
+    Moose_mask_person_names(patient_abbreviation_examples, engine = "regex"),
+    c("Pt", "Pt Syncopal", "Pt [NAME]", "Pt [NAME]", "Pt. [NAME]")
+  ),
+  identical(
+    Moose_name_flag(patient_abbreviation_examples, engine = "regex"),
+    c(0L, 0L, 1L, 1L, 1L)
+  ),
+  identical(
+    MooseR:::patient_abbreviation_adjusted_bounds("Pt Smith", 1L, 8L),
+    list(start = 4L, end = 8L)
+  ),
+  is.null(MooseR:::patient_abbreviation_adjusted_bounds("Pt", 1L, 2L))
+)
+
 medical_examples <- c(
   "Chief Complain",
   "Chief Complaint",

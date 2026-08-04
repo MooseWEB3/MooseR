@@ -239,14 +239,14 @@ detect_person_names <- function(text,
       simplify = FALSE
     )
 
-    entities <- Filter(
-      function(entity) {
-        spacy_entity_is_person(entity, document_text)
-      },
-      entities
+    bounds <- lapply(
+      entities,
+      spacy_person_entity_bounds,
+      document_text = document_text
     )
+    bounds <- Filter(Negate(is.null), bounds)
 
-    if (length(entities) == 0L) {
+    if (length(bounds) == 0L) {
       result[[i]] <- NULL
       next
     }
@@ -254,23 +254,23 @@ detect_person_names <- function(text,
     result[[i]] <- data.frame(
       row_id = valid_indices[i],
       detected_name = vapply(
-        entities,
-        function(entity) {
-          reticulate::py_to_r(entity$text)
+        bounds,
+        function(bound) {
+          substr(document_text, bound$start, bound$end)
         },
         character(1)
       ),
       start = vapply(
-        entities,
-        function(entity) {
-          as.integer(reticulate::py_to_r(entity$start_char)) + 1L
+        bounds,
+        function(bound) {
+          bound$start
         },
         integer(1)
       ),
       end = vapply(
-        entities,
-        function(entity) {
-          as.integer(reticulate::py_to_r(entity$end_char))
+        bounds,
+        function(bound) {
+          bound$end
         },
         integer(1)
       ),
@@ -420,6 +420,7 @@ name_person_regex_patterns <- function() {
   person_word <- name_person_title_case_word_pattern()
 
   c(
+    name_patient_abbreviation_regex_pattern(),
     name_title_regex_pattern(exclude_municipalities = FALSE),
     paste0(
       "\\b",
@@ -429,6 +430,19 @@ name_person_regex_patterns <- function() {
       "(?![A-Za-z'-])",
       name_nonperson_suffix_guard()
     )
+  )
+}
+
+name_patient_abbreviation_regex_pattern <- function() {
+  word <- name_context_word_pattern()
+
+  paste0(
+    "(?i:\\bPt\\.?\\s+)",
+    "\\K",
+    word,
+    "(?:\\s+", word, "){0,2}",
+    "(?![A-Za-z'-])",
+    name_nonperson_suffix_guard()
   )
 }
 
@@ -455,6 +469,7 @@ name_context_word_pattern <- function() {
 
 name_person_title_case_word_pattern <- function() {
   paste0(
+    "(?!(?i:Pt)\\b)",
     "(?!", name_regex_excluded_word_pattern(), "\\b)",
     name_title_case_word_pattern()
   )
@@ -677,15 +692,44 @@ is_nonperson_name_candidate <- function(text, start, end) {
   )
 }
 
-spacy_entity_is_person <- function(entity, document_text) {
+patient_abbreviation_adjusted_bounds <- function(text, start, end) {
+  candidate <- substr(text, start, end)
+
+  if (grepl("(?i)^Pt\\.?$", trimws(candidate), perl = TRUE)) {
+    return(NULL)
+  }
+
+  prefix <- regexpr("(?i)^Pt\\.?\\s+", candidate, perl = TRUE)
+
+  if (identical(as.integer(prefix), 1L)) {
+    start <- start + as.integer(attr(prefix, "match.length"))
+  }
+
+  list(start = as.integer(start), end = as.integer(end))
+}
+
+spacy_person_entity_bounds <- function(entity, document_text) {
   if (!identical(reticulate::py_to_r(entity$label_), "PERSON")) {
-    return(FALSE)
+    return(NULL)
   }
 
   start <- as.integer(reticulate::py_to_r(entity$start_char)) + 1L
   end <- as.integer(reticulate::py_to_r(entity$end_char))
+  bounds <- patient_abbreviation_adjusted_bounds(document_text, start, end)
 
-  !is_nonperson_name_candidate(document_text, start, end)
+  if (is.null(bounds)) {
+    return(NULL)
+  }
+
+  if (is_nonperson_name_candidate(document_text, bounds$start, bounds$end)) {
+    return(NULL)
+  }
+
+  bounds
+}
+
+spacy_entity_is_person <- function(entity, document_text) {
+  !is.null(spacy_person_entity_bounds(entity, document_text))
 }
 
 name_title_regex_pattern <- function(exclude_municipalities = TRUE) {
@@ -786,29 +830,29 @@ mask_single_spacy_document <- function(document, replacement) {
     return(original_text)
   }
 
-  person_entities <- Filter(
-    function(entity) {
-      spacy_entity_is_person(entity, original_text)
-    },
-    entities
+  person_bounds <- lapply(
+    entities,
+    spacy_person_entity_bounds,
+    document_text = original_text
   )
+  person_bounds <- Filter(Negate(is.null), person_bounds)
 
-  if (length(person_entities) == 0L) {
+  if (length(person_bounds) == 0L) {
     return(original_text)
   }
 
   positions <- data.frame(
     start = vapply(
-      person_entities,
-      function(entity) {
-        as.integer(reticulate::py_to_r(entity$start_char))
+      person_bounds,
+      function(bound) {
+        bound$start
       },
       integer(1)
     ),
     end = vapply(
-      person_entities,
-      function(entity) {
-        as.integer(reticulate::py_to_r(entity$end_char))
+      person_bounds,
+      function(bound) {
+        bound$end
       },
       integer(1)
     )
@@ -827,8 +871,7 @@ mask_single_spacy_document <- function(document, replacement) {
   output <- original_text
 
   for (i in seq_len(nrow(positions))) {
-    # spaCy offsets are zero-based and end-exclusive.
-    start_r <- positions$start[i] + 1L
+    start_r <- positions$start[i]
     end_r <- positions$end[i]
 
     left_text <- if (start_r > 1L) {

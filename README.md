@@ -236,7 +236,8 @@ audit data where a real person's name could contain one of these terms.
 Location phrases such as `Private Residence`, `West Side`, `Costco Store`, and
 `Edmonton International Airport`,
 and clinical states such as `Pt Syncopal` and `Heavily Intoxicated`, are also
-preserved.
+preserved. `Pt` is treated as the patient abbreviation: it remains visible in
+`Pt Smith`, while the name is masked as `Pt [NAME]`.
 These exclusions are applied to both the regex and spaCy engines.
 MooseR also preserves all 334 official Alberta municipality names, including
 `Medicine Hat`, `Red Deer`, and `Rocky Mountain House`. The registry follows
@@ -572,7 +573,8 @@ majuscules initiales ; vérifiez les données lorsqu'un vrai nom de personne peu
 contenir l'un de ces termes.
 Les expressions de lieu comme `Private Residence`, `West Side`, `Costco Store`
 et `Edmonton International Airport`, ainsi que les états cliniques comme `Pt Syncopal` et
-`Heavily Intoxicated`, sont également conservés.
+`Heavily Intoxicated`, sont également conservés. `Pt` est traité comme
+l'abréviation de patient : dans `Pt Smith`, seul le nom est masqué (`Pt [NAME]`).
 Ces exclusions s'appliquent aux moteurs regex et spaCy.
 MooseR conserve également les 334 noms officiels des municipalités de
 l'Alberta, notamment `Medicine Hat`, `Red Deer` et `Rocky Mountain House`. Le
@@ -912,7 +914,8 @@ maiúsculas; audite os dados quando um nome real puder conter um destes termos.
 As expressões de local como `Private Residence`, `West Side`, `Costco Store` e
 `Edmonton International Airport`,
 bem como os estados clínicos como `Pt Syncopal` e `Heavily Intoxicated`, também
-são preservados.
+são preservados. `Pt` é tratado como abreviatura de paciente: em `Pt Smith`,
+apenas o nome é mascarado (`Pt [NAME]`).
 Estas exclusões aplicam-se aos motores regex e spaCy.
 O MooseR também preserva os 334 nomes oficiais dos municípios de Alberta,
 incluindo `Medicine Hat`, `Red Deer` e `Rocky Mountain House`. O registo segue
