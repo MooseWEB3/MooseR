@@ -28,6 +28,7 @@
 #' Common title-cased medical phrases, including `Chief Complaint`,
 #' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`,
 #' `Bus Stop`, `Language Barrier`, `Cognitive Impairment`, `Emerge Call`,
+#' `Contact Droplet`,
 #' `Situational Crisis`, and
 #' `Non Small Cell Lung` are excluded through curated
 #' non-person whitelists.
