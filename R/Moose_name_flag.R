@@ -39,6 +39,9 @@
 #' in the text.
 #' The 2,616 unique school names in the Alberta Education School Information
 #' Report are also excluded when the complete school name occurs in the text.
+#' When `data` and `name_columns` are supplied, each text value is additionally
+#' compared with the known names from the same row. These explicit references
+#' take precedence over the non-person whitelists.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
@@ -46,6 +49,12 @@
 #' @param apply_rules Logical. If `TRUE`, include title-based and workflow-based
 #'   supplementary rules, matching the default behavior of
 #'   [Moose_mask_person_names()].
+#' @param data Optional data frame containing row-aligned known-name columns.
+#'   Supply this together with `name_columns`.
+#' @param name_columns Optional character vector naming columns in `data`, in
+#'   natural name order, such as `c("first_name", "last_name")`. Values are
+#'   matched against `text` in the same row using case-insensitive whole-word
+#'   matching. Full names and `Lastname, Firstname` forms are also matched.
 #'
 #' @return An integer vector with the same length as `text`, containing `1L`
 #'   when a personal name is detected and `0L` otherwise.
@@ -58,11 +67,25 @@
 #' )
 #' Moose_name_flag(comments, engine = "regex")
 #'
+#' records <- data.frame(
+#'   comments = c("Alice Smith called.", "No name here."),
+#'   first_name = c("Alice", "Bob"),
+#'   last_name = c("Smith", "Jones")
+#' )
+#' Moose_name_flag(
+#'   records$comments,
+#'   engine = "regex",
+#'   data = records,
+#'   name_columns = c("first_name", "last_name")
+#' )
+#'
 #' @export
 Moose_name_flag <- function(text,
                             batch_size = 100L,
                             engine = c("auto", "spacy", "regex"),
-                            apply_rules = TRUE) {
+                            apply_rules = TRUE,
+                            data = NULL,
+                            name_columns = NULL) {
   engine <- match.arg(engine)
 
   if (is.factor(text)) {
@@ -86,8 +109,29 @@ Moose_name_flag <- function(text,
     stop("`apply_rules` must be TRUE or FALSE.", call. = FALSE)
   }
 
+  use_known_names <- validate_known_name_column_inputs(
+    text = text,
+    data = data,
+    name_columns = name_columns
+  )
+
   if (length(text) == 0L) {
     return(integer())
+  }
+
+  flag <- if (use_known_names) {
+    flag_known_name_columns(
+      text = text,
+      data = data,
+      name_columns = name_columns
+    )
+  } else {
+    integer(length(text))
+  }
+  pending <- which(flag == 0L)
+
+  if (!length(pending)) {
+    return(flag)
   }
 
   state <- get_name_masking_state()
@@ -104,20 +148,20 @@ Moose_name_flag <- function(text,
   using_spacy <- identical(state$engine, "spacy") && !is.null(state$model)
 
   if (!using_spacy) {
-    flag <- moose_name_flag_regex(text)
+    flag[pending] <- moose_name_flag_regex(text[pending])
   } else {
-    flag <- moose_name_flag_spacy(
-      text = text,
+    flag[pending] <- moose_name_flag_spacy(
+      text = text[pending],
       batch_size = batch_size,
       model = state$model
     )
   }
 
   if (isTRUE(apply_rules)) {
-    flag <- pmax.int(
-      flag,
+    flag[pending] <- pmax.int(
+      flag[pending],
       moose_name_flag_supplementary(
-        text,
+        text[pending],
         include_title = using_spacy
       )
     )

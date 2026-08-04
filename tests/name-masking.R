@@ -204,6 +204,86 @@ stopifnot(
   nrow(Moose_detect_person_names(comma_nonperson_examples, engine = "regex")) == 0L
 )
 
+known_name_records <- data.frame(
+  comments = c(
+    "ALICE SMITH called alice.",
+    "Spoke to Tremblay, Jean-Paul.",
+    "Joann spoke to o'neil.",
+    "Heart Transplant was listed.",
+    "ann arrived",
+    "Status unknown",
+    NA
+  ),
+  first_name = factor(c(
+    "Alice", "Jean-Paul", "Ann", "Heart", "Bob", "Unknown", "Sarah"
+  )),
+  last_name = c(
+    "Smith", "Tremblay", "O'Neil", "Transplant", "Jones", NA, "Brown"
+  ),
+  stringsAsFactors = FALSE
+)
+
+known_name_expected <- c(
+  "[NAME] called [NAME].",
+  "Spoke to [NAME].",
+  "Joann spoke to [NAME].",
+  "[NAME] was listed.",
+  "ann arrived",
+  "Status unknown",
+  NA
+)
+
+known_name_masked <- Moose_mask_person_names(
+  known_name_records$comments,
+  engine = "regex",
+  data = known_name_records,
+  name_columns = c("first_name", "last_name")
+)
+known_name_flagged <- Moose_name_flag(
+  known_name_records$comments,
+  engine = "regex",
+  data = known_name_records,
+  name_columns = c("first_name", "last_name")
+)
+
+stopifnot(
+  identical(known_name_masked, known_name_expected),
+  identical(known_name_flagged, c(1L, 1L, 1L, 1L, 0L, 0L, 0L)),
+  identical(
+    Moose_mask_person_names(
+      known_name_records$comments,
+      engine = "regex",
+      keep_original = TRUE,
+      data = known_name_records,
+      name_columns = c("first_name", "last_name")
+    )$masked_text,
+    known_name_expected
+  ),
+  inherits(
+    tryCatch(
+      Moose_name_flag(
+        known_name_records$comments,
+        engine = "regex",
+        data = known_name_records,
+        name_columns = "missing_name"
+      ),
+      error = identity
+    ),
+    "error"
+  ),
+  inherits(
+    tryCatch(
+      Moose_mask_person_names(
+        known_name_records$comments,
+        engine = "regex",
+        name_columns = c("first_name", "last_name")
+      ),
+      error = identity
+    ),
+    "error"
+  )
+)
+
 medical_abbreviation_examples <- c(
   "Hx Collected",
   "PMHx Reviewed",
