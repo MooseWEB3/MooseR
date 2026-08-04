@@ -490,7 +490,10 @@ name_clinical_terms <- function() {
     "Transplants", "Transplantation",
     "Assessment", "Documentation", "Report", "Reports", "Note", "Notes",
     "Record", "Records", "Chart", "Charts", "Form", "Forms", "Summary",
-    "Summaries", "Handover", "Triage", "Transport", "Transfer",
+    "Summaries", "Handover", "Triage", "Transport", "Transfer", "Arrival",
+    "Arrivals", "Arrived", "Scene", "Scenes", "Admission", "Admissions",
+    "Admitted", "Discharge", "Discharges", "Discharged", "Presentation",
+    "Presentations", "Presented", "Enroute", "Departure", "Departed",
     "Ambulance", "Resuscitation", "Extrication", "Status", "Activity",
     # Severity, anatomy, and body systems
     "Acute", "Chronic", "Severe", "Cardia", "Cardiac", "Cardiovascular",
