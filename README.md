@@ -272,6 +272,12 @@ covering public, separate, Francophone, charter, independent, First Nations,
 ECS private-operator, and provincial schools. Matching is case-insensitive, and
 the complete school name must occur in the text. A person's name that is also
 part of a school name is still detected when the full school name is absent.
+MooseR also preserves 12,435 English and French brand and active-ingredient
+names for marketed or approved human drugs from the Health Canada
+[Drug Product Database](https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/drug-product-database/what-data-extract-drug-product-database.html).
+Matching is case-insensitive and ignores accents and punctuation. A partial
+match is excluded only when the complete registered drug name occurs in the
+text, which limits collisions with personal names.
 
 Mask names in a character vector:
 
@@ -657,6 +663,14 @@ services à la petite enfance et les écoles provinciales. La comparaison ne
 tient pas compte de la casse et le nom complet de l'école doit figurer dans le
 texte. Un nom de personne qui fait partie d'un nom d'école reste détecté lorsque
 le nom complet de l'école est absent.
+MooseR conserve aussi 12 435 noms anglais et français de marques et
+d'ingrédients actifs de médicaments humains commercialisés ou approuvés,
+provenant de la
+[Base de données sur les produits pharmaceutiques](https://www.canada.ca/fr/sante-canada/services/medicaments-produits-sante/medicaments/base-donnees-produits-pharmaceutiques/extrait-donnees-base-donnees-produits-pharmaceutiques.html)
+de Santé Canada. La comparaison ne tient pas compte de la casse, des accents
+ni de la ponctuation. Une correspondance partielle n'est exclue que lorsque le
+nom complet du médicament enregistré figure dans le texte, afin de limiter les
+conflits avec les noms de personnes.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -1040,6 +1054,14 @@ infantil e escolas provinciais. A correspondência não diferencia maiúsculas d
 minúsculas e o nome completo da escola deve aparecer no texto. Um nome pessoal
 que também faça parte do nome de uma escola continua a ser detetado quando o
 nome completo da escola não está presente.
+O MooseR também preserva 12.435 nomes em inglês e francês de marcas e
+ingredientes ativos de medicamentos humanos comercializados ou aprovados,
+obtidos da
+[Drug Product Database](https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/drug-product-database/what-data-extract-drug-product-database.html)
+da Health Canada. A correspondência não diferencia maiúsculas de minúsculas e
+ignora acentos e pontuação. Uma correspondência parcial só é excluída quando o
+nome completo do medicamento registado aparece no texto, reduzindo conflitos
+com nomes de pessoas.
 
 Mascarar nomes num vetor de texto:
 

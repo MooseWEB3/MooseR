@@ -40,6 +40,9 @@
 #' in the text.
 #' The 2,616 unique school names in the Alberta Education School Information
 #' Report are also excluded when the complete school name occurs in the text.
+#' The 12,435 English and French brand and active-ingredient names for marketed
+#' or approved human drugs in the Health Canada Drug Product Database are also
+#' excluded. Matching is case-insensitive and ignores accents and punctuation.
 #' When `data` and `name_columns` are supplied, each text value is additionally
 #' compared with the known names from the same row. These explicit references
 #' take precedence over the non-person whitelists.
@@ -224,13 +227,18 @@ moose_name_flag_patterns <- function(text, patterns) {
         text = text[remaining[matched_pending]],
         candidate = candidates
       )
+      drugs <- is_health_canada_drug_candidate_values(
+        text = text[remaining[matched_pending]],
+        candidate = candidates
+      )
       medical <- is_clinical_nonperson_candidate_values(
         text = values[matched],
         start = starts,
         end = starts + lengths - 1L,
         candidate = candidates
       )
-      nonpeople <- geographic | municipalities | facilities | schools | medical
+      nonpeople <-
+        geographic | municipalities | facilities | schools | drugs | medical
       people <- matched_pending[!nonpeople]
 
       if (length(people)) {
