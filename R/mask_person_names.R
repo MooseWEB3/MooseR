@@ -497,7 +497,8 @@ name_clinical_terms <- function() {
     "Interfacility", "Intrafacility", "Interhospital", "Interagency",
     "Arrival", "Arrivals", "Arrived", "Scene", "Scenes", "Admission", "Admissions",
     "Admitted", "Discharge", "Discharges", "Discharged", "Presentation",
-    "Presentations", "Presented", "Enroute", "Departure", "Departed",
+    "Presentations", "Presented", "Enroute", "Route", "Routes", "Routing",
+    "Departure", "Departed",
     "Ambulance", "Resuscitation", "Extrication", "Status", "Activity",
     "Code", "Codes",
     # Severity, anatomy, and body systems
