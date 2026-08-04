@@ -1,6 +1,6 @@
 Package: MooseR
 Title: Data Cleaning and Summary Utility Functions
-Version: 0.0.0.9024
+Version: 0.0.0.9025
 Authors@R:
     person("LisbonBulldog", email = "develop@lisbonbulldog.xyz", role = c("aut", "cre"))
 Description: A collection of utility functions for common data wrangling tasks,

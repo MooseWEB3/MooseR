@@ -21,8 +21,9 @@
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
-#' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`, and
-#' `Bus Stop`, are excluded through curated non-person whitelists.
+#' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`,
+#' `Bus Stop`, and `Non Small Cell Lung` are excluded through curated
+#' non-person whitelists.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
 #' The 334 official Alberta municipality names are also excluded in both
@@ -716,7 +717,9 @@ name_clinical_phrases <- function() {
     "Edmonton General",
     "Safety Alerted",
     "Not Feeling",
-    "Bus Stop"
+    "Bus Stop",
+    "Non Small Cell Lung",
+    "Non-Small Cell Lung"
   )
 }
 
@@ -735,6 +738,55 @@ normalize_clinical_phrase <- function(value) {
 is_clinical_phrase_candidate_values <- function(candidate) {
   normalize_clinical_phrase(candidate) %in%
     normalize_clinical_phrase(name_clinical_phrases())
+}
+
+name_clinical_phrase_regex_pattern <- local({
+  pattern <- NULL
+
+  function() {
+    if (!is.null(pattern)) {
+      return(pattern)
+    }
+
+    phrases <- name_clinical_phrases()
+    phrases <- phrases[order(nchar(phrases), decreasing = TRUE)]
+    escaped <- escape_name_regex_literal(phrases)
+    escaped <- gsub(" ", "\\s+", escaped, fixed = TRUE)
+    pattern <<- paste0(
+      "(?<![A-Za-z'-])(?i:(?:",
+      paste(escaped, collapse = "|"),
+      "))(?![A-Za-z'-])"
+    )
+    pattern
+  }
+})
+
+is_clinical_phrase_span_values <- function(text, start, end) {
+  lengths <- c(length(text), length(start), length(end))
+
+  if (length(unique(lengths)) != 1L) {
+    stop("Clinical phrase span inputs must have the same length.", call. = FALSE)
+  }
+
+  result <- rep.int(FALSE, length(text))
+  valid <- which(!is.na(text) & !is.na(start) & !is.na(end))
+
+  for (i in valid) {
+    matches <- gregexpr(
+      name_clinical_phrase_regex_pattern(),
+      text[i],
+      perl = TRUE
+    )[[1]]
+
+    if (identical(matches[1], -1L)) {
+      next
+    }
+
+    match_ends <- matches + attr(matches, "match.length") - 1L
+    result[i] <- any(matches <= start[i] & match_ends >= end[i])
+  }
+
+  result
 }
 
 name_clinical_word_pattern <- local({
@@ -786,7 +838,9 @@ is_clinical_nonperson_candidate_values <- function(text, start, end, candidate) 
     stop("Clinical candidate inputs must have the same length.", call. = FALSE)
   }
 
-  result <- is_clinical_phrase_candidate_values(candidate)
+  result <-
+    is_clinical_phrase_candidate_values(candidate) |
+    is_clinical_phrase_span_values(text, start, end)
 
   if (!length(candidate)) {
     return(result)
@@ -835,7 +889,10 @@ is_clinical_nonperson_candidate_values <- function(text, start, end, candidate) 
 is_nonperson_name_candidate <- function(text, start, end) {
   candidate <- substr(text, start, end)
 
-  if (is_clinical_phrase_candidate_values(candidate)) {
+  if (
+    is_clinical_phrase_candidate_values(candidate) ||
+      is_clinical_phrase_span_values(text, start, end)
+  ) {
     return(TRUE)
   }
 
