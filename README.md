@@ -224,6 +224,11 @@ Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
 `Syndrome` are also preserved; for example, `Cardia Chest Pain` is not masked.
 Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
+The built-in medical whitelist also preserves title-cased phrases such as
+`Altered Mental Status`, `Nausea Vomiting`, `Blood Pressure`, `Cervical Spine`,
+`Seizure Activity`, and `Opioid Overdose`.
+This whitelist intentionally takes precedence over the title-case name pattern;
+audit data where a real person's name could contain one of these terms.
 Location phrases such as `Private Residence`, `West Side`, `Costco Store`, and
 `Edmonton International Airport`,
 and clinical states such as `Pt Syncopal` and `Heavily Intoxicated`, are also
@@ -550,6 +555,12 @@ ou `Syndrome` sont également conservées ; par exemple, `Cardia Chest Pain`
 n'est pas masqué.
 Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
+La liste blanche médicale intégrée conserve aussi les expressions avec
+majuscules initiales comme `Altered Mental Status`, `Nausea Vomiting`,
+`Blood Pressure`, `Cervical Spine`, `Seizure Activity` et `Opioid Overdose`.
+Cette liste blanche a volontairement priorité sur le modèle de nom avec
+majuscules initiales ; vérifiez les données lorsqu'un vrai nom de personne peut
+contenir l'un de ces termes.
 Les expressions de lieu comme `Private Residence`, `West Side`, `Costco Store`
 et `Edmonton International Airport`, ainsi que les états cliniques comme `Pt Syncopal` et
 `Heavily Intoxicated`, sont également conservés.
@@ -880,6 +891,11 @@ As expressões clínicas que contêm palavras como `Chest`, `Pain`, `Disease` ou
 mascarado.
 As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
+A lista médica integrada também preserva expressões iniciadas por maiúsculas,
+como `Altered Mental Status`, `Nausea Vomiting`, `Blood Pressure`,
+`Cervical Spine`, `Seizure Activity` e `Opioid Overdose`.
+Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
+maiúsculas; audite os dados quando um nome real puder conter um destes termos.
 As expressões de local como `Private Residence`, `West Side`, `Costco Store` e
 `Edmonton International Airport`,
 bem como os estados clínicos como `Pt Syncopal` e `Heavily Intoxicated`, também

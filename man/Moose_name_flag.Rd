@@ -50,6 +50,11 @@ Non-person location phrases ending in \code{Residence}, \code{Store}, \code{Side
 \code{Airport}, and
 clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, or
 \code{Intoxication}, are also excluded.
+Common title-cased medical phrases, including \code{Altered Mental Status},
+\code{Nausea Vomiting}, \code{Blood Pressure}, \code{Cervical Spine}, and
+\code{Opioid Overdose}, are excluded through a curated medical-term whitelist.
+This whitelist takes precedence over the title-case name pattern, so audit
+data where a real person's name could contain one of these terms.
 The 334 official Alberta municipality names are also excluded in both
 engines.
 The Alberta place name \code{Fort McMurray} and the common spelling

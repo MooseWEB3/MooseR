@@ -22,6 +22,11 @@
 #' `Airport`, and
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
+#' Common title-cased medical phrases, including `Altered Mental Status`,
+#' `Nausea Vomiting`, `Blood Pressure`, `Cervical Spine`, and
+#' `Opioid Overdose`, are excluded through a curated medical-term whitelist.
+#' This whitelist takes precedence over the title-case name pattern, so audit
+#' data where a real person's name could contain one of these terms.
 #' The 334 official Alberta municipality names are also excluded in both
 #' engines.
 #' The Alberta place name `Fort McMurray` and the common spelling
@@ -162,7 +167,13 @@ moose_name_flag_patterns <- function(text, patterns) {
         text = text[remaining[matched_pending]],
         candidate = candidates
       )
-      nonpeople <- municipalities | facilities | schools
+      medical <- is_clinical_nonperson_candidate_values(
+        text = values[matched],
+        start = starts,
+        end = starts + lengths - 1L,
+        candidate = candidates
+      )
+      nonpeople <- municipalities | facilities | schools | medical
       people <- matched_pending[!nonpeople]
 
       if (length(people)) {

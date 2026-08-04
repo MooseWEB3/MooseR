@@ -134,3 +134,46 @@ stopifnot(
   nrow(Moose_detect_person_names(nonperson_examples, engine = "regex")) == 0L,
   Moose_name_flag("Pt John Smith", engine = "regex") == 1L
 )
+
+medical_examples <- c(
+  "Altered Mental Status",
+  "Motor Vehicle Collision",
+  "Ground Level Fall",
+  "Right Arm Weakness",
+  "Nausea Vomiting",
+  "Fever Chills",
+  "Septic Shock",
+  "Allergic Reaction",
+  "Blood Pressure",
+  "Heart Rate",
+  "Oxygen Saturation",
+  "Suicidal Ideation",
+  "Urinary Retention",
+  "Cervical Spine",
+  "Facial Laceration",
+  "Seizure Activity",
+  "Gastrointestinal Bleeding",
+  "Opioid Overdose",
+  "Alcohol Withdrawal",
+  "Naloxone Infusion"
+)
+
+stopifnot(
+  !anyDuplicated(MooseR:::name_clinical_terms()),
+  identical(
+    Moose_mask_person_names(medical_examples, engine = "regex"),
+    medical_examples
+  ),
+  identical(
+    Moose_name_flag(medical_examples, engine = "regex"),
+    integer(length(medical_examples))
+  ),
+  nrow(Moose_detect_person_names(medical_examples, engine = "regex")) == 0L,
+  identical(
+    Moose_mask_person_names(
+      c("John Smith", "Sarah Johnson"),
+      engine = "regex"
+    ),
+    c("[NAME]", "[NAME]")
+  )
+)
