@@ -22,7 +22,7 @@
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
 #' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`,
-#' `Bus Stop`, and `Non Small Cell Lung` are excluded through curated
+#' `Bus Stop`, `Situational Crisis`, and `Non Small Cell Lung` are excluded through curated
 #' non-person whitelists.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
@@ -719,7 +719,8 @@ name_clinical_phrases <- function() {
     "Not Feeling",
     "Bus Stop",
     "Non Small Cell Lung",
-    "Non-Small Cell Lung"
+    "Non-Small Cell Lung",
+    "Situational Crisis"
   )
 }
 
