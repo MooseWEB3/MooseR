@@ -19,6 +19,72 @@ stopifnot(
   ))
 )
 
+drugs <- MooseR:::health_canada_drugs()
+normalized_drugs <- MooseR:::health_canada_drug_names_normalized()
+
+stopifnot(
+  length(drugs) == 12435L,
+  length(normalized_drugs) == 11990L,
+  !anyDuplicated(normalized_drugs),
+  all(MooseR:::is_health_canada_drug_candidate_values(drugs, drugs)),
+  all(MooseR:::is_health_canada_drug_candidate_values(
+    toupper(drugs),
+    toupper(drugs)
+  ))
+)
+
+drug_examples <- c(
+  "Abilify Maintena",
+  "Abiraterone Acetate",
+  "Acamprosate Calcique",
+  "Acétate d'abiratérone",
+  "Teva Quinine"
+)
+
+stopifnot(
+  all(MooseR:::is_health_canada_drug_candidate_values(
+    drug_examples,
+    drug_examples
+  )),
+  MooseR:::is_health_canada_drug_candidate_value(
+    "Abilify Maintena was administered.",
+    "Maintena"
+  ),
+  !MooseR:::is_health_canada_drug_candidate_value(
+    "Maintena was documented.",
+    "Maintena"
+  ),
+  !MooseR:::is_health_canada_drug_candidate_value(
+    "John Smith was documented.",
+    "John Smith"
+  )
+)
+
+drug_context <- c(
+  "Abilify Maintena was administered.",
+  "Reviewed by Abilify Maintena.",
+  "John Smith received Abilify Maintena."
+)
+
+stopifnot(
+  identical(
+    Moose_mask_person_names(drug_context, engine = "regex"),
+    c(
+      "Abilify Maintena was administered.",
+      "Reviewed by Abilify Maintena.",
+      "[NAME] received Abilify Maintena."
+    )
+  ),
+  identical(
+    Moose_name_flag(drug_context, engine = "regex"),
+    c(0L, 0L, 1L)
+  ),
+  identical(
+    Moose_detect_person_names(drug_context, engine = "regex")$detected_name,
+    "John Smith"
+  )
+)
+
 facility_examples <- c(
   "Peter Lougheed Centre",
   "Grand Manor",

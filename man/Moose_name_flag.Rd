@@ -78,6 +78,9 @@ Healthcare directory are excluded when the complete facility name occurs
 in the text.
 The 2,616 unique school names in the Alberta Education School Information
 Report are also excluded when the complete school name occurs in the text.
+The 12,435 English and French brand and active-ingredient names for marketed
+or approved human drugs in the Health Canada Drug Product Database are also
+excluded. Matching is case-insensitive and ignores accents and punctuation.
 When \code{data} and \code{name_columns} are supplied, each text value is additionally
 compared with the known names from the same row. These explicit references
 take precedence over the non-person whitelists.
