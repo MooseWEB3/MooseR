@@ -23,6 +23,8 @@
 #' `Intoxication`, are also excluded.
 #' The 334 official Alberta municipality names are also excluded in both
 #' engines.
+#' The Alberta place name `Fort McMurray` and the common spelling
+#' `Fort McMurry` are also excluded.
 #' The 1,150 unique facility names in the Alberta Health Services Find
 #' Healthcare directory are excluded when the complete facility name occurs
 #' in the text.

@@ -108,10 +108,18 @@ nonperson_examples <- c(
   "West Side",
   "Costco Store",
   "Pt Syncopal",
-  "Heavily Intoxicated"
+  "Heavily Intoxicated",
+  "Fort McMurray",
+  "Fort McMurry",
+  "Reviewed by Fort McMurry."
 )
 
 stopifnot(
+  all(MooseR:::is_alberta_municipality_name(c(
+    "Fort McMurray",
+    "FORT MCMURRAY",
+    "fort mcmurry"
+  ))),
   identical(
     Moose_mask_person_names(nonperson_examples, engine = "regex"),
     nonperson_examples
