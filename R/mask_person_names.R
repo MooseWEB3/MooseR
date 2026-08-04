@@ -18,7 +18,7 @@
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
-#' `Altered Mental Status`, `Nausea Vomiting`, `Blood Pressure`, and
+#' `Altered Mental Status`, `Nausea Vomiting`, `Substance Abuse`, and
 #' `Opioid Overdose`, are excluded through a curated medical-term whitelist.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
@@ -519,8 +519,9 @@ name_clinical_terms <- function() {
     "Bradycardia", "Arrhythmia", "Palpitations", "Hypotension",
     "Hypertension", "Sepsis", "Septic", "Pneumonia", "Allergic",
     "Anaphylaxis", "Anaphylactic", "Reaction", "Overdose", "Opioid",
-    "Alcohol", "Withdrawal", "Poisoning", "Syncopal", "Syncope",
-    "Intoxicated", "Intoxication",
+    "Alcohol", "Withdrawal", "Poisoning", "Substance", "Abuse", "Misuse",
+    "Dependence", "Dependency", "Addiction", "Addicted", "Syncopal",
+    "Syncope", "Intoxicated", "Intoxication",
     # Vitals, events, equipment, and treatments
     "Blood", "Pressure", "Heart", "Pulse", "Rate", "Rhythm", "Oxygen",
     "Saturation", "Temperature", "Glucose", "Systolic", "Diastolic",
