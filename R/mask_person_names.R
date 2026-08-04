@@ -521,6 +521,7 @@ name_clinical_terms <- function() {
     "Diarrhea", "Constipation", "Dysphagia", "Dizziness", "Dizzy", "Vertigo",
     "Headache", "Migraine", "Fever", "Chills", "Fatigue", "Weakness",
     "Numbness", "Tingling", "Paralysis", "Seizure", "Seizures", "Stroke",
+    "Animal", "Dog", "Dogs", "Canine", "Bite", "Bites", "Bitten",
     "Nose", "Nasal", "Bleed", "Bleeds", "Bleeding", "Hemorrhage",
     "Laceration", "Lacerations", "Abrasion",
     "Abrasions", "Contusion", "Contusions", "Dislocation", "Dislocations",

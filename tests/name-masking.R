@@ -196,6 +196,7 @@ medical_examples <- c(
   "Facial Laceration",
   "Seizure Activity",
   "Nose Bleed",
+  "Dog Bite",
   "Gastrointestinal Bleeding",
   "Opioid Overdose",
   "Alcohol Withdrawal",
@@ -211,6 +212,8 @@ stopifnot(
   MooseR:::is_nonperson_name_candidate("Patient Demographics", 9L, 20L),
   MooseR:::is_nonperson_name_candidate("Behavioural Problems", 1L, 11L),
   MooseR:::is_nonperson_name_candidate("Behavioural Problems", 13L, 20L),
+  MooseR:::is_nonperson_name_candidate("Dog Bite", 1L, 3L),
+  MooseR:::is_nonperson_name_candidate("Dog Bite", 5L, 8L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
