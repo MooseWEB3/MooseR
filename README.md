@@ -234,7 +234,8 @@ The built-in medical whitelist also preserves title-cased phrases such as
 `Opioid Overdose`, `Heat Exhaustion`, `Dispatched`, `General Malaise`,
 `Supportive Living`, `Wellness Check`, `Refill Prescription`, `Return Trip`,
 `Edmonton General`, `Safety Alerted`, `Not Feeling`, `Bus Stop`, and
-`Language Barrier`, `Non Small Cell Lung`, as well as `Situational Crisis`.
+`Language Barrier`, `Cognitive Impairment`, `Non Small Cell Lung`, as well as
+`Situational Crisis`.
 This whitelist intentionally takes precedence over the title-case name pattern;
 audit data where a real person's name could contain one of these terms.
 Common shorthand such as `Hx`, `PMHx`, `HPI`, `ROS`, `PE`, `Dx`, `Rx`, `Tx`,
@@ -620,7 +621,8 @@ majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`, 
 `Opioid Overdose`, ainsi que `Heat Exhaustion`, `Dispatched`, `General Malaise`,
 `Supportive Living`, `Wellness Check`, `Refill Prescription`, `Return Trip` et
 `Edmonton General`, ainsi que `Safety Alerted`, `Not Feeling`, `Bus Stop` et
-`Language Barrier`, `Non Small Cell Lung`, ainsi que `Situational Crisis`.
+`Language Barrier`, `Cognitive Impairment`, `Non Small Cell Lung`, ainsi que
+`Situational Crisis`.
 Cette liste blanche a volontairement priorité sur le modèle de nom avec
 majuscules initiales ; vérifiez les données lorsqu'un vrai nom de personne peut
 contenir l'un de ces termes.
@@ -1013,8 +1015,8 @@ como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`, `En Rout
 `Heart Transplant`, `Seizure Activity`, `Opioid Overdose`, `Heat Exhaustion`,
 `Dispatched`, `General Malaise`, `Supportive Living`, `Wellness Check`,
 `Refill Prescription`, `Return Trip`, `Edmonton General`, `Safety Alerted` e
-`Not Feeling`, `Bus Stop`, `Language Barrier`, `Non Small Cell Lung` e
-`Situational Crisis`.
+`Not Feeling`, `Bus Stop`, `Language Barrier`, `Cognitive Impairment`,
+`Non Small Cell Lung` e `Situational Crisis`.
 Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
 maiúsculas; audite os dados quando um nome real puder conter um destes termos.
 Abreviaturas comuns como `Hx`, `PMHx`, `HPI`, `ROS`, `PE`, `Dx`, `Rx`, `Tx`,
