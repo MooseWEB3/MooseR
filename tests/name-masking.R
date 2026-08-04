@@ -364,6 +364,7 @@ stopifnot(
 )
 
 medical_abbreviation_examples <- c(
+  "IFT Requested",
   "Hx Collected",
   "PMHx Reviewed",
   "HPI Updated",

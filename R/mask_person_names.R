@@ -632,7 +632,8 @@ name_medical_abbreviations <- function() {
     "NAD", "WNL", "LOC", "SOB",
     # Vitals and common EMS event shorthand
     "BP", "HR", "RR", "SpO2", "GCS", "BGL", "ETOH", "MVC", "MVA", "GSW",
-    "CVA", "TIA", "MI", "CHF", "COPD", "CAD", "UTI", "HTN", "DVT", "AFib"
+    "CVA", "TIA", "MI", "CHF", "COPD", "CAD", "UTI", "HTN", "DVT",
+    "AFib", "IFT"
   )
 }
 
