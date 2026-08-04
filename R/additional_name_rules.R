@@ -18,9 +18,16 @@ apply_name_masking_rules <- function(text, replacement = "[NAME]") {
     stop("`replacement` must be one non-missing character value.", call. = FALSE)
   }
 
-  # Titles followed by likely names, such as "Dr. J. Brown" or "RN Johnson".
+  # Comma-separated names such as "Smith, John".
   output <- mask_name_regex_matches(
     text = text,
+    pattern = name_last_first_regex_pattern(),
+    replacement = replacement
+  )
+
+  # Titles followed by likely names, such as "Dr. J. Brown" or "RN Johnson".
+  output <- mask_name_regex_matches(
+    text = output,
     pattern = name_title_regex_pattern(),
     replacement = replacement
   )

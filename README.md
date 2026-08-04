@@ -241,6 +241,10 @@ clinical-context forms illustrated by the AHS Connect Care
 It is a name-filtering list, not an approved clinical abbreviation policy;
 organizations should apply their own standardized and prohibited-abbreviation
 rules.
+Comma-separated names are also detected, including `Smith, John`,
+`SMITH, JOHN`, `Smith, J.`, and `O'Neil, Anne-Marie`. Canadian geographic
+forms such as `Edmonton, Alberta` and `Vancouver, British Columbia` are
+preserved.
 Location phrases such as `Private Residence`, `West Side`, `Costco Store`, and
 `Edmonton International Airport`,
 and clinical states such as `Pt Syncopal` and `Heavily Intoxicated`, are also
@@ -587,6 +591,10 @@ formes de contexte clinique illustrées dans le
 de Connect Care d'AHS. Il s'agit d'une liste de filtrage des noms, et non d'une
 politique d'abréviations cliniques approuvées ; chaque organisation doit
 appliquer ses propres règles normalisées et interdites.
+Les noms séparés par une virgule sont également détectés, notamment
+`Smith, John`, `SMITH, JOHN`, `Smith, J.` et `O'Neil, Anne-Marie`. Les formes
+géographiques canadiennes comme `Edmonton, Alberta` et
+`Vancouver, British Columbia` sont conservées.
 Les expressions de lieu comme `Private Residence`, `West Side`, `Costco Store`
 et `Edmonton International Airport`, ainsi que les états cliniques comme `Pt Syncopal` et
 `Heavily Intoxicated`, sont également conservés. `Pt` est traité comme
@@ -935,6 +943,9 @@ contexto clínico ilustradas no
 do Connect Care da AHS. Esta é uma lista para filtragem de nomes, não uma
 política aprovada de abreviaturas clínicas; cada organização deve aplicar as
 suas próprias regras padronizadas e proibidas.
+Os nomes separados por vírgula também são detetados, incluindo `Smith, John`,
+`SMITH, JOHN`, `Smith, J.` e `O'Neil, Anne-Marie`. Formas geográficas canadianas
+como `Edmonton, Alberta` e `Vancouver, British Columbia` são preservadas.
 As expressões de local como `Private Residence`, `West Side`, `Costco Store` e
 `Edmonton International Airport`,
 bem como os estados clínicos como `Pt Syncopal` e `Heavily Intoxicated`, também

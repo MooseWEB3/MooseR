@@ -41,6 +41,9 @@ group.
 In regex mode, standalone all-uppercase phrases are ignored. All-uppercase
 names are accepted only after a supported title or, when \code{apply_rules} is
 \code{TRUE}, a supported workflow phrase such as \code{Reviewed by}.
+Comma-separated names such as \code{Smith, John}, \code{SMITH, JOHN}, and
+\code{St-Pierre, Anne-Marie} are detected. Canadian geographic forms such as
+\code{Edmonton, Alberta} are excluded.
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
 \code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such

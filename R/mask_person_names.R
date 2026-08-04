@@ -8,6 +8,9 @@
 #' names. All-uppercase names are accepted after a supported title, such as
 #' `RN` or `Dr.`, or after a supported workflow phrase when `apply_rules` is
 #' `TRUE`.
+#' Comma-separated names such as `Smith, John`, `SMITH, JOHN`, and
+#' `St-Pierre, Anne-Marie` are detected in both engines. Canadian geographic
+#' forms such as `Edmonton, Alberta` are excluded.
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
@@ -163,6 +166,9 @@ mask_person_names <- function(text,
 
 #' Detect personal names without modifying the text
 #'
+#' Detects conventional and comma-separated personal names, including
+#' `Lastname, Firstname` forms.
+#'
 #' @param text A character vector.
 #' @param batch_size Number of documents processed per batch.
 #' @param engine Character. One of \code{"auto"}, \code{"spacy"}, or
@@ -279,12 +285,29 @@ detect_person_names <- function(text,
   }
 
   result <- Filter(Negate(is.null), result)
+  spacy_result <- if (length(result)) do.call(rbind, result) else empty_result
+  comma_result <- detect_person_names_regex(text)
+  comma_result <- comma_result[
+    grepl(",", comma_result$detected_name, fixed = TRUE),
+    ,
+    drop = FALSE
+  ]
+  combined <- rbind(spacy_result, comma_result)
 
-  if (length(result) == 0L) {
+  if (nrow(combined) == 0L) {
     return(empty_result)
   }
 
-  do.call(rbind, result)
+  combined <- do.call(
+    rbind,
+    lapply(
+      split(combined, combined$row_id),
+      remove_overlapping_name_matches
+    )
+  )
+  combined <- combined[order(combined$row_id, combined$start), , drop = FALSE]
+  row.names(combined) <- NULL
+  combined
 }
 
 mask_person_names_regex <- function(text,
@@ -420,6 +443,7 @@ name_person_regex_patterns <- function() {
   person_word <- name_person_title_case_word_pattern()
 
   c(
+    name_last_first_regex_pattern(),
     name_patient_abbreviation_regex_pattern(),
     name_title_regex_pattern(exclude_municipalities = FALSE),
     paste0(
@@ -430,6 +454,20 @@ name_person_regex_patterns <- function() {
       "(?![A-Za-z'-])",
       name_nonperson_suffix_guard()
     )
+  )
+}
+
+name_last_first_regex_pattern <- function() {
+  word <- name_context_word_pattern()
+
+  paste0(
+    "\\b",
+    word,
+    "\\s*,\\s*",
+    word,
+    "(?:\\s+", word, "){0,2}",
+    "(?![A-Za-z'-])",
+    name_nonperson_suffix_guard()
   )
 }
 
@@ -495,6 +533,40 @@ name_organization_word_pattern <- function() {
 
 name_location_word_pattern <- function() {
   "(?i:(?:Residence|Residences|Store|Stores|Side|Airport|Airports))"
+}
+
+name_canadian_geographic_suffix_pattern <- function() {
+  paste0(
+    "(?i:(?:",
+    paste(
+      c(
+        "Alberta", "British Columbia", "Saskatchewan", "Manitoba",
+        "Ontario", "Quebec", "New Brunswick", "Nova Scotia",
+        "Prince Edward Island", "Newfoundland and Labrador", "Yukon",
+        "Northwest Territories", "Nunavut", "Canada",
+        "AB", "BC", "SK", "MB", "ON", "QC", "NB", "NS", "PE",
+        "NL", "YT", "NT", "NU"
+      ),
+      collapse = "|"
+    ),
+    "))"
+  )
+}
+
+is_canadian_geographic_comma_candidate <- function(candidate) {
+  grepl(
+    paste0(",\\s*", name_canadian_geographic_suffix_pattern(), "\\.?$"),
+    candidate,
+    perl = TRUE
+  )
+}
+
+is_canadian_geographic_name_candidate <- function(candidate) {
+  grepl(
+    paste0("^", name_canadian_geographic_suffix_pattern(), "\\.?$"),
+    trimws(candidate),
+    perl = TRUE
+  )
 }
 
 name_medical_abbreviations <- function() {
@@ -673,6 +745,14 @@ is_clinical_nonperson_candidate_values <- function(text, start, end, candidate) 
 
 is_nonperson_name_candidate <- function(text, start, end) {
   candidate <- substr(text, start, end)
+
+  if (
+    is_canadian_geographic_comma_candidate(candidate) ||
+      is_canadian_geographic_name_candidate(candidate)
+  ) {
+    return(TRUE)
+  }
+
   if (is_alberta_municipality_candidate(candidate)) {
     return(TRUE)
   }
