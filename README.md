@@ -295,6 +295,33 @@ Keep the original and masked text side by side:
 Moose_mask_person_names(comments, keep_original = TRUE)
 ```
 
+Use row-aligned name columns as an additional source of known names. Matching
+is case-insensitive and includes individual fields, `First Last`, and
+`Last, First` forms:
+
+```r
+records <- data.frame(
+  comments = c("ALICE SMITH called.", "Spoke to Tremblay, Jean-Paul."),
+  first_name = c("Alice", "Jean-Paul"),
+  last_name = c("Smith", "Tremblay")
+)
+
+records$comments_masked <- Moose_mask_person_names(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+records$name_flag <- Moose_name_flag(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+```
+
+Each comment is compared only with the name values in the same data-frame row.
+This keeps the operation practical for large data sets and avoids treating
+every name in the data set as a match for every comment.
+
 Create an audit table of detected names:
 
 ```r
@@ -648,6 +675,33 @@ Conserver le texte original et le texte masqué côte à côte :
 Moose_mask_person_names(comments, keep_original = TRUE)
 ```
 
+Utiliser des colonnes de noms alignées par ligne comme source supplémentaire
+de noms connus. La correspondance ne tient pas compte de la casse et reconnaît
+les champs individuels ainsi que les formes `Prénom Nom` et `Nom, Prénom` :
+
+```r
+records <- data.frame(
+  comments = c("ALICE SMITH called.", "Spoke to Tremblay, Jean-Paul."),
+  first_name = c("Alice", "Jean-Paul"),
+  last_name = c("Smith", "Tremblay")
+)
+
+records$comments_masked <- Moose_mask_person_names(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+records$name_flag <- Moose_name_flag(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+```
+
+Chaque commentaire est comparé uniquement aux noms figurant dans la même
+ligne. Cette approche convient aux grands jeux de données et évite de comparer
+chaque commentaire à tous les noms du jeu de données.
+
 Créer un tableau d'audit des noms détectés :
 
 ```r
@@ -998,6 +1052,33 @@ Manter o texto original e o texto mascarado lado a lado:
 ```r
 Moose_mask_person_names(comments, keep_original = TRUE)
 ```
+
+Utilizar colunas de nomes alinhadas por linha como fonte adicional de nomes
+conhecidos. A correspondência ignora maiúsculas e minúsculas e reconhece os
+campos individuais, `Nome Apelido` e `Apelido, Nome`:
+
+```r
+records <- data.frame(
+  comments = c("ALICE SMITH called.", "Spoke to Tremblay, Jean-Paul."),
+  first_name = c("Alice", "Jean-Paul"),
+  last_name = c("Smith", "Tremblay")
+)
+
+records$comments_masked <- Moose_mask_person_names(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+records$name_flag <- Moose_name_flag(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+```
+
+Cada comentário é comparado apenas com os nomes existentes na mesma linha.
+Isto mantém a operação adequada para grandes conjuntos de dados e evita
+comparar cada comentário com todos os nomes do conjunto.
 
 Criar uma tabela de auditoria dos nomes detetados:
 

@@ -10,7 +10,9 @@ mask_person_names(
   batch_size = 100L,
   keep_original = FALSE,
   engine = c("auto", "spacy", "regex"),
-  apply_rules = TRUE
+  apply_rules = TRUE,
+  data = NULL,
+  name_columns = NULL
 )
 }
 \arguments{
@@ -28,6 +30,14 @@ both original and masked text.}
 
 \item{apply_rules}{Logical. If \code{TRUE}, apply supplementary regex rules
 after spaCy or regex masking.}
+
+\item{data}{Optional data frame containing row-aligned known-name columns.
+Supply this together with \code{name_columns}.}
+
+\item{name_columns}{Optional character vector naming columns in \code{data}, in
+natural name order, such as \code{c("first_name", "last_name")}. Values are
+matched against \code{text} in the same row using case-insensitive whole-word
+matching. Full names and \code{Lastname, Firstname} forms are also matched.}
 }
 \value{
 A character vector, or a data frame when
@@ -70,6 +80,9 @@ in the text, including \code{Peter Lougheed Centre}, \code{Grand Manor}, and
 \code{Chartwell Griesbach}.
 The 2,616 unique school names in the Alberta Education School Information
 Report are also excluded when the complete school name occurs in the text.
+When \code{data} and \code{name_columns} are supplied, each text value is additionally
+compared with the known names from the same row. These explicit references
+take precedence over the non-person whitelists.
 }
 \examples{
 \dontrun{

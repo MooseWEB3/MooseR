@@ -36,6 +36,9 @@
 #' `Chartwell Griesbach`.
 #' The 2,616 unique school names in the Alberta Education School Information
 #' Report are also excluded when the complete school name occurs in the text.
+#' When `data` and `name_columns` are supplied, each text value is additionally
+#' compared with the known names from the same row. These explicit references
+#' take precedence over the non-person whitelists.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -46,6 +49,12 @@
 #'   \code{"regex"}.
 #' @param apply_rules Logical. If \code{TRUE}, apply supplementary regex rules
 #'   after spaCy or regex masking.
+#' @param data Optional data frame containing row-aligned known-name columns.
+#'   Supply this together with `name_columns`.
+#' @param name_columns Optional character vector naming columns in `data`, in
+#'   natural name order, such as `c("first_name", "last_name")`. Values are
+#'   matched against `text` in the same row using case-insensitive whole-word
+#'   matching. Full names and `Lastname, Firstname` forms are also matched.
 #'
 #' @return A character vector, or a data frame when
 #'   \code{keep_original = TRUE}.
@@ -68,7 +77,9 @@ mask_person_names <- function(text,
                               batch_size = 100L,
                               keep_original = FALSE,
                               engine = c("auto", "spacy", "regex"),
-                              apply_rules = TRUE) {
+                              apply_rules = TRUE,
+                              data = NULL,
+                              name_columns = NULL) {
   validate_name_masking_inputs(text, replacement, batch_size, keep_original)
   engine <- match.arg(engine)
 
@@ -76,8 +87,25 @@ mask_person_names <- function(text,
     stop("`apply_rules` must be TRUE or FALSE.", call. = FALSE)
   }
 
+  use_known_names <- validate_known_name_column_inputs(
+    text = text,
+    data = data,
+    name_columns = name_columns
+  )
+
   if (length(text) == 0L) {
     return(text)
+  }
+
+  input_text <- if (use_known_names) {
+    mask_known_name_columns(
+      text = text,
+      replacement = replacement,
+      data = data,
+      name_columns = name_columns
+    )
+  } else {
+    text
   }
 
   state <- get_name_masking_state()
@@ -93,7 +121,7 @@ mask_person_names <- function(text,
 
   if (!identical(state$engine, "spacy") || is.null(state$model)) {
     output <- mask_person_names_regex(
-      text = text,
+      text = input_text,
       replacement = replacement,
       apply_rules = apply_rules
     )
@@ -113,17 +141,17 @@ mask_person_names <- function(text,
 
   model <- state$model
 
-  missing_input <- is.na(text)
-  blank_input <- !missing_input & !nzchar(trimws(text))
+  missing_input <- is.na(input_text)
+  blank_input <- !missing_input & !nzchar(trimws(input_text))
   process_input <- !missing_input & !blank_input
 
-  output <- text
+  output <- input_text
 
   if (any(process_input)) {
-    input_text <- text[process_input]
+    process_text <- input_text[process_input]
 
     python_text <- reticulate::r_to_py(
-      as.list(input_text),
+      as.list(process_text),
       convert = FALSE
     )
 
