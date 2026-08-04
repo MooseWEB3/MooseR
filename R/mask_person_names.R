@@ -22,7 +22,7 @@
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
 #' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`,
-#' `Bus Stop`, `Language Barrier`, `Cognitive Impairment`,
+#' `Bus Stop`, `Language Barrier`, `Cognitive Impairment`, `Emerge Call`,
 #' `Situational Crisis`, and
 #' `Non Small Cell Lung` are excluded through curated
 #' non-person whitelists.
@@ -725,6 +725,7 @@ name_clinical_phrases <- function() {
     "Bus Stop",
     "Language Barrier",
     "Cognitive Impairment",
+    "Emerge Call",
     "Non Small Cell Lung",
     "Non-Small Cell Lung",
     "Situational Crisis"
