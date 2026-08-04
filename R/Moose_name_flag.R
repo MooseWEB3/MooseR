@@ -26,6 +26,8 @@
 #' The 1,150 unique facility names in the Alberta Health Services Find
 #' Healthcare directory are excluded when the complete facility name occurs
 #' in the text.
+#' The 2,616 unique school names in the Alberta Education School Information
+#' Report are also excluded when the complete school name occurs in the text.
 #'
 #' @param text A character or factor vector, usually a column from a data frame.
 #' @param batch_size Number of documents processed per spaCy batch.
@@ -153,7 +155,11 @@ moose_name_flag_patterns <- function(text, patterns) {
         text = text[remaining[matched_pending]],
         candidate = candidates
       )
-      nonpeople <- municipalities | facilities
+      schools <- is_alberta_school_candidate_values(
+        text = text[remaining[matched_pending]],
+        candidate = candidates
+      )
+      nonpeople <- municipalities | facilities | schools
       people <- matched_pending[!nonpeople]
 
       if (length(people)) {

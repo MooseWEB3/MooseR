@@ -7,6 +7,18 @@ stopifnot(
   !anyDuplicated(facilities)
 )
 
+schools <- MooseR:::alberta_schools()
+
+stopifnot(
+  length(schools) == 2616L,
+  !anyDuplicated(tolower(schools)),
+  all(MooseR:::is_alberta_school_candidate_values(schools, schools)),
+  all(MooseR:::is_alberta_school_candidate_values(
+    toupper(schools),
+    toupper(schools)
+  ))
+)
+
 facility_examples <- c(
   "Peter Lougheed Centre",
   "Grand Manor",
@@ -25,6 +37,49 @@ stopifnot(
     integer(length(facility_examples))
   ),
   nrow(Moose_detect_person_names(facility_examples, engine = "regex")) == 0L
+)
+
+school_examples <- c(
+  "Prairiehome Colony School",
+  "FFCA High School Campus",
+  "The Chinese Academy",
+  "Centre High",
+  "The Academy at King Edward",
+  "Meskanahk Ka-Nipa-Wit School"
+)
+
+stopifnot(
+  all(school_examples %in% schools),
+  identical(
+    Moose_mask_person_names(school_examples, engine = "regex"),
+    school_examples
+  ),
+  identical(
+    Moose_name_flag(school_examples, engine = "regex"),
+    integer(length(school_examples))
+  ),
+  nrow(Moose_detect_person_names(school_examples, engine = "regex")) == 0L
+)
+
+school_context <- c(
+  "John Smith visited The Academy at King Edward.",
+  "Reviewed by The Chinese Academy.",
+  "King Edward met Sarah Johnson."
+)
+
+stopifnot(
+  identical(
+    Moose_mask_person_names(school_context, engine = "regex"),
+    c(
+      "[NAME] visited The Academy at King Edward.",
+      "Reviewed by The Chinese Academy.",
+      "[NAME] met [NAME]."
+    )
+  ),
+  identical(
+    Moose_name_flag(school_context, engine = "regex"),
+    c(1L, 0L, 1L)
+  )
 )
 
 mixed <- c(

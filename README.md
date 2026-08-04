@@ -238,6 +238,12 @@ including hospitals, health centres, clinics, continuing-care sites, and other
 official service locations. The complete facility name must occur in the text:
 `Peter Lougheed Centre`, `Grand Manor`, and `Chartwell Griesbach` are preserved,
 while a standalone personal name is still detected.
+MooseR also excludes all 2,616 unique school names in the Alberta Education
+[School Information Report](https://education.alberta.ca/alberta-education/school-authority-index/),
+covering public, separate, Francophone, charter, independent, First Nations,
+ECS private-operator, and provincial schools. Matching is case-insensitive, and
+the complete school name must occur in the text. A person's name that is also
+part of a school name is still detected when the full school name is absent.
 
 Mask names in a character vector:
 
@@ -557,6 +563,14 @@ d'Alberta Health Services, notamment les hôpitaux, centres de santé, cliniques
 complet de l'établissement doit figurer dans le texte : `Peter Lougheed Centre`,
 `Grand Manor` et `Chartwell Griesbach` sont conservés, tandis qu'un nom de
 personne isolé reste détecté.
+MooseR exclut également les 2 616 noms uniques d'écoles du
+[School Information Report](https://education.alberta.ca/alberta-education/school-authority-index/)
+de l'Alberta Education, couvrant les écoles publiques, séparées, francophones,
+à charte, indépendantes, des Premières Nations, les opérateurs privés de
+services à la petite enfance et les écoles provinciales. La comparaison ne
+tient pas compte de la casse et le nom complet de l'école doit figurer dans le
+texte. Un nom de personne qui fait partie d'un nom d'école reste détecté lorsque
+le nom complet de l'école est absent.
 
 Masquer les noms dans un vecteur de caractères :
 
@@ -877,6 +891,14 @@ unidades de cuidados continuados e outros locais oficiais de serviço. O nome
 completo da instituição deve aparecer no texto: `Peter Lougheed Centre`,
 `Grand Manor` e `Chartwell Griesbach` são preservados, enquanto um nome pessoal
 isolado continua a ser detetado.
+O MooseR também exclui os 2.616 nomes únicos de escolas do
+[School Information Report](https://education.alberta.ca/alberta-education/school-authority-index/)
+da Alberta Education, abrangendo escolas públicas, separadas, francófonas,
+charter, independentes, das Primeiras Nações, operadores privados de educação
+infantil e escolas provinciais. A correspondência não diferencia maiúsculas de
+minúsculas e o nome completo da escola deve aparecer no texto. Um nome pessoal
+que também faça parte do nome de uma escola continua a ser detetado quando o
+nome completo da escola não está presente.
 
 Mascarar nomes num vetor de texto:
 
