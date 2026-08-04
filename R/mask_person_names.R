@@ -21,8 +21,8 @@
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
-#' `Altered Mental Status`, `Nausea Vomiting`, `Substance Abuse`, and
-#' `Opioid Overdose`, are excluded through a curated medical-term whitelist.
+#' `Heat Exhaustion`, `Wellness Check`, `Substance Abuse`, and
+#' `Edmonton General`, are excluded through curated medical whitelists.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
 #' The 334 official Alberta municipality names are also excluded in both
@@ -685,6 +685,36 @@ name_clinical_terms <- function() {
   )
 }
 
+name_clinical_phrases <- function() {
+  c(
+    "Heat Exhaustion",
+    "Dispatched",
+    "General Malaise",
+    "Supportive Living",
+    "Wellness Check",
+    "Refill Prescription",
+    "Return Trip",
+    "Edmonton General"
+  )
+}
+
+normalize_clinical_phrase <- function(value) {
+  value <- trimws(as.character(value))
+  value <- gsub("[[:space:]]+", " ", value, perl = TRUE)
+  value <- gsub(
+    "^[[:punct:][:space:]]+|[[:punct:][:space:]]+$",
+    "",
+    value,
+    perl = TRUE
+  )
+  tolower(value)
+}
+
+is_clinical_phrase_candidate_values <- function(candidate) {
+  normalize_clinical_phrase(candidate) %in%
+    normalize_clinical_phrase(name_clinical_phrases())
+}
+
 name_clinical_word_pattern <- local({
   pattern <- paste0(
     "(?i:(?:",
@@ -734,20 +764,29 @@ is_clinical_nonperson_candidate_values <- function(text, start, end, candidate) 
     stop("Clinical candidate inputs must have the same length.", call. = FALSE)
   }
 
-  result <- rep.int(FALSE, length(candidate))
+  result <- is_clinical_phrase_candidate_values(candidate)
 
   if (!length(candidate)) {
     return(result)
   }
 
   candidate_keys <- ifelse(is.na(candidate), "", candidate)
-  unique_candidates <- !duplicated(candidate_keys)
+  pending_candidates <- which(!result)
+
+  if (!length(pending_candidates)) {
+    return(result)
+  }
+
+  pending_keys <- candidate_keys[pending_candidates]
+  unique_candidates <- !duplicated(pending_keys)
   unique_result <- grepl(
     paste0("\\b", name_clinical_word_pattern(), "\\b"),
-    candidate_keys[unique_candidates],
+    pending_keys[unique_candidates],
     perl = TRUE
   )
-  result <- unique_result[match(candidate_keys, candidate_keys[unique_candidates])]
+  result[pending_candidates] <- unique_result[
+    match(pending_keys, pending_keys[unique_candidates])
+  ]
   pending <- which(!result & !is.na(text) & end < nchar(text))
 
   if (!length(pending)) {
@@ -773,6 +812,10 @@ is_clinical_nonperson_candidate_values <- function(text, start, end, candidate) 
 
 is_nonperson_name_candidate <- function(text, start, end) {
   candidate <- substr(text, start, end)
+
+  if (is_clinical_phrase_candidate_values(candidate)) {
+    return(TRUE)
+  }
 
   if (
     is_canadian_geographic_comma_candidate(candidate) ||
