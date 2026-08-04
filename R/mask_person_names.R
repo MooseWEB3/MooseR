@@ -498,6 +498,7 @@ name_clinical_terms <- function() {
     "Admitted", "Discharge", "Discharges", "Discharged", "Presentation",
     "Presentations", "Presented", "Enroute", "Departure", "Departed",
     "Ambulance", "Resuscitation", "Extrication", "Status", "Activity",
+    "Code", "Codes",
     # Severity, anatomy, and body systems
     "Acute", "Chronic", "Severe", "Cardia", "Cardiac", "Cardiovascular",
     "Chest", "Abdomen", "Abdominal", "Respiratory", "Renal", "Airway",
