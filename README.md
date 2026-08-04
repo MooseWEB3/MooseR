@@ -226,7 +226,7 @@ Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
 `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
-`Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
+`Interfacility Transfer`, `Transport Truck`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
 and `Opioid Overdose`.
 This whitelist intentionally takes precedence over the title-case name pattern;
@@ -559,7 +559,8 @@ Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
 La liste blanche médicale intégrée conserve aussi les expressions avec
 majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`,
-`On Arrival`, `Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
+`On Arrival`, `Interfacility Transfer`, `Transport Truck`, `Nursing Home`,
+`Altered Mental Status`,
 `Nausea Vomiting`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
 `Opioid Overdose`.
 Cette liste blanche a volontairement priorité sur le modèle de nom avec
@@ -897,7 +898,7 @@ As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
 como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
-`Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
+`Interfacility Transfer`, `Transport Truck`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Substance Abuse`,
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
 Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
