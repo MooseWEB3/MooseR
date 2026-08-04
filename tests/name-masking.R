@@ -159,6 +159,48 @@ stopifnot(
   is.null(MooseR:::patient_abbreviation_adjusted_bounds("Pt", 1L, 2L))
 )
 
+medical_abbreviation_examples <- c(
+  "Hx Collected",
+  "PMHx Reviewed",
+  "HPI Updated",
+  "ROS Completed",
+  "Dx Pending",
+  "Rx Updated",
+  "Tx Started",
+  "Sx Documented",
+  "GCS Recorded",
+  "SpO2 Recorded"
+)
+
+medical_abbreviations <- MooseR:::name_medical_abbreviations()
+
+stopifnot(
+  !anyDuplicated(toupper(medical_abbreviations)),
+  all(vapply(
+    medical_abbreviations,
+    function(abbreviation) {
+      MooseR:::is_nonperson_name_candidate(
+        abbreviation,
+        1L,
+        nchar(abbreviation)
+      )
+    },
+    logical(1)
+  )),
+  identical(
+    Moose_mask_person_names(medical_abbreviation_examples, engine = "regex"),
+    medical_abbreviation_examples
+  ),
+  identical(
+    Moose_name_flag(medical_abbreviation_examples, engine = "regex"),
+    integer(length(medical_abbreviation_examples))
+  ),
+  identical(
+    Moose_mask_person_names(c("Dr Smith", "RN Johnson", "Paramedic Brown"), engine = "regex"),
+    rep("[NAME]", 3L)
+  )
+)
+
 medical_examples <- c(
   "Chief Complain",
   "Chief Complaint",
