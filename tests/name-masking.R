@@ -182,6 +182,7 @@ medical_examples <- c(
   "65 Year Old",
   "65 Years Old",
   "Patient is 65 Years Old",
+  "Community Paramedic",
   "On Scene",
   "Patient Discharged",
   "Patient Demographics",
@@ -257,6 +258,8 @@ stopifnot(
   MooseR:::is_nonperson_name_candidate("Transport Cause", 11L, 15L),
   MooseR:::is_nonperson_name_candidate("Year Old", 1L, 4L),
   MooseR:::is_nonperson_name_candidate("Year Old", 6L, 8L),
+  MooseR:::is_nonperson_name_candidate("Community Paramedic", 1L, 19L),
+  !MooseR:::is_nonperson_name_candidate("Paramedic Smith", 1L, 15L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
