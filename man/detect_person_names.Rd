@@ -19,5 +19,6 @@ A data frame containing document number, detected name, and
 character offsets.
 }
 \description{
-Detect personal names without modifying the text
+Detects conventional and comma-separated personal names, including
+\code{Lastname, Firstname} forms.
 }

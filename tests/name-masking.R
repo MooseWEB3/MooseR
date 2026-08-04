@@ -159,6 +159,51 @@ stopifnot(
   is.null(MooseR:::patient_abbreviation_adjusted_bounds("Pt", 1L, 2L))
 )
 
+comma_name_examples <- c(
+  "Smith, John",
+  "SMITH, JOHN",
+  "Smith, John Paul",
+  "Smith, J.",
+  "Smith,John",
+  "O'Neil, Anne-Marie",
+  "St-Pierre, Jean"
+)
+
+comma_nonperson_examples <- c(
+  "Edmonton, Alberta",
+  "Red Deer, Alberta",
+  "Vancouver, British Columbia",
+  "Vancouver, BC",
+  "Pain, Chest"
+)
+
+comma_detected <- Moose_detect_person_names(comma_name_examples, engine = "regex")
+
+stopifnot(
+  identical(
+    Moose_mask_person_names(comma_name_examples, engine = "regex"),
+    rep("[NAME]", length(comma_name_examples))
+  ),
+  identical(
+    Moose_name_flag(comma_name_examples, engine = "regex"),
+    rep.int(1L, length(comma_name_examples))
+  ),
+  identical(comma_detected$detected_name, comma_name_examples),
+  identical(
+    Moose_apply_name_masking_rules(comma_name_examples),
+    rep("[NAME]", length(comma_name_examples))
+  ),
+  identical(
+    Moose_mask_person_names(comma_nonperson_examples, engine = "regex"),
+    comma_nonperson_examples
+  ),
+  identical(
+    Moose_name_flag(comma_nonperson_examples, engine = "regex"),
+    integer(length(comma_nonperson_examples))
+  ),
+  nrow(Moose_detect_person_names(comma_nonperson_examples, engine = "regex")) == 0L
+)
+
 medical_abbreviation_examples <- c(
   "Hx Collected",
   "PMHx Reviewed",

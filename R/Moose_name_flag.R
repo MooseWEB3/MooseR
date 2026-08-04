@@ -13,6 +13,9 @@
 #' In regex mode, standalone all-uppercase phrases are ignored. All-uppercase
 #' names are accepted only after a supported title or, when `apply_rules` is
 #' `TRUE`, a supported workflow phrase such as `Reviewed by`.
+#' Comma-separated names such as `Smith, John`, `SMITH, JOHN`, and
+#' `St-Pierre, Anne-Marie` are detected. Canadian geographic forms such as
+#' `Edmonton, Alberta` are excluded.
 #' Healthcare organization names ending in words such as `Hospital`, `Clinic`,
 #' `Centre`, `Health`, or `Foundation`, and clinical phrases containing words
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
@@ -158,6 +161,9 @@ moose_name_flag_patterns <- function(text, patterns) {
         starts,
         starts + lengths - 1L
       )
+      geographic <-
+        is_canadian_geographic_comma_candidate(candidates) |
+        is_canadian_geographic_name_candidate(candidates)
       municipalities <- is_alberta_municipality_candidate(candidates)
       facilities <- is_alberta_health_facility_candidate_values(
         text = text[remaining[matched_pending]],
@@ -173,7 +179,7 @@ moose_name_flag_patterns <- function(text, patterns) {
         end = starts + lengths - 1L,
         candidate = candidates
       )
-      nonpeople <- municipalities | facilities | schools | medical
+      nonpeople <- geographic | municipalities | facilities | schools | medical
       people <- matched_pending[!nonpeople]
 
       if (length(people)) {
@@ -214,7 +220,10 @@ moose_name_flag_patterns <- function(text, patterns) {
 }
 
 moose_name_flag_supplementary <- function(text, include_title = TRUE) {
-  patterns <- name_workflow_regex_pattern(exclude_municipalities = FALSE)
+  patterns <- c(
+    name_last_first_regex_pattern(),
+    name_workflow_regex_pattern(exclude_municipalities = FALSE)
+  )
 
   if (isTRUE(include_title)) {
     patterns <- c(
