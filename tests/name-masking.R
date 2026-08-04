@@ -349,6 +349,7 @@ medical_examples <- c(
   "Return Trip",
   "Edmonton General",
   "Safety Alerted",
+  "Not Feeling",
   "Chief Complain",
   "Chief Complaint",
   "Chief Complaints",
