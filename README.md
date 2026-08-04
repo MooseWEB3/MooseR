@@ -224,6 +224,9 @@ Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
 `Syndrome` are also preserved; for example, `Cardia Chest Pain` is not masked.
 Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
+Location phrases such as `Private Residence`, `West Side`, and `Costco Store`,
+and clinical states such as `Pt Syncopal` and `Heavily Intoxicated`, are also
+preserved.
 These exclusions are applied to both the regex and spaCy engines.
 MooseR also preserves all 334 official Alberta municipality names, including
 `Medicine Hat`, `Red Deer`, and `Rocky Mountain House`. The registry follows
@@ -539,6 +542,9 @@ ou `Syndrome` sont également conservées ; par exemple, `Cardia Chest Pain`
 n'est pas masqué.
 Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
+Les expressions de lieu comme `Private Residence`, `West Side` et
+`Costco Store`, ainsi que les états cliniques comme `Pt Syncopal` et
+`Heavily Intoxicated`, sont également conservés.
 Ces exclusions s'appliquent aux moteurs regex et spaCy.
 MooseR conserve également les 334 noms officiels des municipalités de
 l'Alberta, notamment `Medicine Hat`, `Red Deer` et `Rocky Mountain House`. Le
@@ -856,6 +862,9 @@ As expressões clínicas que contêm palavras como `Chest`, `Pain`, `Disease` ou
 mascarado.
 As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
+As expressões de local como `Private Residence`, `West Side` e `Costco Store`,
+bem como os estados clínicos como `Pt Syncopal` e `Heavily Intoxicated`, também
+são preservados.
 Estas exclusões aplicam-se aos motores regex e spaCy.
 O MooseR também preserva os 334 nomes oficiais dos municípios de Alberta,
 incluindo `Medicine Hat`, `Red Deer` e `Rocky Mountain House`. O registo segue
