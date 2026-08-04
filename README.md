@@ -226,7 +226,7 @@ Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
 `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`, `En Route`,
-`Public Assist`, `Covid Screen`,
+`Public Assist`, `Covid Screen`, `Year Old`,
 `Interfacility Transfer`, `Transport Truck`, `Transport Cause`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
@@ -562,7 +562,7 @@ Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
 La liste blanche médicale intégrée conserve aussi les expressions avec
 majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`, `En Route`,
-`Public Assist`, `Covid Screen`,
+`Public Assist`, `Covid Screen`, `Year Old`,
 `On Arrival`, `Interfacility Transfer`, `Transport Truck`, `Transport Cause`, `Ground Level`, `Nursing Home`,
 `Altered Mental Status`,
 `Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
@@ -904,7 +904,7 @@ As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
 como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`, `En Route`,
-`Public Assist`, `Covid Screen`,
+`Public Assist`, `Covid Screen`, `Year Old`,
 `Interfacility Transfer`, `Transport Truck`, `Transport Cause`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`,

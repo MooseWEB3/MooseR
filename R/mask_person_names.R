@@ -501,6 +501,7 @@ name_clinical_terms <- function() {
   c(
     # Clinical context and documentation
     "Clinical", "Emergency", "Diagnosis", "Treatment", "Therapy", "Surgery",
+    "Age", "Aged", "Year", "Years", "Old",
     "Procedure", "Complain", "Complaint", "Complaints", "Present", "Past",
     "History", "Histories", "Illness", "Illnesses", "Transplant",
     "Transplants", "Transplantation", "Nursing", "Nurse", "Nurses",
