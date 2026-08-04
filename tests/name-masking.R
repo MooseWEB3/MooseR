@@ -190,6 +190,8 @@ medical_examples <- c(
   "Suicidal Ideation",
   "Urinary Retention",
   "Urinary Issues",
+  "Behavioural Problems",
+  "Behavioral Problems",
   "Cervical Spine",
   "Facial Laceration",
   "Seizure Activity",
@@ -207,6 +209,8 @@ stopifnot(
   MooseR:::is_nonperson_name_candidate("Nose Bleed", 6L, 10L),
   MooseR:::is_nonperson_name_candidate("Patient Demographics", 1L, 7L),
   MooseR:::is_nonperson_name_candidate("Patient Demographics", 9L, 20L),
+  MooseR:::is_nonperson_name_candidate("Behavioural Problems", 1L, 11L),
+  MooseR:::is_nonperson_name_candidate("Behavioural Problems", 13L, 20L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
