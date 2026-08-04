@@ -22,7 +22,7 @@
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
 #' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`, and
-#' `Edmonton General`, are excluded through curated medical whitelists.
+#' `Bus Stop`, are excluded through curated non-person whitelists.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
 #' The 334 official Alberta municipality names are also excluded in both
@@ -715,7 +715,8 @@ name_clinical_phrases <- function() {
     "Return Trip",
     "Edmonton General",
     "Safety Alerted",
-    "Not Feeling"
+    "Not Feeling",
+    "Bus Stop"
   )
 }
 
