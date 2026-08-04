@@ -516,7 +516,7 @@ name_clinical_terms <- function() {
     "Admitted", "Discharge", "Discharges", "Discharged", "Presentation",
     "Presentations", "Presented", "Enroute", "Route", "Routes", "Routing",
     "Departure", "Departed",
-    "Ambulance", "Assist", "Assists", "Assistance", "Resuscitation",
+    "Ambulance", "Community", "Communities", "Assist", "Assists", "Assistance", "Resuscitation",
     "Extrication", "Status", "Activity",
     "Code", "Codes",
     # Severity, anatomy, and body systems
