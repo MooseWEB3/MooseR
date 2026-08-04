@@ -512,7 +512,8 @@ name_clinical_terms <- function() {
     "Urinary", "Vascular", "Arterial", "Venous", "Left", "Right",
     # Symptoms, conditions, and injuries
     "Trauma", "Pain", "Disease", "Syndrome", "Disorder", "Injury",
-    "Failure", "Fracture", "Cancer", "Infection", "Symptom", "Symptoms",
+    "Failure", "Fracture", "Cancer", "Infection", "Covid", "Coronavirus",
+    "Screen", "Screens", "Screened", "Screening", "Symptom", "Symptoms",
     "Issue", "Issues",
     "Altered", "Mental", "Consciousness", "Alert", "Oriented", "Confused",
     "Confusion", "Unconscious", "Unresponsive", "Lethargic", "Agitated",
