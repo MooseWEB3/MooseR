@@ -186,6 +186,7 @@ medical_examples <- c(
   "Interfacility Call",
   "Interhospital Transfer",
   "Transport Truck",
+  "Transport Cause",
   "Medical Transport Truck",
   "Patient Transport Truck",
   "Service Truck",
@@ -247,6 +248,8 @@ stopifnot(
   MooseR:::is_nonperson_name_candidate("Public Assist", 8L, 13L),
   MooseR:::is_nonperson_name_candidate("Covid Screen", 1L, 5L),
   MooseR:::is_nonperson_name_candidate("Covid Screen", 7L, 12L),
+  MooseR:::is_nonperson_name_candidate("Transport Cause", 1L, 9L),
+  MooseR:::is_nonperson_name_candidate("Transport Cause", 11L, 15L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
