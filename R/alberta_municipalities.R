@@ -170,7 +170,10 @@ alberta_municipality_aliases <- local({
   core <- sub(" No\\. [0-9]+, County of$", "", core)
   core <- sub(", M\\.D\\. of$", "", core)
   core <- sub(", County of$", "", core)
-  aliases <- unique(c(aliases, common_order, core))
+  # Fort McMurray is an urban service area within Wood Buffalo rather than a
+  # separate municipality. Include its common missing-"a" data-entry variant.
+  place_aliases <- c("Fort McMurray", "Fort McMurry")
+  aliases <- unique(c(aliases, common_order, core, place_aliases))
 
   function() aliases
 })

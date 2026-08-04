@@ -51,6 +51,8 @@ clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, 
 \code{Intoxication}, are also excluded.
 The 334 official Alberta municipality names are also excluded in both
 engines.
+The Alberta place name \code{Fort McMurray} and the common spelling
+\code{Fort McMurry} are also excluded.
 The 1,150 unique facility names in the Alberta Health Services Find
 Healthcare directory are excluded when the complete facility name occurs
 in the text.

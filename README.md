@@ -231,7 +231,8 @@ These exclusions are applied to both the regex and spaCy engines.
 MooseR also preserves all 334 official Alberta municipality names, including
 `Medicine Hat`, `Red Deer`, and `Rocky Mountain House`. The registry follows
 the Government of Alberta 2024 Municipal Codes and excludes the administrative
-`Special Areas Board`.
+`Special Areas Board`. The Alberta place name `Fort McMurray` and the common
+spelling `Fort McMurry` are also preserved.
 MooseR also excludes the 1,150 unique facility names in the Alberta Health
 Services [Find Healthcare directory](https://www.albertahealthservices.ca/findhealth/search.aspx),
 including hospitals, health centres, clinics, continuing-care sites, and other
@@ -555,7 +556,9 @@ Ces exclusions s'appliquent aux moteurs regex et spaCy.
 MooseR conserve également les 334 noms officiels des municipalités de
 l'Alberta, notamment `Medicine Hat`, `Red Deer` et `Rocky Mountain House`. Le
 registre suit les codes municipaux 2024 du gouvernement de l'Alberta et exclut
-l'organisme administratif `Special Areas Board`.
+l'organisme administratif `Special Areas Board`. Le nom de lieu albertain
+`Fort McMurray` et l'orthographe courante `Fort McMurry` sont également
+conservés.
 MooseR exclut aussi les 1 150 noms uniques du répertoire
 [Find Healthcare](https://www.albertahealthservices.ca/findhealth/search.aspx)
 d'Alberta Health Services, notamment les hôpitaux, centres de santé, cliniques,
@@ -883,7 +886,8 @@ Estas exclusões aplicam-se aos motores regex e spaCy.
 O MooseR também preserva os 334 nomes oficiais dos municípios de Alberta,
 incluindo `Medicine Hat`, `Red Deer` e `Rocky Mountain House`. O registo segue
 os Códigos Municipais de 2024 do Governo de Alberta e exclui o órgão
-administrativo `Special Areas Board`.
+administrativo `Special Areas Board`. O nome do local de Alberta
+`Fort McMurray` e a grafia comum `Fort McMurry` também são preservados.
 O MooseR também exclui os 1.150 nomes únicos do diretório
 [Find Healthcare](https://www.albertahealthservices.ca/findhealth/search.aspx)
 da Alberta Health Services, incluindo hospitais, centros de saúde, clínicas,
