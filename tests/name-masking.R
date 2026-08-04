@@ -327,6 +327,14 @@ stopifnot(
 )
 
 medical_examples <- c(
+  "Heat Exhaustion",
+  "Dispatched",
+  "General Malaise",
+  "Supportive Living",
+  "Wellness Check",
+  "Refill Prescription",
+  "Return Trip",
+  "Edmonton General",
   "Chief Complain",
   "Chief Complaint",
   "Chief Complaints",
@@ -407,8 +415,36 @@ medical_examples <- c(
   "Naloxone Infusion"
 )
 
+clinical_phrase_variants <- unique(c(
+  MooseR:::name_clinical_phrases(),
+  toupper(MooseR:::name_clinical_phrases()),
+  tolower(MooseR:::name_clinical_phrases())
+))
+
 stopifnot(
   !anyDuplicated(MooseR:::name_clinical_terms()),
+  !anyDuplicated(tolower(MooseR:::name_clinical_phrases())),
+  all(MooseR:::is_clinical_phrase_candidate_values(
+    MooseR:::name_clinical_phrases()
+  )),
+  all(MooseR:::is_clinical_phrase_candidate_values(toupper(
+    MooseR:::name_clinical_phrases()
+  ))),
+  all(MooseR:::is_clinical_phrase_candidate_values(tolower(
+    MooseR:::name_clinical_phrases()
+  ))),
+  identical(
+    Moose_mask_person_names(clinical_phrase_variants, engine = "regex"),
+    clinical_phrase_variants
+  ),
+  identical(
+    Moose_name_flag(clinical_phrase_variants, engine = "regex"),
+    integer(length(clinical_phrase_variants))
+  ),
+  nrow(Moose_detect_person_names(
+    clinical_phrase_variants,
+    engine = "regex"
+  )) == 0L,
   MooseR:::is_nonperson_name_candidate("Urinary Issues", 9L, 14L),
   MooseR:::is_nonperson_name_candidate("Nose Bleed", 1L, 4L),
   MooseR:::is_nonperson_name_candidate("Nose Bleed", 6L, 10L),

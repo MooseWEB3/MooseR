@@ -65,8 +65,8 @@ Non-person location phrases ending in \code{Residence}, \code{Store}, \code{Side
 clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, or
 \code{Intoxication}, are also excluded.
 Common title-cased medical phrases, including \code{Chief Complaint},
-\code{Altered Mental Status}, \code{Nausea Vomiting}, \code{Substance Abuse}, and
-\code{Opioid Overdose}, are excluded through a curated medical-term whitelist.
+\code{Heat Exhaustion}, \code{Wellness Check}, \code{Substance Abuse}, and
+\code{Edmonton General}, are excluded through curated medical whitelists.
 This whitelist takes precedence over the title-case name pattern, so audit
 data where a real person's name could contain one of these terms.
 The 334 official Alberta municipality names are also excluded in both
