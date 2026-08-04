@@ -227,7 +227,7 @@ Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
 `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`, `En Route`,
 `Public Assist`, `Covid Screen`,
-`Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
+`Interfacility Transfer`, `Transport Truck`, `Transport Cause`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
 and `Opioid Overdose`.
@@ -563,7 +563,7 @@ Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
 La liste blanche médicale intégrée conserve aussi les expressions avec
 majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`, `En Route`,
 `Public Assist`, `Covid Screen`,
-`On Arrival`, `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`,
+`On Arrival`, `Interfacility Transfer`, `Transport Truck`, `Transport Cause`, `Ground Level`, `Nursing Home`,
 `Altered Mental Status`,
 `Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
@@ -905,7 +905,7 @@ Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
 como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`, `En Route`,
 `Public Assist`, `Covid Screen`,
-`Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
+`Interfacility Transfer`, `Transport Truck`, `Transport Cause`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Nose Bleed`, `Dog Bite`, `Urinary Issues`, `Patient Demographics`,
 `Behavioural Problems`, `Substance Abuse`,
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
