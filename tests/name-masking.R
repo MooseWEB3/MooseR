@@ -188,6 +188,7 @@ medical_examples <- c(
   "Oxygen Saturation",
   "Suicidal Ideation",
   "Urinary Retention",
+  "Urinary Issues",
   "Cervical Spine",
   "Facial Laceration",
   "Seizure Activity",
@@ -199,6 +200,7 @@ medical_examples <- c(
 
 stopifnot(
   !anyDuplicated(MooseR:::name_clinical_terms()),
+  MooseR:::is_nonperson_name_candidate("Urinary Issues", 9L, 14L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
