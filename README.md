@@ -225,9 +225,10 @@ Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
 Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
-`Chief Complaint`, `Present Illness`, `On Arrival`, `Interfacility Transfer`,
-`Nursing Home`, `Altered Mental Status`, `Nausea Vomiting`, `Substance Abuse`,
-`Heart Transplant`, `Seizure Activity`, and `Opioid Overdose`.
+`Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
+`Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
+`Nausea Vomiting`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
+and `Opioid Overdose`.
 This whitelist intentionally takes precedence over the title-case name pattern;
 audit data where a real person's name could contain one of these terms.
 Location phrases such as `Private Residence`, `West Side`, `Costco Store`, and
@@ -557,8 +558,8 @@ n'est pas masqué.
 Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
 La liste blanche médicale intégrée conserve aussi les expressions avec
-majuscules initiales comme `Chief Complaint`, `Present Illness`, `On Arrival`,
-`Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
+majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`,
+`On Arrival`, `Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
 `Opioid Overdose`.
 Cette liste blanche a volontairement priorité sur le modèle de nom avec
@@ -895,7 +896,7 @@ mascarado.
 As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
-como `Chief Complaint`, `Present Illness`, `On Arrival`,
+como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
 `Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Substance Abuse`,
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
