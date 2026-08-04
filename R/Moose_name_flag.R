@@ -26,8 +26,9 @@
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
-#' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`, and
-#' `Bus Stop`, are excluded through curated non-person whitelists.
+#' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`,
+#' `Bus Stop`, and `Non Small Cell Lung` are excluded through curated
+#' non-person whitelists.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
 #' The 334 official Alberta municipality names are also excluded in both
@@ -182,7 +183,12 @@ moose_name_flag_patterns <- function(text, patterns) {
     return(flag)
   }
 
-  screened <- text[remaining]
+  screened <- gsub(
+    name_clinical_phrase_regex_pattern(),
+    " | ",
+    text[remaining],
+    perl = TRUE
+  )
   active <- seq_along(remaining)
 
   for (pattern in patterns) {

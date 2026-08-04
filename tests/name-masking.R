@@ -351,6 +351,8 @@ medical_examples <- c(
   "Safety Alerted",
   "Not Feeling",
   "Bus Stop",
+  "Non Small Cell Lung",
+  "Non-Small Cell Lung",
   "Chief Complain",
   "Chief Complaint",
   "Chief Complaints",
@@ -449,6 +451,16 @@ stopifnot(
   all(MooseR:::is_clinical_phrase_candidate_values(tolower(
     MooseR:::name_clinical_phrases()
   ))),
+  MooseR:::is_clinical_phrase_span_values(
+    "Non Small Cell Lung",
+    1L,
+    9L
+  ),
+  MooseR:::is_clinical_phrase_span_values(
+    "Non Small Cell Lung",
+    11L,
+    19L
+  ),
   identical(
     Moose_mask_person_names(clinical_phrase_variants, engine = "regex"),
     clinical_phrase_variants
