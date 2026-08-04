@@ -26,7 +26,7 @@
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
 #' Common title-cased medical phrases, including `Chief Complaint`,
-#' `Heat Exhaustion`, `Wellness Check`, `Substance Abuse`, and
+#' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, and
 #' `Edmonton General`, are excluded through curated medical whitelists.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
