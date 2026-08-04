@@ -510,6 +510,7 @@ name_clinical_terms <- function() {
     # Symptoms, conditions, and injuries
     "Trauma", "Pain", "Disease", "Syndrome", "Disorder", "Injury",
     "Failure", "Fracture", "Cancer", "Infection", "Symptom", "Symptoms",
+    "Issue", "Issues",
     "Altered", "Mental", "Consciousness", "Alert", "Oriented", "Confused",
     "Confusion", "Unconscious", "Unresponsive", "Lethargic", "Agitated",
     "Combative", "Delirium", "Psychiatric", "Psychosis", "Anxiety",
