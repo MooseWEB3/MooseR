@@ -136,6 +136,9 @@ stopifnot(
 )
 
 medical_examples <- c(
+  "Chief Complain",
+  "Chief Complaint",
+  "Chief Complaints",
   "Altered Mental Status",
   "Motor Vehicle Collision",
   "Ground Level Fall",

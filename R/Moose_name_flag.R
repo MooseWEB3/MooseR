@@ -22,8 +22,8 @@
 #' `Airport`, and
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
-#' Common title-cased medical phrases, including `Altered Mental Status`,
-#' `Nausea Vomiting`, `Blood Pressure`, `Cervical Spine`, and
+#' Common title-cased medical phrases, including `Chief Complaint`,
+#' `Altered Mental Status`, `Nausea Vomiting`, `Blood Pressure`, and
 #' `Opioid Overdose`, are excluded through a curated medical-term whitelist.
 #' This whitelist takes precedence over the title-case name pattern, so audit
 #' data where a real person's name could contain one of these terms.
