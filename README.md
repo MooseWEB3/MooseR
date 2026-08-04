@@ -233,6 +233,13 @@ The built-in medical whitelist also preserves title-cased phrases such as
 and `Opioid Overdose`.
 This whitelist intentionally takes precedence over the title-case name pattern;
 audit data where a real person's name could contain one of these terms.
+Common shorthand such as `Hx`, `PMHx`, `HPI`, `ROS`, `PE`, `Dx`, `Rx`, `Tx`,
+`Sx`, `GCS`, `SpO2`, and `MVC` is also preserved. The list follows common
+clinical-context forms illustrated by the AHS Connect Care
+[Smart Naming guide](https://publicshare.albertahealthservices.ca/Main/assets/cmio/AHS_CC_TIP_Smart-Naming.pdf).
+It is a name-filtering list, not an approved clinical abbreviation policy;
+organizations should apply their own standardized and prohibited-abbreviation
+rules.
 Location phrases such as `Private Residence`, `West Side`, `Costco Store`, and
 `Edmonton International Airport`,
 and clinical states such as `Pt Syncopal` and `Heavily Intoxicated`, are also
@@ -571,6 +578,13 @@ majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`, 
 Cette liste blanche a volontairement priorité sur le modèle de nom avec
 majuscules initiales ; vérifiez les données lorsqu'un vrai nom de personne peut
 contenir l'un de ces termes.
+Les abréviations courantes comme `Hx`, `PMHx`, `HPI`, `ROS`, `PE`, `Dx`, `Rx`,
+`Tx`, `Sx`, `GCS`, `SpO2` et `MVC` sont aussi conservées. La liste suit les
+formes de contexte clinique illustrées dans le
+[guide Smart Naming](https://publicshare.albertahealthservices.ca/Main/assets/cmio/AHS_CC_TIP_Smart-Naming.pdf)
+de Connect Care d'AHS. Il s'agit d'une liste de filtrage des noms, et non d'une
+politique d'abréviations cliniques approuvées ; chaque organisation doit
+appliquer ses propres règles normalisées et interdites.
 Les expressions de lieu comme `Private Residence`, `West Side`, `Costco Store`
 et `Edmonton International Airport`, ainsi que les états cliniques comme `Pt Syncopal` et
 `Heavily Intoxicated`, sont également conservés. `Pt` est traité comme
@@ -911,6 +925,13 @@ como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`, `En Rout
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
 Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
 maiúsculas; audite os dados quando um nome real puder conter um destes termos.
+Abreviaturas comuns como `Hx`, `PMHx`, `HPI`, `ROS`, `PE`, `Dx`, `Rx`, `Tx`,
+`Sx`, `GCS`, `SpO2` e `MVC` também são preservadas. A lista segue formas de
+contexto clínico ilustradas no
+[guia Smart Naming](https://publicshare.albertahealthservices.ca/Main/assets/cmio/AHS_CC_TIP_Smart-Naming.pdf)
+do Connect Care da AHS. Esta é uma lista para filtragem de nomes, não uma
+política aprovada de abreviaturas clínicas; cada organização deve aplicar as
+suas próprias regras padronizadas e proibidas.
 As expressões de local como `Private Residence`, `West Side`, `Costco Store` e
 `Edmonton International Airport`,
 bem como os estados clínicos como `Pt Syncopal` e `Heavily Intoxicated`, também

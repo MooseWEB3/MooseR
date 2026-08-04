@@ -497,8 +497,23 @@ name_location_word_pattern <- function() {
   "(?i:(?:Residence|Residences|Store|Stores|Side|Airport|Airports))"
 }
 
+name_medical_abbreviations <- function() {
+  c(
+    # Clinical history, assessment, and documentation
+    "Hx", "PMH", "PMHx", "PSH", "PSHx", "FHx", "SHx", "HPI", "RS",
+    "ROS", "PE", "Dx", "Rx", "Tx", "Px", "Sx", "AD", "DC", "TR",
+    # Care settings and status
+    "ER", "IP", "CC", "OP", "CN", "RH", "PR", "MU", "NKA", "NKDA",
+    "NAD", "WNL", "LOC", "SOB",
+    # Vitals and common EMS event shorthand
+    "BP", "HR", "RR", "SpO2", "GCS", "BGL", "ETOH", "MVC", "MVA", "GSW",
+    "CVA", "TIA", "MI", "CHF", "COPD", "CAD", "UTI", "HTN", "DVT", "AFib"
+  )
+}
+
 name_clinical_terms <- function() {
   c(
+    name_medical_abbreviations(),
     # Clinical context and documentation
     "Clinical", "Emergency", "Diagnosis", "Treatment", "Therapy", "Surgery",
     "Age", "Aged", "Year", "Years", "Old",
