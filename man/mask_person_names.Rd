@@ -66,7 +66,8 @@ clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, 
 \code{Intoxication}, are also excluded.
 Common title-cased medical phrases, including \code{Chief Complaint},
 \code{Heat Exhaustion}, \code{Wellness Check}, \code{Safety Alerted}, \code{Not Feeling},
-\code{Bus Stop}, \code{Situational Crisis}, and \code{Non Small Cell Lung} are excluded through curated
+\code{Bus Stop}, \code{Language Barrier}, \code{Situational Crisis}, and
+\code{Non Small Cell Lung} are excluded through curated
 non-person whitelists.
 This whitelist takes precedence over the title-case name pattern, so audit
 data where a real person's name could contain one of these terms.
