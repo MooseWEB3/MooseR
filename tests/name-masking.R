@@ -422,6 +422,7 @@ medical_examples <- c(
   "Cognitive Impairment",
   "Emerge Call",
   "Contact Droplet",
+  "Patient Name",
   "Non Small Cell Lung",
   "Non-Small Cell Lung",
   "Situational Crisis",
