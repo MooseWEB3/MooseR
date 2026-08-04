@@ -350,6 +350,7 @@ medical_examples <- c(
   "Edmonton General",
   "Safety Alerted",
   "Not Feeling",
+  "Bus Stop",
   "Chief Complain",
   "Chief Complaint",
   "Chief Complaints",
