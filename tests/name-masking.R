@@ -418,6 +418,7 @@ medical_examples <- c(
   "Not Feeling",
   "Bus Stop",
   "Language Barrier",
+  "Cognitive Impairment",
   "Non Small Cell Lung",
   "Non-Small Cell Lung",
   "Situational Crisis",
