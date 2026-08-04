@@ -225,8 +225,8 @@ Clinical phrases containing words such as `Chest`, `Pain`, `Disease`, or
 Treatment phrases such as `Normal Saline IV` are also preserved.
 Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
-`Chief Complaint`, `On Arrival`, `Interfacility Transfer`, `Nursing Home`,
-`Altered Mental Status`, `Nausea Vomiting`, `Substance Abuse`,
+`Chief Complaint`, `Present Illness`, `On Arrival`, `Interfacility Transfer`,
+`Nursing Home`, `Altered Mental Status`, `Nausea Vomiting`, `Substance Abuse`,
 `Heart Transplant`, `Seizure Activity`, and `Opioid Overdose`.
 This whitelist intentionally takes precedence over the title-case name pattern;
 audit data where a real person's name could contain one of these terms.
@@ -557,7 +557,7 @@ n'est pas masqué.
 Les expressions de traitement comme `Normal Saline IV` sont aussi conservées.
 Les libellés de documents cliniques comme `RN Report` sont aussi conservés.
 La liste blanche médicale intégrée conserve aussi les expressions avec
-majuscules initiales comme `Chief Complaint`, `On Arrival`,
+majuscules initiales comme `Chief Complaint`, `Present Illness`, `On Arrival`,
 `Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
 `Nausea Vomiting`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
 `Opioid Overdose`.
@@ -895,8 +895,9 @@ mascarado.
 As expressões de tratamento como `Normal Saline IV` também são preservadas.
 Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
-como `Chief Complaint`, `On Arrival`, `Interfacility Transfer`, `Nursing Home`,
-`Altered Mental Status`, `Nausea Vomiting`, `Substance Abuse`,
+como `Chief Complaint`, `Present Illness`, `On Arrival`,
+`Interfacility Transfer`, `Nursing Home`, `Altered Mental Status`,
+`Nausea Vomiting`, `Substance Abuse`,
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
 Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
 maiúsculas; audite os dados quando um nome real puder conter um destes termos.
