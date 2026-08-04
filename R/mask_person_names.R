@@ -23,6 +23,8 @@
 #' Healthcare directory are excluded when the complete facility name occurs
 #' in the text, including `Peter Lougheed Centre`, `Grand Manor`, and
 #' `Chartwell Griesbach`.
+#' The 2,616 unique school names in the Alberta Education School Information
+#' Report are also excluded when the complete school name occurs in the text.
 #'
 #' @param text A character vector.
 #' @param replacement Replacement text used for detected names.
@@ -459,7 +461,8 @@ name_organization_word_pattern <- function() {
         "Center", "Centers", "Health", "Healthcare", "Medical", "Care",
         "Authority", "Hospice", "Foundation", "City", "Town", "Village",
         "Municipal", "Municipality", "County", "District", "Improvement",
-        "Special", "Areas"
+        "Special", "Areas", "School", "Schools", "Academy", "Academies",
+        "College", "Collegiate", "Campus", "Institute"
       ),
       collapse = "|"
     ),
@@ -524,6 +527,10 @@ is_nonperson_name_candidate <- function(text, start, end) {
   }
 
   if (is_alberta_health_facility_candidate(text, start, end)) {
+    return(TRUE)
+  }
+
+  if (is_alberta_school_candidate(text, start, end)) {
     return(TRUE)
   }
 

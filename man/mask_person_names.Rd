@@ -57,6 +57,8 @@ The 1,150 unique facility names in the Alberta Health Services Find
 Healthcare directory are excluded when the complete facility name occurs
 in the text, including \code{Peter Lougheed Centre}, \code{Grand Manor}, and
 \code{Chartwell Griesbach}.
+The 2,616 unique school names in the Alberta Education School Information
+Report are also excluded when the complete school name occurs in the text.
 }
 \examples{
 \dontrun{
