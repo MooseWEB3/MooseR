@@ -23,7 +23,7 @@
 #' Common title-cased medical phrases, including `Chief Complaint`,
 #' `Heat Exhaustion`, `Wellness Check`, `Safety Alerted`, `Not Feeling`,
 #' `Bus Stop`, `Language Barrier`, `Cognitive Impairment`, `Emerge Call`,
-#' `Contact Droplet`,
+#' `Contact Droplet`, `Patient Name`,
 #' `Situational Crisis`, and
 #' `Non Small Cell Lung` are excluded through curated
 #' non-person whitelists.
@@ -729,6 +729,7 @@ name_clinical_phrases <- function() {
     "Cognitive Impairment",
     "Emerge Call",
     "Contact Droplet",
+    "Patient Name",
     "Non Small Cell Lung",
     "Non-Small Cell Lung",
     "Situational Crisis"
