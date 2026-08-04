@@ -17,6 +17,11 @@
 #' `Airport`, and
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
+#' Common title-cased medical phrases, including `Altered Mental Status`,
+#' `Nausea Vomiting`, `Blood Pressure`, `Cervical Spine`, and
+#' `Opioid Overdose`, are excluded through a curated medical-term whitelist.
+#' This whitelist takes precedence over the title-case name pattern, so audit
+#' data where a real person's name could contain one of these terms.
 #' The 334 official Alberta municipality names are also excluded in both
 #' engines, including names such as `Medicine Hat`, `Red Deer`, and
 #' `Rocky Mountain House`.
@@ -438,7 +443,7 @@ name_title_case_word_pattern <- function() {
 
 name_context_word_pattern <- function() {
   paste0(
-    "(?!", name_nonperson_word_pattern(), "\\b)",
+    "(?!", name_regex_excluded_word_pattern(), "\\b)",
     "(?:",
     "[A-Z]\\.",
     "|", name_title_case_word_pattern(),
@@ -450,7 +455,7 @@ name_context_word_pattern <- function() {
 
 name_person_title_case_word_pattern <- function() {
   paste0(
-    "(?!", name_nonperson_word_pattern(), "\\b)",
+    "(?!", name_regex_excluded_word_pattern(), "\\b)",
     name_title_case_word_pattern()
   )
 }
@@ -477,34 +482,83 @@ name_location_word_pattern <- function() {
   "(?i:(?:Residence|Residences|Store|Stores|Side|Airport|Airports))"
 }
 
-name_clinical_word_pattern <- function() {
-  paste0(
+name_clinical_terms <- function() {
+  c(
+    # Clinical context and documentation
+    "Clinical", "Emergency", "Diagnosis", "Treatment", "Therapy", "Surgery",
+    "Procedure",
+    "Assessment", "Documentation", "Report", "Reports", "Note", "Notes",
+    "Record", "Records", "Chart", "Charts", "Form", "Forms", "Summary",
+    "Summaries", "Handover", "Triage", "Transport", "Transfer",
+    "Ambulance", "Resuscitation", "Extrication", "Status", "Activity",
+    # Severity, anatomy, and body systems
+    "Acute", "Chronic", "Severe", "Cardia", "Cardiac", "Cardiovascular",
+    "Chest", "Abdomen", "Abdominal", "Respiratory", "Renal", "Airway",
+    "Head", "Neck", "Back", "Shoulder", "Arm", "Elbow", "Wrist", "Hand",
+    "Hip", "Leg", "Knee", "Ankle", "Foot", "Facial", "Cervical", "Lumbar",
+    "Thoracic", "Cranial", "Spinal", "Spine", "Pelvic", "Pelvis",
+    "Pulmonary", "Neurological", "Neuro", "Gastric", "Gastrointestinal",
+    "Urinary", "Vascular", "Arterial", "Venous", "Left", "Right",
+    # Symptoms, conditions, and injuries
+    "Trauma", "Pain", "Disease", "Syndrome", "Disorder", "Injury",
+    "Failure", "Fracture", "Cancer", "Infection", "Symptom", "Symptoms",
+    "Altered", "Mental", "Consciousness", "Alert", "Oriented", "Confused",
+    "Confusion", "Unconscious", "Unresponsive", "Lethargic", "Agitated",
+    "Combative", "Delirium", "Psychiatric", "Psychosis", "Anxiety",
+    "Depression", "Suicidal", "Homicidal", "Ideation", "Dyspnea", "Apnea",
+    "Wheezing", "Cough", "Hypoxia", "Hypoxic", "Nausea", "Vomiting",
+    "Diarrhea", "Constipation", "Dysphagia", "Dizziness", "Dizzy", "Vertigo",
+    "Headache", "Migraine", "Fever", "Chills", "Fatigue", "Weakness",
+    "Numbness", "Tingling", "Paralysis", "Seizure", "Seizures", "Stroke",
+    "Bleeding", "Hemorrhage", "Laceration", "Lacerations", "Abrasion",
+    "Abrasions", "Contusion", "Contusions", "Dislocation", "Dislocations",
+    "Sprain", "Sprains", "Strain", "Strains", "Wound", "Wounds", "Edema",
+    "Swelling", "Tenderness", "Rash", "Retention", "Dehydration",
+    "Hypoglycemia", "Hyperglycemia", "Diabetic", "Tachycardia",
+    "Bradycardia", "Arrhythmia", "Palpitations", "Hypotension",
+    "Hypertension", "Sepsis", "Septic", "Pneumonia", "Allergic",
+    "Anaphylaxis", "Anaphylactic", "Reaction", "Overdose", "Opioid",
+    "Alcohol", "Withdrawal", "Poisoning", "Syncopal", "Syncope",
+    "Intoxicated", "Intoxication",
+    # Vitals, events, equipment, and treatments
+    "Blood", "Pressure", "Heart", "Pulse", "Rate", "Rhythm", "Oxygen",
+    "Saturation", "Temperature", "Glucose", "Systolic", "Diastolic",
+    "Motor", "Vehicle", "Collision", "Ground", "Level", "Mechanical",
+    "Witnessed", "Unwitnessed", "Normal", "Saline", "IV", "Intravenous",
+    "Infusion", "Bolus", "Dose", "Medication", "Solution", "Ventilation",
+    "Ventilator", "Nebulizer", "Catheter", "Cannula", "Tourniquet", "Splint",
+    "Bandage", "Dressing", "Defibrillator", "Defibrillation", "CPR", "ECG",
+    "EKG", "Aspirin", "Epinephrine", "Adrenaline", "Naloxone", "Narcan",
+    "Nitroglycerin", "Insulin", "Dextrose", "Morphine", "Fentanyl",
+    "Ketamine", "Acetaminophen", "Tylenol", "Ibuprofen", "Advil",
+    "Albuterol", "Salbutamol", "Atrovent"
+  )
+}
+
+name_clinical_word_pattern <- local({
+  pattern <- paste0(
     "(?i:(?:",
-    paste(
-      c(
-        "Acute", "Chronic", "Severe", "Cardia", "Cardiac", "Chest",
-        "Abdominal", "Respiratory", "Renal", "Clinical", "Emergency",
-        "Trauma", "Pain", "Disease", "Syndrome", "Disorder", "Injury",
-        "Failure", "Fracture", "Cancer", "Infection", "Symptom", "Symptoms",
-        "Diagnosis", "Treatment", "Therapy", "Surgery", "Procedure",
-        "Normal", "Saline", "IV", "Intravenous", "Infusion", "Bolus", "Dose",
-        "Medication", "Solution", "Report", "Reports", "Assessment",
-        "Documentation", "Note", "Notes", "Record", "Records", "Chart",
-        "Charts", "Form", "Forms", "Summary", "Summaries", "Handover",
-        "Syncopal", "Syncope", "Intoxicated", "Intoxication"
-      ),
-      collapse = "|"
-    ),
+    paste(unique(name_clinical_terms()), collapse = "|"),
     "))"
+  )
+
+  function() pattern
+})
+
+name_regex_excluded_word_pattern <- function() {
+  paste0(
+    "(?:",
+    name_organization_word_pattern(),
+    "|",
+    name_location_word_pattern(),
+    ")"
   )
 }
 
 name_nonperson_word_pattern <- function() {
   paste0(
     "(?:",
-    name_organization_word_pattern(),
-    "|",
-    name_location_word_pattern(),
+    name_regex_excluded_word_pattern(),
     "|",
     name_clinical_word_pattern(),
     ")"
@@ -518,9 +572,53 @@ name_nonperson_suffix_guard <- function() {
     "(?!\\s+(?:",
     context_word,
     "\\s+){0,2}",
-    name_nonperson_word_pattern(),
+    name_regex_excluded_word_pattern(),
     "\\b)"
   )
+}
+
+is_clinical_nonperson_candidate_values <- function(text, start, end, candidate) {
+  lengths <- c(length(text), length(start), length(end), length(candidate))
+
+  if (length(unique(lengths)) != 1L) {
+    stop("Clinical candidate inputs must have the same length.", call. = FALSE)
+  }
+
+  result <- rep.int(FALSE, length(candidate))
+
+  if (!length(candidate)) {
+    return(result)
+  }
+
+  candidate_keys <- ifelse(is.na(candidate), "", candidate)
+  unique_candidates <- !duplicated(candidate_keys)
+  unique_result <- grepl(
+    paste0("\\b", name_clinical_word_pattern(), "\\b"),
+    candidate_keys[unique_candidates],
+    perl = TRUE
+  )
+  result <- unique_result[match(candidate_keys, candidate_keys[unique_candidates])]
+  pending <- which(!result & !is.na(text) & end < nchar(text))
+
+  if (!length(pending)) {
+    return(result)
+  }
+
+  suffix <- substr(text[pending], end[pending] + 1L, nchar(text[pending]))
+  unique_suffixes <- !duplicated(suffix)
+  suffix_result <- grepl(
+    paste0(
+      "^\\s+(?:",
+      name_context_word_pattern(),
+      "\\s+){0,2}",
+      name_clinical_word_pattern(),
+      "\\b"
+    ),
+    suffix[unique_suffixes],
+    perl = TRUE
+  )
+  result[pending] <- suffix_result[match(suffix, suffix[unique_suffixes])]
+  result
 }
 
 is_nonperson_name_candidate <- function(text, start, end) {
