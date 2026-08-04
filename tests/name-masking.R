@@ -192,6 +192,7 @@ medical_examples <- c(
   "Cervical Spine",
   "Facial Laceration",
   "Seizure Activity",
+  "Nose Bleed",
   "Gastrointestinal Bleeding",
   "Opioid Overdose",
   "Alcohol Withdrawal",
@@ -201,6 +202,8 @@ medical_examples <- c(
 stopifnot(
   !anyDuplicated(MooseR:::name_clinical_terms()),
   MooseR:::is_nonperson_name_candidate("Urinary Issues", 9L, 14L),
+  MooseR:::is_nonperson_name_candidate("Nose Bleed", 1L, 4L),
+  MooseR:::is_nonperson_name_candidate("Nose Bleed", 6L, 10L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
