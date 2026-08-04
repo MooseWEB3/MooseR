@@ -227,7 +227,8 @@ Clinical document labels such as `RN Report` are also preserved.
 The built-in medical whitelist also preserves title-cased phrases such as
 `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
 `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
-`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
+`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Patient Demographics`,
+`Substance Abuse`, `Heart Transplant`, `Seizure Activity`,
 and `Opioid Overdose`.
 This whitelist intentionally takes precedence over the title-case name pattern;
 audit data where a real person's name could contain one of these terms.
@@ -561,7 +562,8 @@ La liste blanche médicale intégrée conserve aussi les expressions avec
 majuscules initiales comme `Chief Complaint`, `Present Illness`, `Code Status`,
 `On Arrival`, `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`,
 `Altered Mental Status`,
-`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
+`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Patient Demographics`,
+`Substance Abuse`, `Heart Transplant`, `Seizure Activity` et
 `Opioid Overdose`.
 Cette liste blanche a volontairement priorité sur le modèle de nom avec
 majuscules initiales ; vérifiez les données lorsqu'un vrai nom de personne peut
@@ -899,7 +901,8 @@ Os rótulos de documentos clínicos como `RN Report` também são preservados.
 A lista médica integrada também preserva expressões iniciadas por maiúsculas,
 como `Chief Complaint`, `Present Illness`, `Code Status`, `On Arrival`,
 `Interfacility Transfer`, `Transport Truck`, `Ground Level`, `Nursing Home`, `Altered Mental Status`,
-`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Substance Abuse`,
+`Nausea Vomiting`, `Nose Bleed`, `Urinary Issues`, `Patient Demographics`,
+`Substance Abuse`,
 `Heart Transplant`, `Seizure Activity` e `Opioid Overdose`.
 Esta lista tem prioridade intencional sobre o padrão de nome com iniciais
 maiúsculas; audite os dados quando um nome real puder conter um destes termos.
