@@ -161,6 +161,8 @@ medical_examples <- c(
   "Medical Transport Truck",
   "Patient Transport Truck",
   "Service Truck",
+  "Ground Level",
+  "Patient Found Ground Level",
   "Present Illness",
   "History Present Illness",
   "History of Present Illness",
