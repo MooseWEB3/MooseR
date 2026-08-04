@@ -348,6 +348,7 @@ medical_examples <- c(
   "Refill Prescription",
   "Return Trip",
   "Edmonton General",
+  "Safety Alerted",
   "Chief Complain",
   "Chief Complaint",
   "Chief Complaints",

@@ -65,7 +65,7 @@ Non-person location phrases ending in \code{Residence}, \code{Store}, \code{Side
 clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, or
 \code{Intoxication}, are also excluded.
 Common title-cased medical phrases, including \code{Chief Complaint},
-\code{Heat Exhaustion}, \code{Wellness Check}, \code{Substance Abuse}, and
+\code{Heat Exhaustion}, \code{Wellness Check}, \code{Safety Alerted}, and
 \code{Edmonton General}, are excluded through curated medical whitelists.
 This whitelist takes precedence over the title-case name pattern, so audit
 data where a real person's name could contain one of these terms.
