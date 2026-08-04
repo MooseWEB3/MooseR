@@ -363,6 +363,78 @@ stopifnot(
   )
 )
 
+known_only_records <- data.frame(
+  comments = c(
+    "Jonathon Smyth called.",
+    "Alice Martin called Peter Brown.",
+    "Tremblay, Jean-Paul reviewed.",
+    "ONEIL arrived.",
+    "Jon called.",
+    "Peter Brown called.",
+    NA
+  ),
+  first_name = factor(c(
+    "Jonathan", "Alice", "Jean-Paul", "Anne", "John", "Sarah", "Alice"
+  )),
+  last_name = c(
+    "Smith", "Martin", "Tremblay", "O'Neil", "Doe", "Johnson", "Martin"
+  ),
+  stringsAsFactors = FALSE
+)
+
+known_only_expected <- c(
+  "[NAME] [NAME] called.",
+  "[NAME] called Peter Brown.",
+  "[NAME] reviewed.",
+  "[NAME] arrived.",
+  "Jon called.",
+  "Peter Brown called.",
+  NA
+)
+
+stopifnot(
+  identical(
+    Moose_mask_person_names2(
+      known_only_records$comments,
+      data = known_only_records,
+      name_columns = c("first_name", "last_name")
+    ),
+    known_only_expected
+  ),
+  identical(
+    Moose_name_flag2(
+      known_only_records$comments,
+      data = known_only_records,
+      name_columns = c("first_name", "last_name")
+    ),
+    c(1L, 1L, 1L, 1L, 0L, 0L, 0L)
+  ),
+  identical(
+    Moose_mask_person_names2(
+      known_only_records$comments[1],
+      data = known_only_records[1, , drop = FALSE],
+      max_distance = 0L
+    ),
+    known_only_records$comments[1]
+  ),
+  Moose_name_flag2(
+    known_only_records$comments[5],
+    data = known_only_records[5, , drop = FALSE],
+    min_chars = 4L
+  ) == 1L,
+  inherits(
+    tryCatch(
+      Moose_name_flag2(
+        known_only_records$comments,
+        data = known_only_records,
+        max_distance = 4L
+      ),
+      error = identity
+    ),
+    "error"
+  )
+)
+
 medical_abbreviation_examples <- c(
   "IFT Requested",
   "Hx Collected",

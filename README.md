@@ -92,6 +92,8 @@ existing scripts do not break.
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Return an audit table of detected names and character offsets. |
 | `Moose_name_flag()` | - | Return a 1/0 vector showing whether each text value contains a detected personal name. |
+| `Moose_mask_person_names2()` | - | Mask only exact or similar names from row-aligned known-name columns. |
+| `Moose_name_flag2()` | - | Flag only exact or similar names from row-aligned known-name columns. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Apply supplementary regex-based name-masking rules. |
 | `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
 | `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
@@ -334,6 +336,25 @@ Each comment is compared only with the name values in the same data-frame row.
 This keeps the operation practical for large data sets and avoids treating
 every name in the data set as a match for every comment.
 
+Use the `2` functions when names not represented by the same row's known-name
+columns must remain unchanged. They do not run spaCy or general name detection:
+
+```r
+records$known_names_masked <- Moose_mask_person_names2(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+records$known_name_flag <- Moose_name_flag2(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+```
+
+The default similar-name rule allows one spelling edit only for known names
+with at least five letters. Use `max_distance = 0L` for exact matching only.
+
 Create an audit table of detected names:
 
 ```r
@@ -476,6 +497,8 @@ scripts existants.
 | `Moose_mask_person_names()` | `mask_person_names()` | Remplacer les noms de personnes détectés dans un texte par une chaîne de remplacement. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Retourner un tableau d'audit des noms détectés et de leur position dans le texte. |
 | `Moose_name_flag()` | - | Retourner un vecteur 1/0 précisant si chaque texte contient un nom de personne détecté. |
+| `Moose_mask_person_names2()` | - | Masquer uniquement les noms exacts ou similaires provenant de colonnes de noms alignées par ligne. |
+| `Moose_name_flag2()` | - | Signaler uniquement les noms exacts ou similaires provenant de colonnes de noms alignées par ligne. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Appliquer des règles supplémentaires de masquage des noms avec des expressions régulières. |
 | `Moose_todate()` | - | Convertir les formats de date courants en valeurs R `Date`. |
 | `Moose_todatetime()` | - | Convertir les formats courants de date et heure en valeurs R `POSIXct`. |
@@ -729,6 +752,27 @@ Chaque commentaire est comparé uniquement aux noms figurant dans la même
 ligne. Cette approche convient aux grands jeux de données et évite de comparer
 chaque commentaire à tous les noms du jeu de données.
 
+Utilisez les fonctions se terminant par `2` lorsque les noms absents des
+colonnes connues de la même ligne doivent rester inchangés. Elles n'utilisent
+ni spaCy ni la détection générale des noms :
+
+```r
+records$known_names_masked <- Moose_mask_person_names2(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+records$known_name_flag <- Moose_name_flag2(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+```
+
+Par défaut, une seule modification orthographique est permise uniquement pour
+les noms connus comportant au moins cinq lettres. Utilisez
+`max_distance = 0L` pour une correspondance exacte uniquement.
+
 Créer un tableau d'audit des noms détectés :
 
 ```r
@@ -872,6 +916,8 @@ existentes.
 | `Moose_mask_person_names()` | `mask_person_names()` | Substituir os nomes de pessoas detetados num texto por uma cadeia de substituição. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Devolver uma tabela de auditoria dos nomes detetados e das respetivas posições no texto. |
 | `Moose_name_flag()` | - | Devolver um vetor 1/0 que mostra se cada texto contém um nome de pessoa detetado. |
+| `Moose_mask_person_names2()` | - | Mascarar apenas nomes exatos ou semelhantes provenientes de colunas de nomes alinhadas por linha. |
+| `Moose_name_flag2()` | - | Sinalizar apenas nomes exatos ou semelhantes provenientes de colunas de nomes alinhadas por linha. |
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Aplicar regras adicionais de mascaramento de nomes com expressões regulares. |
 | `Moose_todate()` | - | Converter formatos comuns de data em valores R `Date`. |
 | `Moose_todatetime()` | - | Converter formatos comuns de data e hora em valores R `POSIXct`. |
@@ -1121,6 +1167,27 @@ records$name_flag <- Moose_name_flag(
 Cada comentário é comparado apenas com os nomes existentes na mesma linha.
 Isto mantém a operação adequada para grandes conjuntos de dados e evita
 comparar cada comentário com todos os nomes do conjunto.
+
+Use as funções terminadas em `2` quando os nomes que não constam das colunas
+conhecidas da mesma linha devem permanecer inalterados. Estas funções não
+executam o spaCy nem a deteção geral de nomes:
+
+```r
+records$known_names_masked <- Moose_mask_person_names2(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+records$known_name_flag <- Moose_name_flag2(
+  records$comments,
+  data = records,
+  name_columns = c("first_name", "last_name")
+)
+```
+
+Por predefinição, é permitida uma única alteração ortográfica apenas para
+nomes conhecidos com pelo menos cinco letras. Use `max_distance = 0L` para
+correspondência exclusivamente exata.
 
 Criar uma tabela de auditoria dos nomes detetados:
 
