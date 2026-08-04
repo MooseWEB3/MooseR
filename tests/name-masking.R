@@ -421,6 +421,7 @@ medical_examples <- c(
   "Language Barrier",
   "Cognitive Impairment",
   "Emerge Call",
+  "Contact Droplet",
   "Non Small Cell Lung",
   "Non-Small Cell Lung",
   "Situational Crisis",
