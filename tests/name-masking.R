@@ -150,6 +150,7 @@ medical_examples <- c(
   "Drug Addiction",
   "On Arrival",
   "Upon Arrival",
+  "En Route",
   "On Scene",
   "Patient Discharged",
   "Patient Demographics",
@@ -214,6 +215,8 @@ stopifnot(
   MooseR:::is_nonperson_name_candidate("Behavioural Problems", 13L, 20L),
   MooseR:::is_nonperson_name_candidate("Dog Bite", 1L, 3L),
   MooseR:::is_nonperson_name_candidate("Dog Bite", 5L, 8L),
+  MooseR:::is_nonperson_name_candidate("En Route", 1L, 2L),
+  MooseR:::is_nonperson_name_candidate("En Route", 4L, 8L),
   identical(
     Moose_mask_person_names(medical_examples, engine = "regex"),
     medical_examples
