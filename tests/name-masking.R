@@ -174,6 +174,11 @@ comma_nonperson_examples <- c(
   "Red Deer, Alberta",
   "Vancouver, British Columbia",
   "Vancouver, BC",
+  "Avenue, Calgary",
+  "AVENUE,CALGARY",
+  "Street, Edmonton",
+  "Route, Red Deer",
+  "Avenue, Fort McMurry",
   "Pain, Chest"
 )
 
@@ -197,6 +202,14 @@ stopifnot(
     Moose_mask_person_names(comma_nonperson_examples, engine = "regex"),
     comma_nonperson_examples
   ),
+  all(MooseR:::is_alberta_municipality_comma_candidate(c(
+    "Avenue, Calgary",
+    "AVENUE,CALGARY",
+    "Street, Edmonton",
+    "Route, Red Deer",
+    "Avenue, Fort McMurry"
+  ))),
+  !MooseR:::is_alberta_municipality_comma_candidate("Smith, John"),
   identical(
     Moose_name_flag(comma_nonperson_examples, engine = "regex"),
     integer(length(comma_nonperson_examples))

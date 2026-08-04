@@ -246,7 +246,8 @@ rules.
 Comma-separated names are also detected, including `Smith, John`,
 `SMITH, JOHN`, `Smith, J.`, and `O'Neil, Anne-Marie`. Canadian geographic
 forms such as `Edmonton, Alberta` and `Vancouver, British Columbia` are
-preserved.
+preserved. Address or location labels followed by an Alberta municipality,
+such as `Avenue, Calgary`, are also preserved.
 Location phrases such as `Private Residence`, `West Side`, `Costco Store`, and
 `Edmonton International Airport`,
 and clinical states such as `Pt Syncopal` and `Heavily Intoxicated`, are also
@@ -625,7 +626,9 @@ appliquer ses propres règles normalisées et interdites.
 Les noms séparés par une virgule sont également détectés, notamment
 `Smith, John`, `SMITH, JOHN`, `Smith, J.` et `O'Neil, Anne-Marie`. Les formes
 géographiques canadiennes comme `Edmonton, Alberta` et
-`Vancouver, British Columbia` sont conservées.
+`Vancouver, British Columbia` sont conservées. Les libellés d'adresse ou de
+lieu suivis d'une municipalité albertaine, comme `Avenue, Calgary`, sont aussi
+conservés.
 Les expressions de lieu comme `Private Residence`, `West Side`, `Costco Store`
 et `Edmonton International Airport`, ainsi que les états cliniques comme `Pt Syncopal` et
 `Heavily Intoxicated`, sont également conservés. `Pt` est traité comme
@@ -1006,6 +1009,8 @@ suas próprias regras padronizadas e proibidas.
 Os nomes separados por vírgula também são detetados, incluindo `Smith, John`,
 `SMITH, JOHN`, `Smith, J.` e `O'Neil, Anne-Marie`. Formas geográficas canadianas
 como `Edmonton, Alberta` e `Vancouver, British Columbia` são preservadas.
+Rótulos de endereço ou localização seguidos por um município de Alberta,
+como `Avenue, Calgary`, também são preservados.
 As expressões de local como `Private Residence`, `West Side`, `Costco Store` e
 `Edmonton International Airport`,
 bem como os estados clínicos como `Pt Syncopal` e `Heavily Intoxicated`, também
