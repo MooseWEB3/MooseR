@@ -532,7 +532,7 @@ name_clinical_terms <- function() {
     # Vitals, events, equipment, and treatments
     "Blood", "Pressure", "Heart", "Pulse", "Rate", "Rhythm", "Oxygen",
     "Saturation", "Temperature", "Glucose", "Systolic", "Diastolic",
-    "Motor", "Vehicle", "Collision", "Ground", "Level", "Mechanical",
+    "Motor", "Vehicle", "Collision", "Truck", "Trucks", "Ground", "Level", "Mechanical",
     "Witnessed", "Unwitnessed", "Normal", "Saline", "IV", "Intravenous",
     "Infusion", "Bolus", "Dose", "Medication", "Solution", "Ventilation",
     "Ventilator", "Nebulizer", "Catheter", "Cannula", "Tourniquet", "Splint",
