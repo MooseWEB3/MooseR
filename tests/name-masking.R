@@ -47,3 +47,24 @@ stopifnot(
     c(1L, 0L, 1L)
   )
 )
+
+nonperson_examples <- c(
+  "Private Residence",
+  "West Side",
+  "Costco Store",
+  "Pt Syncopal",
+  "Heavily Intoxicated"
+)
+
+stopifnot(
+  identical(
+    Moose_mask_person_names(nonperson_examples, engine = "regex"),
+    nonperson_examples
+  ),
+  identical(
+    Moose_name_flag(nonperson_examples, engine = "regex"),
+    integer(length(nonperson_examples))
+  ),
+  nrow(Moose_detect_person_names(nonperson_examples, engine = "regex")) == 0L,
+  Moose_name_flag("Pt John Smith", engine = "regex") == 1L
+)

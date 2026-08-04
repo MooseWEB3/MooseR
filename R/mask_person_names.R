@@ -13,6 +13,9 @@
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
 #' as `Normal Saline IV`, and clinical document labels such as `RN Report`, are
 #' excluded from name matching in both engines.
+#' Non-person location phrases ending in `Residence`, `Store`, or `Side`, and
+#' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
+#' `Intoxication`, are also excluded.
 #' The 334 official Alberta municipality names are also excluded in both
 #' engines, including names such as `Medicine Hat`, `Red Deer`, and
 #' `Rocky Mountain House`.
@@ -464,6 +467,10 @@ name_organization_word_pattern <- function() {
   )
 }
 
+name_location_word_pattern <- function() {
+  "(?i:(?:Residence|Residences|Store|Stores|Side))"
+}
+
 name_clinical_word_pattern <- function() {
   paste0(
     "(?i:(?:",
@@ -477,7 +484,8 @@ name_clinical_word_pattern <- function() {
         "Normal", "Saline", "IV", "Intravenous", "Infusion", "Bolus", "Dose",
         "Medication", "Solution", "Report", "Reports", "Assessment",
         "Documentation", "Note", "Notes", "Record", "Records", "Chart",
-        "Charts", "Form", "Forms", "Summary", "Summaries", "Handover"
+        "Charts", "Form", "Forms", "Summary", "Summaries", "Handover",
+        "Syncopal", "Syncope", "Intoxicated", "Intoxication"
       ),
       collapse = "|"
     ),
@@ -489,6 +497,8 @@ name_nonperson_word_pattern <- function() {
   paste0(
     "(?:",
     name_organization_word_pattern(),
+    "|",
+    name_location_word_pattern(),
     "|",
     name_clinical_word_pattern(),
     ")"
