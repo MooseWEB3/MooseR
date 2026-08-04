@@ -13,7 +13,8 @@
 #' such as `Chest`, `Pain`, `Disease`, or `Syndrome`, and treatment phrases such
 #' as `Normal Saline IV`, and clinical document labels such as `RN Report`, are
 #' excluded from name matching in both engines.
-#' Non-person location phrases ending in `Residence`, `Store`, or `Side`, and
+#' Non-person location phrases ending in `Residence`, `Store`, `Side`, or
+#' `Airport`, and
 #' clinical states containing `Syncopal`, `Syncope`, `Intoxicated`, or
 #' `Intoxication`, are also excluded.
 #' The 334 official Alberta municipality names are also excluded in both
@@ -473,7 +474,7 @@ name_organization_word_pattern <- function() {
 }
 
 name_location_word_pattern <- function() {
-  "(?i:(?:Residence|Residences|Store|Stores|Side))"
+  "(?i:(?:Residence|Residences|Store|Stores|Side|Airport|Airports))"
 }
 
 name_clinical_word_pattern <- function() {

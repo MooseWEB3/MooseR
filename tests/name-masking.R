@@ -111,7 +111,10 @@ nonperson_examples <- c(
   "Heavily Intoxicated",
   "Fort McMurray",
   "Fort McMurry",
-  "Reviewed by Fort McMurry."
+  "Reviewed by Fort McMurry.",
+  "Edmonton Airport",
+  "Edmonton International Airport",
+  "Reviewed by Edmonton Airport."
 )
 
 stopifnot(
