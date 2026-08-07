@@ -93,6 +93,7 @@ existing scripts do not break.
 | `Moose_check_name_masking()` | `check_name_masking()` | Report the current Python, spaCy, and model setup status. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
 | `Moose_mask_PHN()` | - | Mask nine-digit Personal Health Numbers near a `PHN` label. |
+| `Moose_mask_PHN_flag()` | - | Return 1 when a PHN is detected and 0 otherwise. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Return an audit table of detected names and character offsets. |
 | `Moose_name_flag()` | - | Return a 1/0 vector showing whether each text value contains a detected personal name. |
 | `Moose_mask_person_names2()` | - | Mask only exact or similar names from row-aligned known-name columns. |

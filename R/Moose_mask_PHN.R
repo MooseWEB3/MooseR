@@ -44,38 +44,7 @@ Moose_mask_PHN <- function(text,
     stop("`replacement` must be one non-missing character value.", call. = FALSE)
   }
 
-  if (
-    !is.numeric(proximity) ||
-      length(proximity) != 1L ||
-      is.na(proximity) ||
-      !is.finite(proximity) ||
-      proximity < 0L ||
-      proximity != as.integer(proximity)
-  ) {
-    stop("`proximity` must be one non-negative integer.", call. = FALSE)
-  }
-
-  proximity <- as.integer(proximity)
-  number_pattern <- paste0(
-    "(?<![0-9])(?:",
-    "[0-9]{5}[[:space:]]*-[[:space:]]*[0-9]{4}",
-    "|[0-9]{9}",
-    ")(?![0-9])"
-  )
-  patterns <- c(
-    paste0(
-      "(?i:\\bPHN\\b)[^0-9\\r\\n]{0,",
-      proximity,
-      "}\\K",
-      number_pattern
-    ),
-    paste0(
-      number_pattern,
-      "(?=[^0-9\\r\\n]{0,",
-      proximity,
-      "}(?i:\\bPHN\\b))"
-    )
-  )
+  proximity <- moose_validate_phn_proximity(proximity)
 
   output <- text
 
@@ -86,25 +55,12 @@ Moose_mask_PHN <- function(text,
       next
     }
 
-    positions <- lapply(patterns, function(pattern) {
-      matches <- gregexpr(pattern, value, perl = TRUE)[[1]]
+    positions <- moose_phn_positions(value, proximity)
 
-      if (identical(matches[1], -1L)) {
-        return(NULL)
-      }
-
-      data.frame(
-        start = as.integer(matches),
-        end = as.integer(matches + attr(matches, "match.length") - 1L)
-      )
-    })
-    positions <- Filter(Negate(is.null), positions)
-
-    if (!length(positions)) {
+    if (!nrow(positions)) {
       next
     }
 
-    positions <- unique(do.call(rbind, positions))
     positions <- positions[order(positions$start, decreasing = TRUE), , drop = FALSE]
     current <- value
 
@@ -126,4 +82,110 @@ Moose_mask_PHN <- function(text,
   }
 
   output
+}
+
+#' Flag text containing an Alberta Personal Health Number
+#'
+#' Uses the same PHN-label proximity rules as [Moose_mask_PHN()] and returns
+#' `1L` when a PHN is found or `0L` otherwise. Missing and blank values return
+#' `0L`.
+#'
+#' @param text A character or factor vector.
+#' @param proximity A single non-negative integer giving the maximum number of
+#'   non-digit characters allowed between `PHN` and the number.
+#'
+#' @return An integer vector with the same length as `text`.
+#'
+#' @examples
+#' Moose_mask_PHN_flag(c(
+#'   "PHN: 123456789",
+#'   "No PHN is present",
+#'   NA_character_
+#' ))
+#'
+#' @export
+Moose_mask_PHN_flag <- function(text, proximity = 20L) {
+  if (is.factor(text)) {
+    text <- as.character(text)
+  }
+
+  if (!is.character(text)) {
+    stop("`text` must be a character or factor vector.", call. = FALSE)
+  }
+
+  proximity <- moose_validate_phn_proximity(proximity)
+  flag <- integer(length(text))
+  candidates <- which(!is.na(text) & nzchar(text))
+
+  if (!length(candidates)) {
+    return(flag)
+  }
+
+  flag[candidates] <- vapply(
+    text[candidates],
+    function(value) as.integer(nrow(moose_phn_positions(value, proximity)) > 0L),
+    integer(1)
+  )
+  flag
+}
+
+moose_validate_phn_proximity <- function(proximity) {
+  if (
+    !is.numeric(proximity) ||
+      length(proximity) != 1L ||
+      is.na(proximity) ||
+      !is.finite(proximity) ||
+      proximity < 0L ||
+      proximity != as.integer(proximity)
+  ) {
+    stop("`proximity` must be one non-negative integer.", call. = FALSE)
+  }
+
+  as.integer(proximity)
+}
+
+moose_phn_patterns <- function(proximity) {
+  number_pattern <- paste0(
+    "(?<![0-9])(?:",
+    "[0-9]{5}[[:space:]]*-[[:space:]]*[0-9]{4}",
+    "|[0-9]{9}",
+    ")(?![0-9])"
+  )
+
+  c(
+    paste0(
+      "(?i:\\bPHN\\b)[^0-9\\r\\n]{0,",
+      proximity,
+      "}\\K",
+      number_pattern
+    ),
+    paste0(
+      number_pattern,
+      "(?=[^0-9\\r\\n]{0,",
+      proximity,
+      "}(?i:\\bPHN\\b))"
+    )
+  )
+}
+
+moose_phn_positions <- function(value, proximity) {
+  positions <- lapply(moose_phn_patterns(proximity), function(pattern) {
+    matches <- gregexpr(pattern, value, perl = TRUE)[[1]]
+
+    if (identical(matches[1], -1L)) {
+      return(NULL)
+    }
+
+    data.frame(
+      start = as.integer(matches),
+      end = as.integer(matches + attr(matches, "match.length") - 1L)
+    )
+  })
+  positions <- Filter(Negate(is.null), positions)
+
+  if (!length(positions)) {
+    return(data.frame(start = integer(), end = integer()))
+  }
+
+  unique(do.call(rbind, positions))
 }
