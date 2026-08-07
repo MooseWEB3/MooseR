@@ -1,6 +1,6 @@
 library(MooseR)
 
-facilities <- MooseR:::alberta_health_facilities()
+facilities <- MooseR:::alberta_health_facility_names()
 
 stopifnot(
   length(facilities) == 1150L,
