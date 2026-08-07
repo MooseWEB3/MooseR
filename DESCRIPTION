@@ -1,6 +1,6 @@
 Package: MooseR
 Title: Data Cleaning and Summary Utility Functions
-Version: 0.0.0.9034
+Version: 0.0.0.9035
 Authors@R:
     person("LisbonBulldog", email = "develop@lisbonbulldog.xyz", role = c("aut", "cre"))
 Description: A collection of utility functions for common data wrangling tasks,
@@ -10,9 +10,11 @@ Description: A collection of utility functions for common data wrangling tasks,
     and personal-name detection and masking with spaCy or a pure R regex fallback.
 License: MIT + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Depends:
     R (>= 4.1.0)
 Suggests:
+    readxl,
     reticulate (>= 1.41)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

@@ -2,26 +2,61 @@
 % Please edit documentation in R/Moose_read_csv.R
 \name{Moose_read_csv}
 \alias{Moose_read_csv}
-\title{Read a CSV file and clean its column names}
+\title{Import CSV files}
 \usage{
-Moose_read_csv(path, file_name)
+Moose_read_csv(
+  path,
+  file_name = NULL,
+  prefix = "imported_data",
+  envir = parent.frame(),
+  recursive = FALSE,
+  overwrite = FALSE,
+  clean_names = TRUE,
+  ...
+)
 }
 \arguments{
-\item{path}{Directory containing the CSV file.}
+\item{path}{A directory to import, or a single file path.}
 
-\item{file_name}{Name of the CSV file.}
+\item{file_name}{Optional file name within \code{path}, retained for backward
+compatibility. When supplied, only that file is returned.}
+
+\item{prefix}{Prefix used for objects created during directory imports.}
+
+\item{envir}{Environment receiving objects during directory imports.}
+
+\item{recursive}{Logical. Search subdirectories during directory imports.}
+
+\item{overwrite}{Logical. Allow existing object names in \code{envir} to be
+replaced. The default is \code{FALSE}.}
+
+\item{clean_names}{Logical. Clean imported column names using MooseR's
+existing CSV-name rules.}
+
+\item{...}{Additional arguments passed to \code{\link[utils:read.table]{utils::read.csv()}}.}
 }
 \value{
-A data frame containing the imported data with cleaned column names.
+For a single file, the imported data frame. For a directory, an
+invisible named list containing all imported data frames.
 }
 \description{
-Reads a CSV file with base R and standardizes its column names
-by replacing spaces and slashes with underscores and removing parentheses,
-commas, and hyphens.
+When \code{path} is a directory and \code{file_name} is \code{NULL}, imports every CSV file
+in deterministic file-name order, assigns the results as
+\code{imported_data_001}, \code{imported_data_002}, and so on in \code{envir}, and reports
+each file-to-object mapping. The imported objects are also returned in an
+invisible named list.
+}
+\details{
+The original single-file call \code{Moose_read_csv(path, file_name)} remains
+supported and returns one data frame without assigning it. Passing a CSV
+file directly as \code{path} has the same single-file behavior.
 }
 \examples{
-csv_file <- tempfile(fileext = ".csv")
-writeLines("First Name,Value/Score\nAlice,10", csv_file)
-Moose_read_csv(dirname(csv_file), basename(csv_file))
-unlink(csv_file)
+csv_dir <- tempfile()
+dir.create(csv_dir)
+writeLines("First Name,Value/Score\nAlice,10", file.path(csv_dir, "a.csv"))
+imported <- new.env(parent = emptyenv())
+Moose_read_csv(csv_dir, envir = imported)
+imported$imported_data_001
+unlink(csv_dir, recursive = TRUE)
 }
