@@ -5,7 +5,7 @@
 # data-raw/update-alberta-health-facilities.ps1. It contains every facility
 # unique name offered by the AHS facility-name search as of July 31, 2026
 # (1,150 unique names from 1,154 entries).
-alberta_health_facilities <- local({
+alberta_health_facility_names <- local({
   facilities <- NULL
 
   function() {
@@ -54,7 +54,7 @@ alberta_health_facility_names_normalized <- local({
   function() {
     if (is.null(normalized)) {
       normalized <<- unique(normalize_alberta_health_facility(
-        alberta_health_facilities()
+        alberta_health_facility_names()
       ))
       normalized <<- normalized[nzchar(normalized)]
     }
