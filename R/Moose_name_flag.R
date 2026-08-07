@@ -56,6 +56,8 @@
 #' @param apply_rules Logical. If `TRUE`, include title-based and workflow-based
 #'   supplementary rules, matching the default behavior of
 #'   [Moose_mask_person_names()].
+#' @param sensitivity Character. Controls whether broad, uncontextualized
+#'   title-case pairs are accepted. See [Moose_mask_person_names()].
 #' @param data Optional data frame containing row-aligned known-name columns.
 #'   Supply this together with `name_columns`.
 #' @param name_columns Optional character vector naming columns in `data`, in
@@ -91,9 +93,11 @@ Moose_name_flag <- function(text,
                             batch_size = 100L,
                             engine = c("auto", "spacy", "regex"),
                             apply_rules = TRUE,
+                            sensitivity = c("high_recall", "balanced", "high_precision"),
                             data = NULL,
                             name_columns = NULL) {
   engine <- match.arg(engine)
+  sensitivity <- match.arg(sensitivity)
 
   if (is.factor(text)) {
     text <- as.character(text)
@@ -155,7 +159,10 @@ Moose_name_flag <- function(text,
   using_spacy <- identical(state$engine, "spacy") && !is.null(state$model)
 
   if (!using_spacy) {
-    flag[pending] <- moose_name_flag_regex(text[pending])
+    flag[pending] <- moose_name_flag_regex(
+      text[pending],
+      sensitivity = sensitivity
+    )
   } else {
     flag[pending] <- moose_name_flag_spacy(
       text = text[pending],
@@ -177,7 +184,18 @@ Moose_name_flag <- function(text,
   flag
 }
 
-moose_name_flag_regex <- function(text) {
+moose_name_flag_regex <- function(
+    text,
+    sensitivity = c("high_recall", "balanced", "high_precision")) {
+  sensitivity <- match.arg(sensitivity)
+
+  if (!identical(sensitivity, "high_recall")) {
+    matches <- detect_person_names_regex(text, sensitivity = sensitivity)
+    flag <- integer(length(text))
+    flag[unique(matches$row_id)] <- 1L
+    return(flag)
+  }
+
   moose_name_flag_patterns(text, name_person_regex_patterns())
 }
 

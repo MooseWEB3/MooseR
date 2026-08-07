@@ -11,6 +11,7 @@ mask_person_names(
   keep_original = FALSE,
   engine = c("auto", "spacy", "regex"),
   apply_rules = TRUE,
+  sensitivity = c("high_recall", "balanced", "high_precision"),
   data = NULL,
   name_columns = NULL
 )
@@ -30,6 +31,12 @@ both original and masked text.}
 
 \item{apply_rules}{Logical. If \code{TRUE}, apply supplementary regex rules
 after spaCy or regex masking.}
+
+\item{sensitivity}{Character. \code{"high_recall"} preserves the broad legacy
+behavior. \code{"balanced"} requires contextual evidence for otherwise
+uncontextualized title-case pairs. \code{"high_precision"} disables those
+broad pairs while retaining titles, workflow phrases, patient abbreviations,
+comma-separated names, known-name columns, and spaCy \code{PERSON} entities.}
 
 \item{data}{Optional data frame containing row-aligned known-name columns.
 Supply this together with \code{name_columns}.}

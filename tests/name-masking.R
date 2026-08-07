@@ -60,6 +60,98 @@ stopifnot(
   )
 )
 
+title_case_false_positives <- c(
+  "Follow Up",
+  "Home Support",
+  "Social Work",
+  "Case Management",
+  "Family Medicine",
+  "No Change",
+  "Adult Male",
+  "Fire Department",
+  "Assisted Living",
+  "Advance Directive",
+  "Vital Signs",
+  "Diagnostic Imaging",
+  "Air Canada",
+  "Monday Morning",
+  "Thank You",
+  "Power Outage",
+  "Black Ice",
+  "Phone Call"
+)
+
+context_supported_names <- c(
+  "Spoke with John Smith.",
+  "Sarah Johnson stated she was ready."
+)
+
+high_confidence_names <- c(
+  "Dr. John Smith",
+  "Smith, John",
+  "Pt John Smith",
+  "Reviewed by John Smith"
+)
+
+explained_name <- Moose_detect_person_names(
+  "John Smith.",
+  engine = "regex",
+  explain = TRUE
+)
+
+stopifnot(
+  identical(
+    Moose_mask_person_names(title_case_false_positives, engine = "regex"),
+    rep("[NAME]", length(title_case_false_positives))
+  ),
+  identical(
+    Moose_mask_person_names(
+      title_case_false_positives,
+      engine = "regex",
+      sensitivity = "balanced"
+    ),
+    title_case_false_positives
+  ),
+  identical(
+    Moose_mask_person_names(
+      title_case_false_positives,
+      engine = "regex",
+      sensitivity = "high_precision"
+    ),
+    title_case_false_positives
+  ),
+  identical(
+    Moose_mask_person_names(
+      context_supported_names,
+      engine = "regex",
+      sensitivity = "balanced"
+    ),
+    c("Spoke with [NAME].", "[NAME] stated she was ready.")
+  ),
+  identical(
+    Moose_mask_person_names(
+      high_confidence_names,
+      engine = "regex",
+      sensitivity = "high_precision"
+    ),
+    c("[NAME]", "[NAME]", "Pt [NAME]", "Reviewed by [NAME]")
+  ),
+  identical(
+    Moose_name_flag(
+      title_case_false_positives,
+      engine = "regex",
+      sensitivity = "balanced"
+    ),
+    integer(length(title_case_false_positives))
+  ),
+  identical(
+    names(explained_name),
+    c("row_id", "detected_name", "start", "end", "rule", "confidence")
+  ),
+  identical(explained_name$rule, "title_case_pair"),
+  identical(explained_name$confidence, "low")
+)
+
 drug_context <- c(
   "Abilify Maintena was administered.",
   "Reviewed by Abilify Maintena.",

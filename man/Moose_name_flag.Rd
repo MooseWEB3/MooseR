@@ -9,6 +9,7 @@ Moose_name_flag(
   batch_size = 100L,
   engine = c("auto", "spacy", "regex"),
   apply_rules = TRUE,
+  sensitivity = c("high_recall", "balanced", "high_precision"),
   data = NULL,
   name_columns = NULL
 )
@@ -22,6 +23,10 @@ Moose_name_flag(
 
 \item{apply_rules}{Logical. If \code{TRUE}, include title-based and workflow-based
 supplementary rules, matching the default behavior of
+\code{\link[=Moose_mask_person_names]{Moose_mask_person_names()}}.}
+
+\item{sensitivity}{Character. Controls whether broad, uncontextualized
+title-case pairs are accepted. See
 \code{\link[=Moose_mask_person_names]{Moose_mask_person_names()}}.}
 
 \item{data}{Optional data frame containing row-aligned known-name columns.
