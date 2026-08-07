@@ -84,7 +84,9 @@ existing scripts do not break.
 | `Moose_compare_balance()` | `BD_compare_balance()` | Compare covariate balance between two data frames. |
 | `Moose_SID_creator()` | `BD_SID_creator()` | Create a stable de-identified SID from name, date of birth, and gender. |
 | `Moose_today()` | `BD_today()` | Return today's date in underscore and compact formats. |
-| `Moose_read_csv()` | - | Read a CSV file and clean its column names. |
+| `Moose_read_csv()` | - | Import one CSV file or all CSV files in a directory. |
+| `Moose_read_xlsx()` | - | Import one XLSX workbook or all XLSX files in a directory. |
+| `Moose_read_rds()` | - | Import one RDS object or all RDS files in a directory. |
 | `Moose_SRds()` | - | Save an R object to an RDS file. |
 | `Moose_LRds()` | - | Restore an R object from an RDS file. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Prepare the spaCy engine when available, or the pure R regex fallback. |
@@ -194,6 +196,31 @@ Save and restore an R object in RDS format:
 ```r
 Moose_SRds(boosted_data, "boosted_data")
 restored_data <- Moose_LRds("boosted_data")
+```
+
+Import every supported file in a directory at once:
+
+```r
+Moose_read_csv("C:/data/csv")
+Moose_read_xlsx("C:/data/xlsx")
+Moose_read_rds("C:/data/rds")
+```
+
+Files are sorted by name and assigned in the calling environment as
+`imported_data_001`, `imported_data_002`, and so on. Each function reports the
+mapping, for example:
+
+```text
+the_data.csv is imported as imported_data_001
+```
+
+Directory imports refuse to replace existing objects by default. Use a
+different `prefix`, or set `overwrite = TRUE` intentionally. XLSX imports
+require `install.packages("readxl")` and read the first worksheet by default.
+The older single-file CSV call remains supported:
+
+```r
+one_data_set <- Moose_read_csv("C:/data", "the_data.csv")
 ```
 
 Set up personal-name masking. On normal computers, `engine = "auto"` tries spaCy
@@ -489,7 +516,9 @@ scripts existants.
 | `Moose_compare_balance()` | `BD_compare_balance()` | Comparer l'équilibre des covariables entre deux jeux de données. |
 | `Moose_SID_creator()` | `BD_SID_creator()` | Créer un SID stable et désidentifié à partir du nom, de la date de naissance et du genre. |
 | `Moose_today()` | `BD_today()` | Retourner la date du jour avec des traits de soulignement et dans un format compact. |
-| `Moose_read_csv()` | - | Lire un fichier CSV et nettoyer ses noms de colonnes. |
+| `Moose_read_csv()` | - | Importer un fichier CSV ou tous les fichiers CSV d'un dossier. |
+| `Moose_read_xlsx()` | - | Importer un classeur XLSX ou tous les fichiers XLSX d'un dossier. |
+| `Moose_read_rds()` | - | Importer un objet RDS ou tous les fichiers RDS d'un dossier. |
 | `Moose_SRds()` | - | Enregistrer un objet R dans un fichier RDS. |
 | `Moose_LRds()` | - | Restaurer un objet R à partir d'un fichier RDS. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Préparer le moteur spaCy lorsqu'il est disponible, ou la solution de rechange en expressions régulières R. |
@@ -599,6 +628,31 @@ Enregistrer et restaurer un objet R au format RDS :
 ```r
 Moose_SRds(boosted_data, "boosted_data")
 restored_data <- Moose_LRds("boosted_data")
+```
+
+Importer en une seule fois tous les fichiers pris en charge dans un dossier :
+
+```r
+Moose_read_csv("C:/data/csv")
+Moose_read_xlsx("C:/data/xlsx")
+Moose_read_rds("C:/data/rds")
+```
+
+Les fichiers sont triés par nom et créés dans l'environnement appelant sous
+les noms `imported_data_001`, `imported_data_002`, etc. Chaque fonction affiche
+la correspondance, par exemple :
+
+```text
+the_data.csv is imported as imported_data_001
+```
+
+Par défaut, l'importation d'un dossier refuse d'écraser les objets existants.
+Utilisez un autre `prefix` ou définissez volontairement `overwrite = TRUE`.
+L'importation XLSX nécessite `install.packages("readxl")` et lit par défaut la
+première feuille. L'ancien appel CSV pour un seul fichier reste pris en charge :
+
+```r
+one_data_set <- Moose_read_csv("C:/data", "the_data.csv")
 ```
 
 Préparer le masquage des noms de personnes. Sur un ordinateur standard,
@@ -908,7 +962,9 @@ existentes.
 | `Moose_compare_balance()` | `BD_compare_balance()` | Comparar o equilíbrio das covariáveis entre dois conjuntos de dados. |
 | `Moose_SID_creator()` | `BD_SID_creator()` | Criar um SID estável e desidentificado a partir do nome, data de nascimento e género. |
 | `Moose_today()` | `BD_today()` | Devolver a data atual nos formatos com sublinhados e compacto. |
-| `Moose_read_csv()` | - | Ler um ficheiro CSV e limpar os respetivos nomes de colunas. |
+| `Moose_read_csv()` | - | Importar um ficheiro CSV ou todos os ficheiros CSV de uma pasta. |
+| `Moose_read_xlsx()` | - | Importar um livro XLSX ou todos os ficheiros XLSX de uma pasta. |
+| `Moose_read_rds()` | - | Importar um objeto RDS ou todos os ficheiros RDS de uma pasta. |
 | `Moose_SRds()` | - | Guardar um objeto R num ficheiro RDS. |
 | `Moose_LRds()` | - | Restaurar um objeto R a partir de um ficheiro RDS. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Preparar o motor spaCy quando disponível, ou a alternativa em R baseada em expressões regulares. |
@@ -1018,6 +1074,32 @@ Guardar e restaurar um objeto R no formato RDS:
 ```r
 Moose_SRds(boosted_data, "boosted_data")
 restored_data <- Moose_LRds("boosted_data")
+```
+
+Importar de uma só vez todos os ficheiros suportados numa pasta:
+
+```r
+Moose_read_csv("C:/data/csv")
+Moose_read_xlsx("C:/data/xlsx")
+Moose_read_rds("C:/data/rds")
+```
+
+Os ficheiros são ordenados por nome e criados no ambiente chamador como
+`imported_data_001`, `imported_data_002` e assim por diante. Cada função mostra
+a correspondência, por exemplo:
+
+```text
+the_data.csv is imported as imported_data_001
+```
+
+Por predefinição, a importação de uma pasta recusa substituir objetos
+existentes. Utilize outro `prefix` ou defina intencionalmente
+`overwrite = TRUE`. A importação XLSX requer `install.packages("readxl")` e lê
+a primeira folha por predefinição. A chamada CSV antiga para um único ficheiro
+continua disponível:
+
+```r
+one_data_set <- Moose_read_csv("C:/data", "the_data.csv")
 ```
 
 Preparar o mascaramento de nomes de pessoas. Num computador normal,
