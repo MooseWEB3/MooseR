@@ -56,6 +56,12 @@
 #'   \code{"regex"}.
 #' @param apply_rules Logical. If \code{TRUE}, apply supplementary regex rules
 #'   after spaCy or regex masking.
+#' @param sensitivity Character. `"high_recall"` preserves the broad legacy
+#'   behavior. `"balanced"` requires contextual evidence for otherwise
+#'   uncontextualized title-case pairs. `"high_precision"` disables those
+#'   broad pairs while retaining titles, workflow phrases, patient
+#'   abbreviations, comma-separated names, known-name columns, and spaCy
+#'   `PERSON` entities.
 #' @param data Optional data frame containing row-aligned known-name columns.
 #'   Supply this together with `name_columns`.
 #' @param name_columns Optional character vector naming columns in `data`, in
@@ -85,10 +91,12 @@ mask_person_names <- function(text,
                               keep_original = FALSE,
                               engine = c("auto", "spacy", "regex"),
                               apply_rules = TRUE,
+                              sensitivity = c("high_recall", "balanced", "high_precision"),
                               data = NULL,
                               name_columns = NULL) {
   validate_name_masking_inputs(text, replacement, batch_size, keep_original)
   engine <- match.arg(engine)
+  sensitivity <- match.arg(sensitivity)
 
   if (!is.logical(apply_rules) || length(apply_rules) != 1L || is.na(apply_rules)) {
     stop("`apply_rules` must be TRUE or FALSE.", call. = FALSE)
@@ -130,7 +138,8 @@ mask_person_names <- function(text,
     output <- mask_person_names_regex(
       text = input_text,
       replacement = replacement,
-      apply_rules = apply_rules
+      apply_rules = apply_rules,
+      sensitivity = sensitivity
     )
 
     if (isTRUE(keep_original)) {
@@ -208,6 +217,10 @@ mask_person_names <- function(text,
 #' @param batch_size Number of documents processed per batch.
 #' @param engine Character. One of \code{"auto"}, \code{"spacy"}, or
 #'   \code{"regex"}.
+#' @param sensitivity Character. Controls whether broad, uncontextualized
+#'   title-case pairs are accepted. See [mask_person_names()].
+#' @param explain Logical. If `TRUE`, append `rule` and `confidence` columns
+#'   describing why each candidate was accepted.
 #'
 #' @return A data frame containing document number, detected name, and
 #'   character offsets.
@@ -215,7 +228,9 @@ mask_person_names <- function(text,
 #' @export
 detect_person_names <- function(text,
                                 batch_size = 100L,
-                                engine = c("auto", "spacy", "regex")) {
+                                engine = c("auto", "spacy", "regex"),
+                                sensitivity = c("high_recall", "balanced", "high_precision"),
+                                explain = FALSE) {
   validate_name_masking_inputs(
     text = text,
     replacement = "[NAME]",
@@ -223,6 +238,11 @@ detect_person_names <- function(text,
     keep_original = FALSE
   )
   engine <- match.arg(engine)
+  sensitivity <- match.arg(sensitivity)
+
+  if (!is.logical(explain) || length(explain) != 1L || is.na(explain)) {
+    stop("`explain` must be TRUE or FALSE.", call. = FALSE)
+  }
 
   empty_result <- data.frame(
     row_id = integer(),
@@ -231,6 +251,11 @@ detect_person_names <- function(text,
     end = integer(),
     stringsAsFactors = FALSE
   )
+
+  if (isTRUE(explain)) {
+    empty_result$rule <- character()
+    empty_result$confidence <- character()
+  }
 
   valid_indices <- which(!is.na(text) & nzchar(trimws(text)))
 
@@ -250,7 +275,11 @@ detect_person_names <- function(text,
   }
 
   if (!identical(state$engine, "spacy") || is.null(state$model)) {
-    return(detect_person_names_regex(text))
+    return(detect_person_names_regex(
+      text,
+      sensitivity = sensitivity,
+      explain = explain
+    ))
   }
 
   model <- state$model
@@ -315,13 +344,23 @@ detect_person_names <- function(text,
         },
         integer(1)
       ),
+      rule = "spacy_person",
+      confidence = "model",
       stringsAsFactors = FALSE
     )
   }
 
   result <- Filter(Negate(is.null), result)
-  spacy_result <- if (length(result)) do.call(rbind, result) else empty_result
-  comma_result <- detect_person_names_regex(text)
+  comma_result <- detect_person_names_regex(
+    text,
+    sensitivity = sensitivity,
+    explain = TRUE
+  )
+  spacy_result <- if (length(result)) {
+    do.call(rbind, result)
+  } else {
+    comma_result[0, , drop = FALSE]
+  }
   comma_result <- comma_result[
     grepl(",", comma_result$detected_name, fixed = TRUE),
     ,
@@ -342,16 +381,24 @@ detect_person_names <- function(text,
   )
   combined <- combined[order(combined$row_id, combined$start), , drop = FALSE]
   row.names(combined) <- NULL
+  if (!isTRUE(explain)) {
+    combined <- combined[c("row_id", "detected_name", "start", "end")]
+  }
   combined
 }
 
 mask_person_names_regex <- function(text,
                                     replacement = "[NAME]",
-                                    apply_rules = TRUE) {
+                                    apply_rules = TRUE,
+                                    sensitivity = c("high_recall", "balanced", "high_precision")) {
+  sensitivity <- match.arg(sensitivity)
   output <- text
 
   for (row_id in seq_along(text)) {
-    matches <- detect_person_names_regex(text[row_id])
+    matches <- detect_person_names_regex(
+      text[row_id],
+      sensitivity = sensitivity
+    )
 
     if (nrow(matches) == 0L || is.na(text[row_id])) {
       next
@@ -384,7 +431,11 @@ mask_person_names_regex <- function(text,
   output
 }
 
-detect_person_names_regex <- function(text) {
+detect_person_names_regex <- function(
+    text,
+    sensitivity = c("high_recall", "balanced", "high_precision"),
+    explain = FALSE) {
+  sensitivity <- match.arg(sensitivity)
   empty_result <- data.frame(
     row_id = integer(),
     detected_name = character(),
@@ -392,6 +443,11 @@ detect_person_names_regex <- function(text) {
     end = integer(),
     stringsAsFactors = FALSE
   )
+
+  if (isTRUE(explain)) {
+    empty_result$rule <- character()
+    empty_result$confidence <- character()
+  }
 
   if (!is.character(text) || length(text) == 0L) {
     return(empty_result)
@@ -411,7 +467,8 @@ detect_person_names_regex <- function(text) {
 
     row_matches <- list()
 
-    for (pattern in patterns) {
+    for (rule in names(patterns)) {
+      pattern <- patterns[[rule]]
       matches <- gregexpr(pattern, value, perl = TRUE)[[1]]
 
       if (identical(matches[1], -1L)) {
@@ -422,7 +479,7 @@ detect_person_names_regex <- function(text) {
       lengths <- attr(matches, "match.length")
       ends <- starts + lengths - 1L
 
-      row_matches[[length(row_matches) + 1L]] <- data.frame(
+      matched <- data.frame(
         row_id = row_id,
         detected_name = mapply(
           function(start, end) {
@@ -434,8 +491,30 @@ detect_person_names_regex <- function(text) {
         ),
         start = starts,
         end = ends,
+        rule = rule,
+        confidence = name_detection_rule_confidence(rule),
         stringsAsFactors = FALSE
       )
+
+      if (identical(rule, "title_case_pair")) {
+        keep_context <- switch(
+          sensitivity,
+          high_recall = rep.int(TRUE, nrow(matched)),
+          balanced = mapply(
+            is_context_supported_person_candidate,
+            text = value,
+            start = matched$start,
+            end = matched$end,
+            USE.NAMES = FALSE
+          ),
+          high_precision = rep.int(FALSE, nrow(matched))
+        )
+        matched <- matched[keep_context, , drop = FALSE]
+      }
+
+      if (nrow(matched)) {
+        row_matches[[length(row_matches) + 1L]] <- matched
+      }
     }
 
     if (length(row_matches) == 0L) {
@@ -471,6 +550,9 @@ detect_person_names_regex <- function(text) {
 
   out <- do.call(rbind, result)
   row.names(out) <- NULL
+  if (!isTRUE(explain)) {
+    out <- out[c("row_id", "detected_name", "start", "end")]
+  }
   out
 }
 
@@ -478,10 +560,10 @@ name_person_regex_patterns <- function() {
   person_word <- name_person_title_case_word_pattern()
 
   c(
-    name_last_first_regex_pattern(),
-    name_patient_abbreviation_regex_pattern(),
-    name_title_regex_pattern(exclude_municipalities = FALSE),
-    paste0(
+    last_first = name_last_first_regex_pattern(),
+    patient_abbreviation = name_patient_abbreviation_regex_pattern(),
+    titled_name = name_title_regex_pattern(exclude_municipalities = FALSE),
+    title_case_pair = paste0(
       "\\b",
       person_word,
       "\\s+(?:[A-Z]\\.\\s+)?",
@@ -490,6 +572,40 @@ name_person_regex_patterns <- function() {
       name_nonperson_suffix_guard()
     )
   )
+}
+
+name_detection_rule_confidence <- function(rule) {
+  unname(c(
+    last_first = "high",
+    patient_abbreviation = "high",
+    titled_name = "high",
+    title_case_pair = "low",
+    workflow = "high",
+    spacy_person = "model"
+  )[rule])
+}
+
+is_context_supported_person_candidate <- function(text, start, end) {
+  prefix <- if (start > 1L) substr(text, 1L, start - 1L) else ""
+  suffix <- if (end < nchar(text)) substr(text, end + 1L, nchar(text)) else ""
+
+  prefix_pattern <- paste0(
+    "(?i)(?:",
+    "spoke\\s+(?:with|to)|talked\\s+(?:with|to)|met|called|contacted|",
+    "notified|seen\\s+by|assessed\\s+by|reviewed\\s+by|signed\\s+by|",
+    "completed\\s+by|reported\\s+by|accompanied\\s+by|transported\\s+by",
+    ")\\s+$"
+  )
+  suffix_pattern <- paste0(
+    "(?i)^\\s+(?:",
+    "spoke|called|reported|stated|said|advised|arrived|presented|",
+    "requested|declined|agreed|reviewed|assessed|signed|completed|",
+    "was|is|has|had",
+    ")\\b"
+  )
+
+  grepl(prefix_pattern, prefix, perl = TRUE) ||
+    grepl(suffix_pattern, suffix, perl = TRUE)
 }
 
 name_last_first_regex_pattern <- function() {

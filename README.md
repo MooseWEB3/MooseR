@@ -92,6 +92,7 @@ existing scripts do not break.
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Prepare the spaCy engine when available, or the pure R regex fallback. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Report the current Python, spaCy, and model setup status. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
+| `Moose_mask_PHN()` | - | Mask nine-digit Personal Health Numbers near a `PHN` label. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Return an audit table of detected names and character offsets. |
 | `Moose_name_flag()` | - | Return a 1/0 vector showing whether each text value contains a detected personal name. |
 | `Moose_mask_person_names2()` | - | Mask only exact or similar names from row-aligned known-name columns. |
@@ -385,7 +386,23 @@ with at least five letters. Use `max_distance = 0L` for exact matching only.
 Create an audit table of detected names:
 
 ```r
-Moose_detect_person_names(comments)
+Moose_detect_person_names(comments, explain = TRUE)
+```
+
+The default `sensitivity = "high_recall"` preserves the broad legacy behavior
+and prioritizes avoiding missed names. To reduce false positives from
+uncontextualized title-case phrases such as `Home Support`, use
+`sensitivity = "balanced"`. The stricter `"high_precision"` mode disables
+those broad title-case pairs while retaining titles, workflow phrases,
+patient abbreviations, comma-separated names, known-name columns, and spaCy
+`PERSON` entities:
+
+```r
+Moose_mask_person_names(
+  comments,
+  engine = "regex",
+  sensitivity = "balanced"
+)
 ```
 
 Add a row-level flag for detected personal names:
