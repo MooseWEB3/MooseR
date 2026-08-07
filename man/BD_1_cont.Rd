@@ -26,14 +26,18 @@ Defaults to \code{var_name}.}
 \item{finite_only}{Logical. If \code{TRUE} (default), exclude \code{Inf/-Inf} from summaries.}
 
 \item{probs}{Numeric vector of quantile probabilities in the order you want reported.
-Defaults to \code{c(0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)}.}
+Defaults to \code{c(0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)}.
+Output names are generated from these probabilities; quartiles use
+\code{Q1}, \code{Q2}, and \code{Q3}, and other probabilities use
+percentage labels such as \code{P20}.}
 }
 \value{
 A one-row data frame with columns:
 \itemize{
 \item \code{Variable}, \code{Mean_SD}, \code{Median}, \code{Min_Max},
-\item \code{P1}, \code{P5}, \code{P10}, \code{Q1}, \code{Q2}, \code{Q3}, \code{P90}, \code{P95}, \code{P99},
-\item \code{Missing}, \code{N}, \code{NonMissing}, \code{MissingPct}.
+\item one column for each value in \code{probs},
+\item \code{Missing}, \code{N}, \code{NonMissing}, \code{MissingPct},
+\code{NonFinite}, and \code{Analyzed}.
 }
 }
 \description{
@@ -43,9 +47,12 @@ mean (sd), median, min–max, selected percentiles, and missingness counts.
 \details{
 If all values are missing (or filtered out by \code{finite_only = TRUE}),
 numeric summaries are returned as \code{NA_character_} while counts are provided.
+\code{NonMissing} counts all non-missing values, \code{NonFinite} counts
+infinite values, and \code{Analyzed} reports the number used in summaries.
 }
 \examples{
 x <- data.frame(a = c(rnorm(100), NA, Inf))
 BD_1_cont(x, "a", display_name = "My Var")
+BD_1_cont(x, "a", probs = c(0.20, 0.80))
 
 }

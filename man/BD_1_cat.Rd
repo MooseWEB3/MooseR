@@ -34,14 +34,16 @@ under \code{missing_label}.}
 \item{sort_levels}{One of \code{"desc"} (default, by count desc),
 \code{"asc"}, \code{"alpha"} (alphabetical), or \code{"levels"} (keep factor order).}
 
-\item{top_n}{Integer or \code{NULL}. If set, keeps the \code{top_n} most frequent
-levels and collapses the rest into an \code{"Other"} column (after sorting).}
+\item{top_n}{Positive integer or \code{NULL}. If set, keeps the \code{top_n}
+most frequent levels, regardless of \code{sort_levels}, and collapses the
+rest into an \code{"Other"} column.}
 
 \item{other_label}{String label used when collapsing to "Other" (default "Other").}
 }
 \value{
 A one-row data frame: first column is \code{display_name},
 then one column per level showing \code{"n (p\%)"}, ending with \code{Total}.
+Column names are made unique if labels collide.
 }
 \description{
 Builds a single, display-ready data frame row of counts and percentages

@@ -11,21 +11,28 @@
 #' @param finite_only Logical. If \code{TRUE} (default), exclude \code{Inf/-Inf} from summaries.
 #' @param probs Numeric vector of quantile probabilities in the order you want reported.
 #'   Defaults to \code{c(0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)}.
+#'   Output names are generated from these probabilities; quartiles use
+#'   \code{Q1}, \code{Q2}, and \code{Q3}, and other probabilities use
+#'   percentage labels such as \code{P20}.
 #'
 #' @returns A one-row data frame with columns:
 #' \itemize{
 #'   \item \code{Variable}, \code{Mean_SD}, \code{Median}, \code{Min_Max},
-#'   \item \code{P1}, \code{P5}, \code{P10}, \code{Q1}, \code{Q2}, \code{Q3}, \code{P90}, \code{P95}, \code{P99},
-#'   \item \code{Missing}, \code{N}, \code{NonMissing}, \code{MissingPct}.
+#'   \item one column for each value in \code{probs},
+#'   \item \code{Missing}, \code{N}, \code{NonMissing}, \code{MissingPct},
+#'     \code{NonFinite}, and \code{Analyzed}.
 #' }
 #'
 #' @details
 #' If all values are missing (or filtered out by \code{finite_only = TRUE}),
 #' numeric summaries are returned as \code{NA_character_} while counts are provided.
+#' \code{NonMissing} counts all non-missing values, \code{NonFinite} counts
+#' infinite values, and \code{Analyzed} reports the number used in summaries.
 #'
 #' @examples
 #' x <- data.frame(a = c(rnorm(100), NA, Inf))
 #' BD_1_cont(x, "a", display_name = "My Var")
+#' BD_1_cont(x, "a", probs = c(0.20, 0.80))
 #'
 #' @export
 BD_1_cont <- function(dataset,
@@ -34,40 +41,79 @@ BD_1_cont <- function(dataset,
                       digits = 2,
                       finite_only = TRUE,
                       probs = c(0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)) {
+  validated <- moose_validate_summary_inputs(
+    dataset,
+    var_name,
+    display_name,
+    digits
+  )
+  var_name <- validated$var_name
+  display_name <- validated$display_name
+  digits <- validated$digits
+  finite_only <- moose_validate_single_logical(finite_only, "finite_only")
+  probs <- moose_validate_probs(probs)
+  quantile_labels <- moose_quantile_labels(probs)
 
-  # --- Input checks ---
-  stopifnot(is.data.frame(dataset))
-  if (!var_name %in% names(dataset)) stop("Variable not found in dataset: ", var_name)
   x <- dataset[[var_name]]
-  if (!is.numeric(x)) stop("Variable must be numeric: ", var_name)
+  if (!is.numeric(x)) {
+    stop("Variable must be numeric: ", var_name, call. = FALSE)
+  }
 
   # --- Missing / finite handling ---
   na_idx <- is.na(x)
   missing_n <- sum(na_idx)
-  if (isTRUE(finite_only)) {
+  non_missing_n <- sum(!na_idx)
+  non_finite_n <- sum(!na_idx & !is.finite(x))
+  if (finite_only) {
     ok <- !is.na(x) & is.finite(x)
   } else {
     ok <- !is.na(x)
   }
   x_ok <- x[ok]
-  non_missing_n <- length(x_ok)
+  analyzed_n <- length(x_ok)
+  total_n <- length(x)
+  missing_pct <- if (total_n == 0L) {
+    NA_real_
+  } else {
+    round(100 * missing_n / total_n, 1)
+  }
 
-  # Early return if nothing to summarize
-  if (non_missing_n == 0L) {
-    return(data.frame(
-      Variable = display_name,
-      Mean_SD  = NA_character_,
-      Median   = NA_character_,
-      Min_Max  = NA_character_,
-      P1  = NA_character_, P5  = NA_character_, P10 = NA_character_,
-      Q1  = NA_character_, Q2  = NA_character_, Q3  = NA_character_,
-      P90 = NA_character_, P95 = NA_character_, P99 = NA_character_,
-      Missing    = missing_n,
-      N          = length(x),
-      NonMissing = non_missing_n,
-      MissingPct = round(100 * missing_n / length(x), 1),
+  build_result <- function(mean_sd,
+                           median,
+                           min_max,
+                           quantiles) {
+    row <- c(
+      list(
+        Variable = display_name,
+        Mean_SD = mean_sd,
+        Median = median,
+        Min_Max = min_max
+      ),
+      stats::setNames(as.list(quantiles), quantile_labels),
+      list(
+        Missing = missing_n,
+        N = total_n,
+        NonMissing = non_missing_n,
+        MissingPct = missing_pct,
+        NonFinite = non_finite_n,
+        Analyzed = analyzed_n
+      )
+    )
+
+    data.frame(
+      row,
       stringsAsFactors = FALSE,
       check.names = FALSE
+    )
+  }
+
+  # Early return if nothing to summarize
+  if (analyzed_n == 0L) {
+    return(build_result(
+      mean_sd = NA_character_,
+      median = NA_character_,
+      min_max = NA_character_,
+      quantiles = rep(NA_character_, length(probs))
     ))
   }
 
@@ -81,32 +127,13 @@ BD_1_cont <- function(dataset,
   # Quantiles in requested order
   qs <- stats::quantile(x_ok, probs = probs, names = FALSE, type = 7)
 
-  # Map quantiles to labels (expects the default probs order shown above)
-  # If you change probs, labels may not match; keep default for standard table output.
-  q_labels <- stats::setNames(qs, c("P1","P5","P10","Q1","Q2","Q3","P90","P95","P99")[seq_along(qs)])
-
   # Formatter
   fmt <- function(v) sprintf(paste0("%.", digits, "f"), v)
 
-  data.frame(
-    Variable = display_name,
-    Mean_SD  = sprintf("%s (%s)", fmt(m), fmt(sdv)),
-    Median   = fmt(med),
-    Min_Max  = sprintf("%s - %s", fmt(mn), fmt(mx)),
-    P1  = if ("P1"  %in% names(q_labels)) fmt(q_labels["P1"])  else NA_character_,
-    P5  = if ("P5"  %in% names(q_labels)) fmt(q_labels["P5"])  else NA_character_,
-    P10 = if ("P10" %in% names(q_labels)) fmt(q_labels["P10"]) else NA_character_,
-    Q1  = if ("Q1"  %in% names(q_labels)) fmt(q_labels["Q1"])  else NA_character_,
-    Q2  = if ("Q2"  %in% names(q_labels)) fmt(q_labels["Q2"])  else NA_character_,
-    Q3  = if ("Q3"  %in% names(q_labels)) fmt(q_labels["Q3"])  else NA_character_,
-    P90 = if ("P90" %in% names(q_labels)) fmt(q_labels["P90"]) else NA_character_,
-    P95 = if ("P95" %in% names(q_labels)) fmt(q_labels["P95"]) else NA_character_,
-    P99 = if ("P99" %in% names(q_labels)) fmt(q_labels["P99"]) else NA_character_,
-    Missing    = missing_n,
-    N          = length(x),
-    NonMissing = non_missing_n,
-    MissingPct = round(100 * missing_n / length(x), 1),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
+  build_result(
+    mean_sd = sprintf("%s (%s)", fmt(m), fmt(sdv)),
+    median = fmt(med),
+    min_max = sprintf("%s - %s", fmt(mn), fmt(mx)),
+    quantiles = fmt(qs)
   )
 }
