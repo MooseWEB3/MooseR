@@ -35,6 +35,15 @@ expected <- c(
 stopifnot(
   identical(Moose_mask_PHN(input), expected),
   identical(
+    Moose_mask_PHN_flag(input),
+    c(1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L)
+  ),
+  identical(Moose_mask_PHN_flag(factor(input[1:2])), c(1L, 1L)),
+  identical(
+    Moose_mask_PHN_flag("PHN record: 123456789", proximity = 2L),
+    0L
+  ),
+  identical(
     Moose_mask_PHN("PHN=123456789", replacement = "***"),
     "PHN=***"
   ),
@@ -47,5 +56,7 @@ stopifnot(
     "PHN record: 123456789"
   ),
   inherits(tryCatch(Moose_mask_PHN(123456789), error = identity), "error"),
-  inherits(tryCatch(Moose_mask_PHN("PHN 123456789", proximity = -1L), error = identity), "error")
+  inherits(tryCatch(Moose_mask_PHN("PHN 123456789", proximity = -1L), error = identity), "error"),
+  inherits(tryCatch(Moose_mask_PHN_flag(123456789), error = identity), "error"),
+  inherits(tryCatch(Moose_mask_PHN_flag("PHN 123456789", proximity = -1L), error = identity), "error")
 )
