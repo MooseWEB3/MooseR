@@ -78,6 +78,7 @@ existing scripts do not break.
 | `Moose_get_duplicates()` | `BD_get_duplicates()` | Find duplicated rows by one or more key columns. |
 | `Moose_check_unique()` | `BD_check_unique()` | Check whether a column contains unique values. |
 | `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Count unique categories in a variable. |
+| `Moose_cross_table()` | - | Build a two-variable cross table with counts and percentages. |
 | `Moose_data_type()` | - | Classify selected columns as continuous, categorical, date, or other. |
 | `Moose_quote_rm()` | `BD_quote_rm()` | Remove common quote characters from character and factor columns. |
 | `Moose_1_cat()` | `BD_1_cat()` | Build a one-row count and percentage table for a categorical variable. |
