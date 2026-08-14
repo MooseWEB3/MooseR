@@ -72,6 +72,12 @@ MooseR keeps its original function names for backward compatibility. New code
 should use the `Moose_`-prefixed names. Older names remain available so
 existing scripts do not break.
 
+> **Testing notice:** `Moose_travel()` is currently experimental and has not
+> been formally released. Its interface, routing behavior, and returned
+> results may change while testing is in progress. Do not rely on it for
+> safety-critical, clinical, or production decisions without independent
+> validation.
+
 | Recommended function | Older compatible name | Purpose |
 | --- | --- | --- |
 | `Moose_fix_colname()` | `BD_fix_colname()` | Clean column names by replacing spaces and removing selected special characters. |
@@ -103,7 +109,7 @@ existing scripts do not break.
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Apply supplementary regex-based name-masking rules. |
 | `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
 | `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
-| `Moose_travel()` | - | Add OSRM road travel distance and travel time for coordinate pairs. |
+| `Moose_travel()` | - | Experimental: add OSRM road travel distance and travel time for coordinate pairs. |
 | `Moose_boost_data()` | - | Detect and convert date-like columns in a data set. |
 | `Moose_load_packages()` | `load_packages()` | Install missing packages and load a package list. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Load the default MooseR startup package set. |
