@@ -103,6 +103,7 @@ existing scripts do not break.
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Apply supplementary regex-based name-masking rules. |
 | `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
 | `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
+| `Moose_travel()` | - | Add OSRM road travel distance and travel time for coordinate pairs. |
 | `Moose_boost_data()` | - | Detect and convert date-like columns in a data set. |
 | `Moose_load_packages()` | `load_packages()` | Install missing packages and load a package list. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Load the default MooseR startup package set. |
