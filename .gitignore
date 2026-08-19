@@ -1,6 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
+.Renviron
 .httr-oauth
 .DS_Store
 .quarto
@@ -10,3 +11,5 @@
 .r-lib/
 .agents/
 .codex/
+/MooseR_函数使用说明_中文.txt
+/Moose_travel_中文说明.md
