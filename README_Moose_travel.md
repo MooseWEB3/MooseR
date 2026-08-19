@@ -142,7 +142,17 @@ result <- Moose_travel(
 )
 ```
 
-The credentials are sent using HTTP Basic Authentication. Use an HTTPS server so that credentials and route requests are encrypted in transit.
+The credentials are sent using HTTP Basic Authentication. When credentials are
+provided, `Moose_travel()` requires an `https://` server so that credentials and
+route requests are encrypted in transit. It rejects credentials over plain HTTP,
+rejects usernames or passwords embedded in the server URL, and does not follow
+HTTP redirects. Authentication values are redacted from printed HTTP request
+objects.
+
+OSRM coordinates are part of the request URL. Exact origins and destinations can
+therefore appear in logs kept by the OSRM server, Cloudflare, or another authorized
+reverse proxy. Review and restrict access-log retention before routing sensitive
+or health-related coordinates.
 
 ## Error handling
 

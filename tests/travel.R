@@ -61,3 +61,94 @@ stopifnot(
   inherits(tryCatch(Moose_travel(trips, "missing", "start_lon", "end_lat", "end_lon"), error = identity), "error"),
   inherits(tryCatch(Moose_travel(trips, "start_lat", "start_lon", "end_lat", "end_lon", distance_column = "start_lat"), error = identity), "error")
 )
+
+one_trip <- trips[1L, , drop = FALSE]
+captured_requests <- list()
+success_mock <- function(req) {
+  captured_requests[[length(captured_requests) + 1L]] <<- req
+  httr2::response(
+    status_code = 200,
+    url = req$url,
+    method = "GET",
+    headers = list(`content-type` = "application/json"),
+    body = charToRaw('{"code":"Ok","routes":[{"distance":1234,"duration":321}]}')
+  )
+}
+
+authenticated_result <- httr2::with_mocked_responses(
+  success_mock,
+  Moose_travel(
+    one_trip,
+    "start_lat", "start_lon", "end_lat", "end_lon",
+    server = "https://osrm.example.test",
+    username = "proxy-user",
+    password = " proxy-password ",
+    delay = 0,
+    progress = FALSE
+  )
+)
+authenticated_request <- captured_requests[[1L]]
+authenticated_print <- paste(capture.output(print(authenticated_request)), collapse = "\n")
+authenticated_str <- paste(capture.output(str(authenticated_request)), collapse = "\n")
+basic_token <- jsonlite::base64_enc(charToRaw("proxy-user: proxy-password "))
+authorization_value <- get(
+  "wref_value",
+  envir = asNamespace("httr2"),
+  inherits = TRUE
+)(authenticated_request$headers[["Authorization"]])
+stopifnot(
+  identical(authenticated_request$options$followlocation, 0L),
+  "Authorization" %in% names(authenticated_request$headers),
+  identical(authorization_value, paste("Basic", basic_token)),
+  isTRUE(all.equal(authenticated_result$travel_distance_meters, 1234)),
+  isTRUE(all.equal(authenticated_result$travel_time_seconds, 321)),
+  !grepl("proxy-user", authenticated_print, fixed = TRUE),
+  !grepl("proxy-password", authenticated_print, fixed = TRUE),
+  !grepl(basic_token, authenticated_print, fixed = TRUE),
+  !grepl("proxy-user", authenticated_str, fixed = TRUE),
+  !grepl("proxy-password", authenticated_str, fixed = TRUE),
+  !grepl(basic_token, authenticated_str, fixed = TRUE)
+)
+
+http_without_credentials <- MooseR:::moose_osrm_request(
+  start_lon = -113.5,
+  start_lat = 53.5,
+  end_lon = -113.6,
+  end_lat = 53.6,
+  profile = "driving",
+  server = "http://127.0.0.1:5000",
+  request_timeout = 10
+)
+stopifnot(
+  identical(http_without_credentials$options$followlocation, 0L),
+  !"Authorization" %in% names(http_without_credentials$headers)
+)
+
+http_with_credentials <- tryCatch(
+  Moose_travel(
+    one_trip,
+    "start_lat", "start_lon", "end_lat", "end_lon",
+    server = "http://osrm.example.test",
+    username = "proxy-user",
+    password = "proxy-password",
+    delay = 0,
+    progress = FALSE
+  ),
+  error = identity
+)
+userinfo_server <- tryCatch(
+  Moose_travel(
+    one_trip,
+    "start_lat", "start_lon", "end_lat", "end_lon",
+    server = "https://embedded-user:embedded-password@osrm.example.test",
+    delay = 0,
+    progress = FALSE
+  ),
+  error = identity
+)
+stopifnot(
+  inherits(http_with_credentials, "error"),
+  grepl("HTTPS is required", conditionMessage(http_with_credentials), fixed = TRUE),
+  inherits(userinfo_server, "error"),
+  grepl("must not contain URL userinfo", conditionMessage(userinfo_server), fixed = TRUE)
+)
