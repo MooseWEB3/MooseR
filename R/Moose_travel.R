@@ -8,6 +8,10 @@
 #' light, interactive use. For large or production workloads, supply the URL
 #' of an OSRM server you operate or are authorized to use.
 #'
+#' Redirects are not followed. OSRM places coordinates in the request URL, so
+#' exact origin and destination coordinates may appear in logs maintained by
+#' the routing server or an authorized reverse proxy.
+#'
 #' @param dataset A data frame or tibble.
 #' @param start_latitude,start_longitude Column names containing origin
 #'   latitude and longitude.
@@ -15,16 +19,19 @@
 #'   latitude and longitude.
 #' @param profile OSRM routing profile, usually `"driving"`, `"walking"`, or
 #'   `"cycling"`, when supported by the selected server.
-#' @param server Base URL of an OSRM-compatible server.
+#' @param server HTTP(S) base URL of an OSRM-compatible server. URL userinfo
+#'   such as `https://user:password@example.com` is rejected. HTTPS is required
+#'   when `username` and `password` are supplied.
 #' @param username,password Optional HTTP Basic Authentication credentials.
 #'   Supply both or neither. Prefer environment variables instead of writing a
-#'   password directly in an R script.
+#'   password directly in an R script. Credentials are sent only over HTTPS and
+#'   are redacted from printed HTTP request objects.
 #' @param distance_column Name of the output distance column, in metres.
 #' @param time_column Name of the output travel-time column, in seconds.
 #' @param overwrite Logical. Allow existing output columns to be replaced.
 #' @param on_error One of `"warn"`, `"stop"`, or `"na"`. Controls request and
 #'   no-route failures. Invalid or missing coordinates always return `NA`.
-#' @param timeout Positive number of seconds used as the R connection timeout.
+#' @param timeout Positive number of seconds allowed for each OSRM request.
 #' @param delay Non-negative seconds to pause between unique route requests.
 #' @param progress Logical. Print request progress.
 #'
@@ -82,7 +89,8 @@ Moose_travel <- function(dataset,
     timeout = timeout,
     delay = delay,
     progress = progress,
-    route_fun = moose_osrm_route
+    route_fun = moose_osrm_route,
+    route_args = list(request_timeout = timeout)
   )
 }
 
@@ -102,7 +110,8 @@ moose_travel_impl <- function(dataset,
                               timeout,
                               delay,
                               progress,
-                              route_fun) {
+                              route_fun,
+                              route_args = list()) {
   if (!is.data.frame(dataset)) {
     stop("`dataset` must be a data frame or tibble.", call. = FALSE)
   }
@@ -133,15 +142,22 @@ moose_travel_impl <- function(dataset,
     trimws(x)
   }
   profile <- validate_text(profile, "profile")
-  server <- sub("/+$", "", validate_text(server, "server"))
+  server <- validate_text(server, "server")
   credentials_supplied <- c(!is.null(username), !is.null(password))
   if (any(credentials_supplied) && !all(credentials_supplied)) {
     stop("`username` and `password` must be supplied together.", call. = FALSE)
   }
   if (all(credentials_supplied)) {
     username <- validate_text(username, "username")
-    password <- validate_text(password, "password")
+    if (!is.character(password) || length(password) != 1L ||
+        is.na(password) || !nzchar(password)) {
+      stop("`password` must be one non-empty character value.", call. = FALSE)
+    }
   }
+  server <- moose_validate_routing_server(
+    server,
+    authenticated = all(credentials_supplied)
+  )
   distance_column <- validate_text(distance_column, "distance_column")
   time_column <- validate_text(time_column, "time_column")
   if (identical(distance_column, time_column)) {
@@ -206,8 +222,8 @@ moose_travel_impl <- function(dataset,
     for (i in seq_along(unique_rows)) {
       row_id <- unique_rows[i]
       if (progress) message("Requesting route ", i, " of ", length(unique_rows), "...")
-      result <- tryCatch(
-        route_fun(
+      request_args <- c(
+        list(
           start_lon = coords$start_longitude[row_id],
           start_lat = coords$start_latitude[row_id],
           end_lon = coords$end_longitude[row_id],
@@ -217,6 +233,10 @@ moose_travel_impl <- function(dataset,
           username = username,
           password = password
         ),
+        route_args
+      )
+      result <- tryCatch(
+        do.call(route_fun, request_args),
         error = function(e) e
       )
       if (inherits(result, "error")) {
@@ -252,11 +272,74 @@ moose_travel_impl <- function(dataset,
   output
 }
 
-moose_osrm_route <- function(start_lon, start_lat, end_lon, end_lat, profile,
-                             server, username = NULL, password = NULL) {
-  if (!requireNamespace("jsonlite", quietly = TRUE)) {
-    stop("Package `jsonlite` is required by `Moose_travel()`. Install it with install.packages(\"jsonlite\").", call. = FALSE)
+moose_validate_routing_server <- function(server, authenticated = FALSE) {
+  server <- sub("/+$", "", server)
+  parsed <- tryCatch(
+    httr2::url_parse(server),
+    error = function(e) NULL
+  )
+  if (is.null(parsed) || is.null(parsed$scheme) ||
+      !tolower(parsed$scheme) %in% c("http", "https") ||
+      is.null(parsed$hostname) || !nzchar(parsed$hostname)) {
+    stop("`server` must be a valid HTTP(S) URL.", call. = FALSE)
   }
+  if (!is.null(parsed$username) || !is.null(parsed$password)) {
+    stop(
+      "`server` must not contain URL userinfo; use `username` and `password` instead.",
+      call. = FALSE
+    )
+  }
+  if (isTRUE(authenticated) && !identical(tolower(parsed$scheme), "https")) {
+    stop("HTTPS is required when routing credentials are supplied.", call. = FALSE)
+  }
+  server
+}
+
+moose_osrm_route <- function(start_lon, start_lat, end_lon, end_lat, profile,
+                             server, username = NULL, password = NULL,
+                             request_timeout = getOption("timeout", 60)) {
+  if (!requireNamespace("httr2", quietly = TRUE)) {
+    stop("Package `httr2` is required by `Moose_travel()`. Install it with install.packages(\"httr2\").", call. = FALSE)
+  }
+  request <- moose_osrm_request(
+    start_lon = start_lon,
+    start_lat = start_lat,
+    end_lon = end_lon,
+    end_lat = end_lat,
+    profile = profile,
+    server = server,
+    username = username,
+    password = password,
+    request_timeout = request_timeout
+  )
+  response <- httr2::req_perform(request)
+  payload <- httr2::resp_body_json(
+    response,
+    check_type = FALSE,
+    simplifyVector = TRUE
+  )
+  if (is.null(payload$code) || !identical(payload$code, "Ok") ||
+      is.null(payload$routes) || !nrow(payload$routes)) {
+    code <- if (is.null(payload$code)) "unknown response" else payload$code
+    stop("OSRM did not return a route (", code, ").", call. = FALSE)
+  }
+  c(
+    distance = as.numeric(payload$routes$distance[1L]),
+    duration = as.numeric(payload$routes$duration[1L])
+  )
+}
+
+moose_osrm_request <- function(start_lon, start_lat, end_lon, end_lat, profile,
+                               server, username = NULL, password = NULL,
+                               request_timeout = getOption("timeout", 60)) {
+  credentials_supplied <- c(!is.null(username), !is.null(password))
+  if (any(credentials_supplied) && !all(credentials_supplied)) {
+    stop("`username` and `password` must be supplied together.", call. = FALSE)
+  }
+  server <- moose_validate_routing_server(
+    server,
+    authenticated = all(credentials_supplied)
+  )
   coordinates <- paste0(
     format(start_lon, scientific = FALSE, trim = TRUE, digits = 15), ",",
     format(start_lat, scientific = FALSE, trim = TRUE, digits = 15), ";",
@@ -267,25 +350,13 @@ moose_osrm_route <- function(start_lon, start_lat, end_lon, end_lat, profile,
     server, "/route/v1/", utils::URLencode(profile, reserved = TRUE), "/",
     coordinates, "?overview=false&steps=false&alternatives=false"
   )
-  if (is.null(username)) {
-    response <- jsonlite::fromJSON(request_url, simplifyVector = TRUE)
-  } else {
+  request <- httr2::request(request_url) |>
+    httr2::req_timeout(request_timeout) |>
+    httr2::req_options(followlocation = 0L)
+  if (!is.null(username)) {
     token <- jsonlite::base64_enc(charToRaw(enc2utf8(paste0(username, ":", password))))
-    connection <- base::url(
-      request_url,
-      open = "rb",
-      headers = c(Authorization = paste("Basic", token))
-    )
-    on.exit(close(connection), add = TRUE)
-    response <- jsonlite::fromJSON(connection, simplifyVector = TRUE)
+    request <- request |>
+      httr2::req_headers_redacted(Authorization = paste("Basic", token))
   }
-  if (is.null(response$code) || !identical(response$code, "Ok") ||
-      is.null(response$routes) || !nrow(response$routes)) {
-    code <- if (is.null(response$code)) "unknown response" else response$code
-    stop("OSRM did not return a route (", code, ").", call. = FALSE)
-  }
-  c(
-    distance = as.numeric(response$routes$distance[1L]),
-    duration = as.numeric(response$routes$duration[1L])
-  )
+  request
 }
