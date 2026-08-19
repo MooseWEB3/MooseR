@@ -28,19 +28,21 @@ Moose_travel(
 \item{start_latitude, start_longitude}{Column names containing origin latitude and longitude.}
 \item{end_latitude, end_longitude}{Column names containing destination latitude and longitude.}
 \item{profile}{OSRM routing profile, usually \code{"driving"}, \code{"walking"}, or \code{"cycling"}, when supported by the selected server.}
-\item{server}{Base URL of an OSRM-compatible server.}
-\item{username, password}{Optional HTTP Basic Authentication credentials. Supply both or neither. Prefer environment variables instead of writing a password directly in an R script.}
+\item{server}{HTTP(S) base URL of an OSRM-compatible server. URL userinfo such as \code{https://user:password@example.com} is rejected. HTTPS is required when \code{username} and \code{password} are supplied.}
+\item{username, password}{Optional HTTP Basic Authentication credentials. Supply both or neither. Prefer environment variables instead of writing a password directly in an R script. Credentials are sent only over HTTPS and are redacted from printed HTTP request objects.}
 \item{distance_column}{Name of the output distance column, in metres.}
 \item{time_column}{Name of the output travel-time column, in seconds.}
 \item{overwrite}{Logical. Allow existing output columns to be replaced.}
 \item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request and no-route failures. Invalid or missing coordinates always return \code{NA}.}
-\item{timeout}{Positive number of seconds used as the R connection timeout.}
+\item{timeout}{Positive number of seconds allowed for each OSRM request.}
 \item{delay}{Non-negative seconds to pause between unique route requests.}
 \item{progress}{Logical. Print request progress.}
 }
 \value{The input data frame with two numeric columns appended.}
 \description{Looks up a road route for each unique origin-destination coordinate pair using an OSRM-compatible routing server. The returned data frame contains the original columns plus distance in metres and travel time in seconds.}
-\details{The public OSRM demonstration server is the default and is suitable for light, interactive use. For large or production workloads, supply the URL of an OSRM server you operate or are authorized to use.}
+\details{The public OSRM demonstration server is the default and is suitable for light, interactive use. For large or production workloads, supply the URL of an OSRM server you operate or are authorized to use.
+
+Redirects are not followed. OSRM places coordinates in the request URL, so exact origin and destination coordinates may appear in logs maintained by the routing server or an authorized reverse proxy.}
 \examples{
 \dontrun{
 trips <- data.frame(

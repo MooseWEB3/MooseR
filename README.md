@@ -72,9 +72,10 @@ MooseR keeps its original function names for backward compatibility. New code
 should use the `Moose_`-prefixed names. Older names remain available so
 existing scripts do not break.
 
-> **Testing notice:** `Moose_travel()` is currently experimental and has not
-> been formally released. Its interface, routing behavior, and returned
-> results may change while testing is in progress. Do not rely on it for
+> **Development notice:** `Moose_google_travel()` is currently in development
+> and has not been formally released. `Moose_travel()` also remains
+> experimental. Their interfaces, routing behavior, and returned results may
+> change while development and testing are in progress. Do not rely on them for
 > safety-critical, clinical, or production decisions without independent
 > validation.
 
@@ -82,6 +83,7 @@ existing scripts do not break.
 | --- | --- | --- |
 | `Moose_fix_colname()` | `BD_fix_colname()` | Clean column names by replacing spaces and removing selected special characters. |
 | `Moose_get_duplicates()` | `BD_get_duplicates()` | Find duplicated rows by one or more key columns. |
+| `Moose_google_travel()` | - | In development: add Google Routes API travel distance and travel time; current traffic is disabled by default. |
 | `Moose_check_unique()` | `BD_check_unique()` | Check whether a column contains unique values. |
 | `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Count unique categories in a variable. |
 | `Moose_cross_table()` | - | Build a two-variable cross table with counts and percentages. |
@@ -115,6 +117,60 @@ existing scripts do not break.
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Load the default MooseR startup package set. |
 | `Moose_enable_mooser_startup_packages()` | `enable_mooser_startup_packages()` | Enable automatic package loading at R startup. |
 | `Moose_disable_mooser_startup_packages()` | `disable_mooser_startup_packages()` | Disable automatic package loading at R startup. |
+
+### Google travel (in development)
+
+`Moose_google_travel()` is in development and has not been formally released.
+It sends each unique valid origin-destination coordinate pair to the Google
+Routes API and adds distance in metres and travel time in seconds. The default
+`TRAFFIC_UNAWARE` preference does not use current traffic.
+
+For a direct request, store a restricted key outside your script:
+
+```r
+Sys.setenv(GOOGLE_MAPS_API_KEY = "your_restricted_key")
+
+result <- Moose_google_travel(
+  dataset = trips,
+  start_latitude = "start_lat",
+  start_longitude = "start_lon",
+  end_latitude = "end_lat",
+  end_longitude = "end_lon"
+)
+```
+
+The direct backend is pinned to `https://routes.googleapis.com`; callers cannot
+change that endpoint. For another computer that must not receive the Google API
+key, use the separately deployed MooseR proxy. The client sends only Basic Auth
+credentials to the fixed `https://google-routes.mooseweb3.com` HTTPS endpoint:
+
+```r
+Sys.setenv(
+  MOOSER_GOOGLE_USER = "your_proxy_username",
+  MOOSER_GOOGLE_PASSWORD = "your_proxy_password"
+)
+
+result <- Moose_google_travel(
+  dataset = trips,
+  start_latitude = "start_lat",
+  start_longitude = "start_lon",
+  end_latitude = "end_lat",
+  end_longitude = "end_lon",
+  backend = "mooser_proxy"
+)
+```
+
+The proxy is not included in the R package and must be deployed before proxy
+mode will work. The proxy must inject its Google key server-side, overwrite or
+strip any client-supplied Google key header, restrict allowed routes and HTTP
+methods, and apply appropriate rate limits. Coordinates are ultimately sent to
+Google in both modes.
+Traffic-aware preferences currently use the Compute Routes Pro tier, and
+`TWO_WHEELER` currently uses the Enterprise tier. Review current
+[Google pricing](https://developers.google.com/maps/billing-and-pricing/pricing),
+[Routes API billing](https://developers.google.com/maps/documentation/routes/usage-and-billing),
+and [Routes API policies](https://developers.google.com/maps/documentation/routes/policies)
+before large jobs or storing/displaying results.
 
 ### Examples
 
