@@ -101,6 +101,7 @@ existing scripts do not break.
 | `Moose_LRds()` | - | Restore an R object from an RDS file. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Prepare the spaCy engine when available, or the pure R regex fallback. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Report the current Python, spaCy, and model setup status. |
+| `Moose_mask()` | - | Mask complete values or a chosen number of characters from the front or back. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Replace detected personal names in text with a replacement string. |
 | `Moose_mask_PHN()` | - | Mask nine-digit Personal Health Numbers near a `PHN` label. |
 | `Moose_mask_PHN_flag()` | - | Return 1 when a PHN is detected and 0 otherwise. |
@@ -377,6 +378,25 @@ Matching is case-insensitive and ignores accents and punctuation. A partial
 match is excluded only when the complete registered drug name occurs in the
 text, which limits collisions with personal names.
 
+Mask complete values, or mask a chosen number of characters from either side:
+
+```r
+ids <- c("1023056", "98765", NA)
+
+Moose_mask(ids)
+#> [1] "*******" "*****"   NA
+
+Moose_mask(ids, side = "front", n = 3)
+#> [1] "***3056" "***65"   NA
+
+Moose_mask(ids, side = "back", n = 3)
+#> [1] "1023***" "98***"   NA
+```
+
+`Moose_mask()` always returns a character vector. Partial masking is not
+anonymization, and even complete masking retains value length, missingness,
+and any vector `names()`.
+
 Mask names in a character vector:
 
 ```r
@@ -606,6 +626,7 @@ scripts existants.
 | `Moose_LRds()` | - | Restaurer un objet R à partir d'un fichier RDS. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Préparer le moteur spaCy lorsqu'il est disponible, ou la solution de rechange en expressions régulières R. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Afficher l'état actuel de la configuration Python, spaCy et du modèle. |
+| `Moose_mask()` | - | Masquer des valeurs entières ou un nombre choisi de caractères depuis le début ou la fin. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Remplacer les noms de personnes détectés dans un texte par une chaîne de remplacement. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Retourner un tableau d'audit des noms détectés et de leur position dans le texte. |
 | `Moose_name_flag()` | - | Retourner un vecteur 1/0 précisant si chaque texte contient un nom de personne détecté. |
@@ -1052,6 +1073,7 @@ existentes.
 | `Moose_LRds()` | - | Restaurar um objeto R a partir de um ficheiro RDS. |
 | `Moose_setup_name_masking()` | `setup_name_masking()` | Preparar o motor spaCy quando disponível, ou a alternativa em R baseada em expressões regulares. |
 | `Moose_check_name_masking()` | `check_name_masking()` | Apresentar o estado atual da configuração de Python, spaCy e do modelo. |
+| `Moose_mask()` | - | Mascarar valores completos ou um número escolhido de caracteres a partir do início ou do fim. |
 | `Moose_mask_person_names()` | `mask_person_names()` | Substituir os nomes de pessoas detetados num texto por uma cadeia de substituição. |
 | `Moose_detect_person_names()` | `detect_person_names()` | Devolver uma tabela de auditoria dos nomes detetados e das respetivas posições no texto. |
 | `Moose_name_flag()` | - | Devolver um vetor 1/0 que mostra se cada texto contém um nome de pessoa detetado. |
