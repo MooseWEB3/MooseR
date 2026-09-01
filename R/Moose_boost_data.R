@@ -16,6 +16,8 @@
 #'   of non-missing values must look like dates and convert successfully before
 #'   a column is changed.
 #' @param verbose Logical. If `TRUE`, report which columns were converted.
+#' @param two_digit_year_cutoff Whole number from 0 to 99. Passed to
+#'   [Moose_todate()] and [Moose_todatetime()].
 #'
 #' @return A copy of `data` with confidently detected date columns converted
 #'   to `Date` and date-time columns converted to `POSIXct`.
@@ -37,7 +39,8 @@ Moose_boost_data <- function(data,
                              numeric_origin = c("auto", "excel", "unix", "r"),
                              tz = "UTC",
                              min_success = 0.8,
-                             verbose = TRUE) {
+                             verbose = TRUE,
+                             two_digit_year_cutoff = 68L) {
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame or data-frame subclass.", call. = FALSE)
   }
@@ -45,6 +48,9 @@ Moose_boost_data <- function(data,
   numeric_origin <- match.arg(numeric_origin)
   day_first <- moose_validate_single_logical(day_first, "day_first")
   tz <- moose_validate_tz(tz)
+  two_digit_year_cutoff <- moose_validate_two_digit_year_cutoff(
+    two_digit_year_cutoff
+  )
   verbose <- moose_validate_single_logical(verbose, "verbose")
 
   if (!is.numeric(min_success) ||
@@ -81,6 +87,7 @@ Moose_boost_data <- function(data,
       day_first = day_first,
       numeric_origin = numeric_origin,
       tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff,
       min_success = min_success
     )
 
@@ -111,6 +118,7 @@ moose_boost_detect_column <- function(column,
                                       day_first,
                                       numeric_origin,
                                       tz,
+                                      two_digit_year_cutoff,
                                       min_success) {
   if (is.factor(column)) {
     column <- as.character(column)
@@ -166,14 +174,16 @@ moose_boost_detect_column <- function(column,
       column,
       day_first = day_first,
       numeric_origin = numeric_origin,
-      tz = tz
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
     )
   } else {
     Moose_todate(
       column,
       day_first = day_first,
       numeric_origin = numeric_origin,
-      tz = tz
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
     )
   }
 
@@ -220,27 +230,22 @@ moose_boost_meaningful_character <- function(x) {
 
 moose_boost_character_shape <- function(x, name_type, numeric_origin, tz) {
   values <- trimws(as.character(x))
-  standard_date <- grepl(
-    paste0(
-      "^(?:",
-      "[0-9]{4}[-/.][0-9]{1,2}[-/.][0-9]{1,2}",
-      "|[0-9]{1,2}[-/.][0-9]{1,2}[-/.][0-9]{4}",
-      "|[0-9]{8}(?:[T[:space:]]?[0-9]{4}(?:[0-9]{2})?)?",
-      ")"
-    ),
-    values,
-    perl = TRUE
+  parse_values <- moose_normalize_datetime_text(values)
+  formats <- c(
+    moose_datetime_formats(FALSE),
+    "%Y%m%d%H%M",
+    "%Y%m%d%H%M%S"
   )
-  month_name <- grepl(
-    paste0(
-      "^(?:",
-      "[0-9]{1,2}[-[:space:]]",
-      "|[[:alpha:]]{3,9}[[:space:]][0-9]{1,2},?[[:space:]]",
-      ").*[0-9]{4}"
-    ),
-    values,
-    perl = TRUE
-  )
+  date_shape <- rep(FALSE, length(values))
+
+  for (fmt in formats) {
+    date_shape <- date_shape |
+      moose_candidate_matches_datetime_format(parse_values, fmt)
+  }
+
+  if (identical(name_type, "none")) {
+    date_shape[grepl("^[0-9]{6}$", values)] <- FALSE
+  }
 
   numeric_text <- grepl("^[+-]?[0-9]+(?:[.][0-9]+)?$", values, perl = TRUE)
   numeric_shape <- rep(FALSE, length(values))
@@ -255,7 +260,7 @@ moose_boost_character_shape <- function(x, name_type, numeric_origin, tz) {
     )
   }
 
-  standard_date | month_name | numeric_shape
+  date_shape | numeric_shape
 }
 
 moose_boost_numeric_shape <- function(x, name_type, numeric_origin, tz) {
@@ -278,7 +283,7 @@ moose_boost_numeric_shape <- function(x, name_type, numeric_origin, tz) {
     scientific = FALSE,
     trim = TRUE
   )
-  compact <- whole & nchar(compact_text) %in% c(8L, 12L, 14L)
+  compact <- whole & nchar(compact_text) %in% c(6L, 8L, 12L, 14L)
 
   if (any(compact)) {
     result[compact] <- !is.na(

@@ -240,11 +240,21 @@ Convert common date and date-time inputs:
 
 ```r
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
+Moose_todate("09/01/26", two_digit_year_cutoff = 20) # 1926-09-01
 Moose_todate(c(20240105, 45296))
 
 Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+Moose_todatetime("09/01/26 13:30:00")
 Moose_todatetime(c(202401051330, 1704450600))
 ```
+
+By default, two-digit years follow the R convention: `00`-`68` become
+2000-2068 and `69`-`99` become 1969-1999. Set `two_digit_year_cutoff` to a
+whole number from 0 to 99 to change the boundary: years at or below the cutoff
+use the 2000s, while larger years use the 1900s. Prefer four-digit years when
+the century must be unambiguous. Month names such as `Sep` use the current R
+`LC_TIME` locale.
 
 Automatically convert date-like columns in a data set:
 
@@ -258,6 +268,9 @@ raw_data <- data.frame(
 boosted_data <- Moose_boost_data(raw_data)
 str(boosted_data)
 ```
+
+`Moose_boost_data()` also accepts `two_digit_year_cutoff` and passes it to
+both date converters.
 
 Save and restore an R object in RDS format:
 
@@ -708,11 +721,22 @@ Convertir les formats courants de date et de date et heure :
 
 ```r
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
+Moose_todate("09/01/26", two_digit_year_cutoff = 20) # 1926-09-01
 Moose_todate(c(20240105, 45296))
 
 Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+Moose_todatetime("09/01/26 13:30:00")
 Moose_todatetime(c(202401051330, 1704450600))
 ```
+
+Par défaut, les années sur deux chiffres suivent la convention de R :
+`00`-`68` correspondent à 2000-2068 et `69`-`99` à 1969-1999. Définissez
+`two_digit_year_cutoff` sur un entier de 0 à 99 pour modifier cette limite :
+les années inférieures ou égales à la limite utilisent les années 2000, et les
+autres les années 1900. Préférez les années sur quatre chiffres lorsque le
+siècle doit être sans ambiguïté. Les noms de mois comme `Sep` utilisent les
+paramètres régionaux `LC_TIME` actuels de R.
 
 Convertir automatiquement les colonnes qui ressemblent à des dates :
 
@@ -726,6 +750,9 @@ raw_data <- data.frame(
 boosted_data <- Moose_boost_data(raw_data)
 str(boosted_data)
 ```
+
+`Moose_boost_data()` accepte également `two_digit_year_cutoff` et le transmet
+aux deux fonctions de conversion de dates.
 
 Enregistrer et restaurer un objet R au format RDS :
 
@@ -1155,11 +1182,22 @@ Converter formatos comuns de data e de data e hora:
 
 ```r
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
+Moose_todate("09/01/26", two_digit_year_cutoff = 20) # 1926-09-01
 Moose_todate(c(20240105, 45296))
 
 Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+Moose_todatetime("09/01/26 13:30:00")
 Moose_todatetime(c(202401051330, 1704450600))
 ```
+
+Por predefinição, os anos com dois dígitos seguem a convenção do R: `00`-`68`
+correspondem a 2000-2068 e `69`-`99` a 1969-1999. Defina
+`two_digit_year_cutoff` como um número inteiro de 0 a 99 para alterar o limite:
+os anos iguais ou inferiores ao limite usam os anos 2000, e os restantes usam
+os anos 1900. Prefira anos com quatro dígitos quando o século tiver de ser
+inequívoco. Os nomes de meses, como `Sep`, usam a configuração regional
+`LC_TIME` atual do R.
 
 Converter automaticamente colunas semelhantes a datas:
 
@@ -1173,6 +1211,9 @@ raw_data <- data.frame(
 boosted_data <- Moose_boost_data(raw_data)
 str(boosted_data)
 ```
+
+`Moose_boost_data()` também aceita `two_digit_year_cutoff` e transmite-o às
+duas funções de conversão de datas.
 
 Guardar e restaurar um objeto R no formato RDS:
 

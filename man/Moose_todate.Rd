@@ -9,14 +9,16 @@ Moose_todate(
   x,
   day_first = FALSE,
   numeric_origin = c("auto", "excel", "unix", "r"),
-  tz = "UTC"
+  tz = "UTC",
+  two_digit_year_cutoff = 68L
 )
 
 Moose_todatetime(
   x,
   day_first = FALSE,
   numeric_origin = c("auto", "excel", "unix", "r"),
-  tz = "UTC"
+  tz = "UTC",
+  two_digit_year_cutoff = 68L
 )
 }
 \arguments{
@@ -28,11 +30,16 @@ integer, and numeric values.}
 
 \item{numeric_origin}{Character. One of \code{"auto"}, \code{"excel"},
 \code{"unix"}, or \code{"r"}. In \code{"auto"} mode, compact values such as
-\code{20240131} are parsed as \code{YYYYMMDD}, large values are parsed as Unix
-seconds, Excel-like serial values are parsed using Excel's Windows origin, and
-smaller values are parsed as R days since 1970-01-01.}
+\code{20240131} and \code{240131} are parsed as \code{YYYYMMDD} and
+\code{YYMMDD}, large values are parsed as Unix seconds, Excel-like serial
+values are parsed using Excel's Windows origin, and smaller values are parsed
+as R days since 1970-01-01.}
 
 \item{tz}{Time zone used for date-time parsing and conversion.}
+
+\item{two_digit_year_cutoff}{Whole number from 0 to 99. Two-digit years at
+or below this value are interpreted as 2000s; larger values are interpreted
+as 1900s. The default, \code{68}, follows the POSIX/R convention.}
 }
 \value{
 \code{Moose_todate()} returns a \code{Date} vector. \code{Moose_todatetime()}
@@ -43,10 +50,20 @@ returns a \code{POSIXct} vector.
 \code{Moose_todatetime()} converts common date or date-time inputs to
 \code{POSIXct}.
 }
+\details{
+With the default cutoff, two-digit years from \code{00} to \code{68} are
+interpreted as 2000 to 2068, and values from \code{69} to \code{99} are
+interpreted as 1969 to 1999. Four-digit years are never parsed as two-digit
+years. Prefer four-digit years whenever the century must be unambiguous.
+Month-name inputs use the current R \code{LC_TIME} locale.
+}
 \examples{
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
+Moose_todate("09/01/26", two_digit_year_cutoff = 20)
 Moose_todate(c(20240105, 45296))
 
 Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+Moose_todatetime("09/01/26 13:30:00")
 Moose_todatetime(c(202401051330, 1704450600))
 }
