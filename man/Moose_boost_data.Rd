@@ -10,14 +10,15 @@ Moose_boost_data(
   numeric_origin = c("auto", "excel", "unix", "r"),
   tz = "UTC",
   min_success = 0.8,
-  verbose = TRUE
+  verbose = TRUE,
+  two_digit_year_cutoff = 68L
 )
 }
 \arguments{
 \item{data}{A data frame or data-frame subclass.}
 
-\item{day_first}{Logical. If \code{TRUE}, ambiguous dates such as \code{01/02/2024}
-are interpreted as day/month/year before month/day/year.}
+\item{day_first}{Logical. If \code{TRUE}, ambiguous dates such as
+\code{01/02/2024} are interpreted as day/month/year before month/day/year.}
 
 \item{numeric_origin}{Character. One of \code{"auto"}, \code{"excel"}, \code{"unix"}, or
 \code{"r"}. Passed to \code{\link[=Moose_todate]{Moose_todate()}} and \code{\link[=Moose_todatetime]{Moose_todatetime()}}.}
@@ -29,6 +30,10 @@ of non-missing values must look like dates and convert successfully before
 a column is changed.}
 
 \item{verbose}{Logical. If \code{TRUE}, report which columns were converted.}
+
+\item{two_digit_year_cutoff}{Whole number from 0 to 99. Passed to
+\code{\link[=Moose_todate]{Moose_todate()}} and
+\code{\link[=Moose_todatetime]{Moose_todatetime()}}.}
 }
 \value{
 A copy of \code{data} with confidently detected date columns converted

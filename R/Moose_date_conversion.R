@@ -8,30 +8,45 @@
 #' @param day_first Logical. If `TRUE`, ambiguous dates such as `01/02/2024`
 #'   are parsed as day/month/year before month/day/year.
 #' @param numeric_origin Character. One of `"auto"`, `"excel"`, `"unix"`, or
-#'   `"r"`. In `"auto"` mode, compact values such as `20240131` are parsed as
-#'   `YYYYMMDD`, large values are parsed as Unix seconds, Excel-like serial
-#'   values are parsed using Excel's Windows origin, and smaller values are
-#'   parsed as R days since 1970-01-01.
+#'   `"r"`. In `"auto"` mode, compact values such as `20240131` and `240131`
+#'   are parsed as `YYYYMMDD` and `YYMMDD`, large values are parsed as Unix
+#'   seconds, Excel-like serial values are parsed using Excel's Windows origin,
+#'   and smaller values are parsed as R days since 1970-01-01.
 #' @param tz Time zone used for date-time parsing and conversion.
+#' @param two_digit_year_cutoff Whole number from 0 to 99. Two-digit years at
+#'   or below this value are interpreted as 2000s; larger values are
+#'   interpreted as 1900s. The default, `68`, follows the POSIX/R convention.
+#' @details With the default cutoff, two-digit years from `00` to `68` are
+#'   interpreted as 2000 to 2068, and values from `69` to `99` are interpreted
+#'   as 1969 to 1999. Four-digit years are never parsed as two-digit years.
+#'   Prefer four-digit years whenever the century must be unambiguous.
+#'   Month-name inputs use the current R `LC_TIME` locale.
 #'
 #' @return `Moose_todate()` returns a `Date` vector. `Moose_todatetime()`
 #'   returns a `POSIXct` vector.
 #'
 #' @examples
 #' Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+#' Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
+#' Moose_todate("09/01/26", two_digit_year_cutoff = 20)
 #' Moose_todate(c(20240105, 45296))
 #'
 #' Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
+#' Moose_todatetime("09/01/26 13:30:00")
 #' Moose_todatetime(c(202401051330, 1704450600))
 #'
 #' @export
 Moose_todate <- function(x,
                          day_first = FALSE,
                          numeric_origin = c("auto", "excel", "unix", "r"),
-                         tz = "UTC") {
+                         tz = "UTC",
+                         two_digit_year_cutoff = 68L) {
   numeric_origin <- match.arg(numeric_origin)
   day_first <- moose_validate_single_logical(day_first, "day_first")
   tz <- moose_validate_tz(tz)
+  two_digit_year_cutoff <- moose_validate_two_digit_year_cutoff(
+    two_digit_year_cutoff
+  )
 
   if (is.null(x)) {
     return(as.Date(character()))
@@ -50,7 +65,12 @@ Moose_todate <- function(x,
   }
 
   if (is.numeric(x) || is.integer(x)) {
-    return(moose_numeric_to_date(x, numeric_origin = numeric_origin, tz = tz))
+    return(moose_numeric_to_date(
+      x,
+      numeric_origin = numeric_origin,
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
+    ))
   }
 
   if (is.character(x)) {
@@ -58,7 +78,8 @@ Moose_todate <- function(x,
       x,
       day_first = day_first,
       numeric_origin = numeric_origin,
-      tz = tz
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
     )
     return(as.Date(dt, tz = tz))
   }
@@ -74,10 +95,14 @@ Moose_todate <- function(x,
 Moose_todatetime <- function(x,
                              day_first = FALSE,
                              numeric_origin = c("auto", "excel", "unix", "r"),
-                             tz = "UTC") {
+                             tz = "UTC",
+                             two_digit_year_cutoff = 68L) {
   numeric_origin <- match.arg(numeric_origin)
   day_first <- moose_validate_single_logical(day_first, "day_first")
   tz <- moose_validate_tz(tz)
+  two_digit_year_cutoff <- moose_validate_two_digit_year_cutoff(
+    two_digit_year_cutoff
+  )
 
   if (is.null(x)) {
     return(as.POSIXct(character(), tz = tz))
@@ -99,7 +124,8 @@ Moose_todatetime <- function(x,
     return(moose_numeric_to_datetime(
       x,
       numeric_origin = numeric_origin,
-      tz = tz
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
     ))
   }
 
@@ -108,7 +134,8 @@ Moose_todatetime <- function(x,
       x,
       day_first = day_first,
       numeric_origin = numeric_origin,
-      tz = tz
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
     ))
   }
 
@@ -121,7 +148,8 @@ Moose_todatetime <- function(x,
 moose_character_to_datetime <- function(x,
                                         day_first,
                                         numeric_origin,
-                                        tz) {
+                                        tz,
+                                        two_digit_year_cutoff = 68L) {
   values <- trimws(as.character(x))
   missing <- is.na(values) |
     !nzchar(values) |
@@ -131,7 +159,14 @@ moose_character_to_datetime <- function(x,
   out <- moose_posix_na(length(values), tz)
 
   formats <- moose_datetime_formats(day_first)
-  out <- moose_parse_datetime_formats(parse_values, formats, tz, out, missing)
+  out <- moose_parse_datetime_formats(
+    parse_values,
+    formats,
+    tz,
+    out,
+    missing,
+    two_digit_year_cutoff = two_digit_year_cutoff
+  )
 
   remaining <- is.na(out) & !missing
   numeric_text <- remaining & grepl("^[+-]?[0-9]+([.][0-9]+)?$", values)
@@ -141,22 +176,30 @@ moose_character_to_datetime <- function(x,
     out[numeric_text] <- moose_numeric_to_datetime(
       numeric_values,
       numeric_origin = numeric_origin,
-      tz = tz
+      tz = tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
     )
   }
 
   out
 }
 
-moose_numeric_to_date <- function(x, numeric_origin, tz) {
+moose_numeric_to_date <- function(x,
+                                  numeric_origin,
+                                  tz,
+                                  two_digit_year_cutoff = 68L) {
   as.Date(moose_numeric_to_datetime(
     x,
     numeric_origin = numeric_origin,
-    tz = tz
+    tz = tz,
+    two_digit_year_cutoff = two_digit_year_cutoff
   ), tz = tz)
 }
 
-moose_numeric_to_datetime <- function(x, numeric_origin, tz) {
+moose_numeric_to_datetime <- function(x,
+                                      numeric_origin,
+                                      tz,
+                                      two_digit_year_cutoff = 68L) {
   out <- moose_posix_na(length(x), tz)
   finite <- !is.na(x) & is.finite(x)
 
@@ -188,10 +231,14 @@ moose_numeric_to_datetime <- function(x, numeric_origin, tz) {
   )
 
   compact_candidate <- compact &
-    nchar(compact_text) %in% c(8L, 12L, 14L)
+    nchar(compact_text) %in% c(6L, 8L, 12L, 14L)
 
   if (any(compact_candidate)) {
-    compact_dt <- moose_parse_compact_datetime(compact_text[compact_candidate], tz)
+    compact_dt <- moose_parse_compact_datetime(
+      compact_text[compact_candidate],
+      tz,
+      two_digit_year_cutoff = two_digit_year_cutoff
+    )
     good <- !is.na(compact_dt)
     idx <- which(compact_candidate)
     out[idx[good]] <- compact_dt[good]
@@ -227,13 +274,32 @@ moose_numeric_to_datetime <- function(x, numeric_origin, tz) {
   out
 }
 
-moose_parse_compact_datetime <- function(x, tz) {
+moose_parse_compact_datetime <- function(x,
+                                         tz,
+                                         two_digit_year_cutoff = 68L) {
   out <- moose_posix_na(length(x), tz)
-  formats <- c("%Y%m%d%H%M%S", "%Y%m%d%H%M", "%Y%m%d")
-  moose_parse_datetime_formats(x, formats, tz, out, rep(FALSE, length(x)))
+  formats <- c(
+    "%Y%m%d%H%M%S",
+    "%Y%m%d%H%M",
+    "%Y%m%d",
+    "%y%m%d"
+  )
+  moose_parse_datetime_formats(
+    x,
+    formats,
+    tz,
+    out,
+    rep(FALSE, length(x)),
+    two_digit_year_cutoff = two_digit_year_cutoff
+  )
 }
 
-moose_parse_datetime_formats <- function(x, formats, tz, out, missing) {
+moose_parse_datetime_formats <- function(x,
+                                         formats,
+                                         tz,
+                                         out,
+                                         missing,
+                                         two_digit_year_cutoff = 68L) {
   for (fmt in formats) {
     needs_parse <- is.na(out) & !missing
 
@@ -247,7 +313,24 @@ moose_parse_datetime_formats <- function(x, formats, tz, out, missing) {
       next
     }
 
-    parsed <- suppressWarnings(strptime(x[needs_parse], format = fmt, tz = tz))
+    parse_text <- x[needs_parse]
+    parse_format <- fmt
+
+    if (grepl("%y", fmt, fixed = TRUE)) {
+      expanded <- moose_expand_two_digit_year(
+        parse_text,
+        fmt,
+        two_digit_year_cutoff
+      )
+      parse_text <- expanded$text
+      parse_format <- expanded$format
+    }
+
+    parsed <- suppressWarnings(strptime(
+      parse_text,
+      format = parse_format,
+      tz = tz
+    ))
     parsed <- as.POSIXct(parsed, tz = tz)
     good <- !is.na(parsed)
 
@@ -260,47 +343,40 @@ moose_parse_datetime_formats <- function(x, formats, tz, out, missing) {
   out
 }
 
-moose_candidate_matches_datetime_format <- function(x, fmt) {
-  if (!grepl("%Y%m%d", fmt, fixed = TRUE)) {
-    if (startsWith(fmt, "%Y-%m-%d")) {
-      return(grepl("^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}", x))
-    }
-
-    if (startsWith(fmt, "%Y/%m/%d")) {
-      return(grepl("^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}", x))
-    }
-
-    if (startsWith(fmt, "%Y.%m.%d")) {
-      return(grepl("^[0-9]{4}[.][0-9]{1,2}[.][0-9]{1,2}", x))
-    }
-
-    if (startsWith(fmt, "%m/%d/%Y")) {
-      return(grepl("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}", x))
-    }
-
-    if (startsWith(fmt, "%m-%d-%Y")) {
-      return(grepl("^[0-9]{1,2}-[0-9]{1,2}-[0-9]{4}", x))
-    }
-
-    if (startsWith(fmt, "%m.%d.%Y")) {
-      return(grepl("^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{4}", x))
-    }
-
-    if (startsWith(fmt, "%d/%m/%Y")) {
-      return(grepl("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}", x))
-    }
-
-    if (startsWith(fmt, "%d-%m-%Y")) {
-      return(grepl("^[0-9]{1,2}-[0-9]{1,2}-[0-9]{4}", x))
-    }
-
-    if (startsWith(fmt, "%d.%m.%Y")) {
-      return(grepl("^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{4}", x))
-    }
-
-    return(rep(TRUE, length(x)))
+moose_expand_two_digit_year <- function(x, fmt, cutoff) {
+  if (startsWith(fmt, "%y%m%d")) {
+    year_start <- rep(1L, length(x))
+  } else {
+    year_start <- regexpr(
+      "[0-9]{2}(?=$|[T[:space:]][0-9]{1,2}:[0-9]{2})",
+      x,
+      perl = TRUE
+    )
   }
 
+  short_year <- as.integer(substr(x, year_start, year_start + 1L))
+  full_year <- ifelse(
+    short_year <= cutoff,
+    2000L + short_year,
+    1900L + short_year
+  )
+
+  expanded <- x
+  for (i in seq_along(expanded)) {
+    expanded[[i]] <- paste0(
+      substr(x[[i]], 1L, year_start[[i]] - 1L),
+      sprintf("%04d", full_year[[i]]),
+      substr(x[[i]], year_start[[i]] + 2L, nchar(x[[i]]))
+    )
+  }
+
+  list(
+    text = expanded,
+    format = sub("%y", "%Y", fmt, fixed = TRUE)
+  )
+}
+
+moose_candidate_matches_datetime_format <- function(x, fmt) {
   if (identical(fmt, "%Y%m%d%H%M%S")) {
     return(grepl("^[0-9]{14}$", x))
   }
@@ -313,15 +389,106 @@ moose_candidate_matches_datetime_format <- function(x, fmt) {
     return(grepl("^[0-9]{8}$", x))
   }
 
-  if (grepl("T", fmt, fixed = TRUE)) {
-    return(grepl("^[0-9]{8}T", x))
+  if (identical(fmt, "%y%m%d")) {
+    return(grepl("^[0-9]{6}$", x))
   }
 
-  if (grepl(" ", fmt, fixed = TRUE)) {
-    return(grepl("^[0-9]{8}[[:space:]]", x))
+  date_regexes <- c(
+    "%Y-%m-%d" = "^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}(?=$|[T[:space:]])",
+    "%Y/%m/%d" = "^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}(?=$|[T[:space:]])",
+    "%Y.%m.%d" = "^[0-9]{4}[.][0-9]{1,2}[.][0-9]{1,2}(?=$|[T[:space:]])",
+    "%Y%m%d" = "^[0-9]{8}(?=$|[T[:space:]])",
+    "%y%m%d" = "^[0-9]{6}(?=$|[T[:space:]])",
+    "%m/%d/%Y" = "^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}(?=$|[T[:space:]])",
+    "%m-%d-%Y" = "^[0-9]{1,2}-[0-9]{1,2}-[0-9]{4}(?=$|[T[:space:]])",
+    "%m.%d.%Y" = "^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{4}(?=$|[T[:space:]])",
+    "%d/%m/%Y" = "^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}(?=$|[T[:space:]])",
+    "%d-%m-%Y" = "^[0-9]{1,2}-[0-9]{1,2}-[0-9]{4}(?=$|[T[:space:]])",
+    "%d.%m.%Y" = "^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{4}(?=$|[T[:space:]])",
+    "%m/%d/%y" = "^[0-9]{1,2}/[0-9]{1,2}/[0-9]{2}(?=$|[T[:space:]])",
+    "%m-%d-%y" = "^[0-9]{1,2}-[0-9]{1,2}-[0-9]{2}(?=$|[T[:space:]])",
+    "%m.%d.%y" = "^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{2}(?=$|[T[:space:]])",
+    "%d/%m/%y" = "^[0-9]{1,2}/[0-9]{1,2}/[0-9]{2}(?=$|[T[:space:]])",
+    "%d-%m-%y" = "^[0-9]{1,2}-[0-9]{1,2}-[0-9]{2}(?=$|[T[:space:]])",
+    "%d.%m.%y" = "^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{2}(?=$|[T[:space:]])",
+    "%d-%b-%Y" = "^[0-9]{1,2}-[[:alpha:]]+-[0-9]{4}(?=$|[T[:space:]])",
+    "%d %b %Y" = "^[0-9]{1,2}[[:space:]]+[[:alpha:]]+[[:space:]]+[0-9]{4}(?=$|[T[:space:]])",
+    "%d-%B-%Y" = "^[0-9]{1,2}-[[:alpha:]]+-[0-9]{4}(?=$|[T[:space:]])",
+    "%d %B %Y" = "^[0-9]{1,2}[[:space:]]+[[:alpha:]]+[[:space:]]+[0-9]{4}(?=$|[T[:space:]])",
+    "%b %d, %Y" = "^[[:alpha:]]+[[:space:]]+[0-9]{1,2},[[:space:]]*[0-9]{4}(?=$|[T[:space:]])",
+    "%B %d, %Y" = "^[[:alpha:]]+[[:space:]]+[0-9]{1,2},[[:space:]]*[0-9]{4}(?=$|[T[:space:]])",
+    "%d-%b-%y" = "^[0-9]{1,2}-[[:alpha:]]+-[0-9]{2}(?=$|[T[:space:]])",
+    "%d %b %y" = "^[0-9]{1,2}[[:space:]]+[[:alpha:]]+[[:space:]]+[0-9]{2}(?=$|[T[:space:]])",
+    "%d-%B-%y" = "^[0-9]{1,2}-[[:alpha:]]+-[0-9]{2}(?=$|[T[:space:]])",
+    "%d %B %y" = "^[0-9]{1,2}[[:space:]]+[[:alpha:]]+[[:space:]]+[0-9]{2}(?=$|[T[:space:]])",
+    "%b %d, %y" = "^[[:alpha:]]+[[:space:]]+[0-9]{1,2},[[:space:]]*[0-9]{2}(?=$|[T[:space:]])",
+    "%B %d, %y" = "^[[:alpha:]]+[[:space:]]+[0-9]{1,2},[[:space:]]*[0-9]{2}(?=$|[T[:space:]])"
+  )
+  matching_format <- startsWith(fmt, names(date_regexes))
+
+  if (any(matching_format)) {
+    format_prefix <- names(date_regexes)[which(matching_format)[1L]]
+    date_regex <- unname(date_regexes[[format_prefix]])
+    suffix <- substring(fmt, nchar(format_prefix) + 1L)
+    suffix_regex <- moose_datetime_suffix_regex(suffix)
+
+    if (!is.na(suffix_regex)) {
+      return(grepl(
+        paste0(date_regex, suffix_regex),
+        x,
+        perl = TRUE
+      ))
+    }
   }
 
-  rep(TRUE, length(x))
+  rep(FALSE, length(x))
+}
+
+moose_datetime_suffix_regex <- function(suffix) {
+  if (!nzchar(suffix)) {
+    return("$")
+  }
+
+  has_offset <- endsWith(suffix, "%z")
+  if (has_offset) {
+    suffix <- substr(suffix, 1L, nchar(suffix) - 2L)
+  }
+
+  if (startsWith(suffix, "T")) {
+    separator <- "T"
+    time_format <- substring(suffix, 2L)
+  } else if (startsWith(suffix, " ")) {
+    separator <- "[[:space:]]+"
+    time_format <- substring(suffix, 2L)
+  } else {
+    return(NA_character_)
+  }
+
+  time_regex <- switch(
+    time_format,
+    "%H:%M:%OS" = "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(?:[.][0-9]+)?",
+    "%H:%M:%S" = "[0-9]{1,2}:[0-9]{2}:[0-9]{2}",
+    "%H:%M" = "[0-9]{1,2}:[0-9]{2}",
+    "%I:%M:%OS %p" = paste0(
+      "[0-9]{1,2}:[0-9]{2}:[0-9]{2}(?:[.][0-9]+)?",
+      "[[:space:]]+[AaPp][Mm]"
+    ),
+    "%I:%M:%S %p" = paste0(
+      "[0-9]{1,2}:[0-9]{2}:[0-9]{2}",
+      "[[:space:]]+[AaPp][Mm]"
+    ),
+    "%I:%M %p" = paste0(
+      "[0-9]{1,2}:[0-9]{2}[[:space:]]+[AaPp][Mm]"
+    ),
+    NULL
+  )
+
+  if (is.null(time_regex)) {
+    return(NA_character_)
+  }
+
+  offset_regex <- if (has_offset) "[+-][0-9]{4}" else ""
+  paste0(separator, time_regex, offset_regex, "$")
 }
 
 moose_datetime_formats <- function(day_first) {
@@ -342,33 +509,53 @@ moose_datetime_formats <- function(day_first) {
     paste,
     sep = "T"
   ))
+  offset_formats <- paste0(c(datetime_formats, iso_formats), "%z")
 
-  unique(c(datetime_formats, iso_formats, date_formats))
+  unique(c(offset_formats, datetime_formats, iso_formats, date_formats))
 }
 
 moose_date_formats <- function(day_first) {
   ymd <- c("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%Y%m%d")
-  month_names <- c("%d-%b-%Y", "%d %b %Y", "%d-%B-%Y", "%d %B %Y")
-  month_names <- c(month_names, "%b %d, %Y", "%B %d, %Y")
+  ymd_short <- "%y%m%d"
+  month_names <- c(
+    "%d-%b-%Y", "%d %b %Y", "%d-%B-%Y", "%d %B %Y",
+    "%b %d, %Y", "%B %d, %Y",
+    "%d-%b-%y", "%d %b %y", "%d-%B-%y", "%d %B %y",
+    "%b %d, %y", "%B %d, %y"
+  )
 
   if (isTRUE(day_first)) {
     ambiguous <- c(
       "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y",
-      "%m/%d/%Y", "%m-%d-%Y", "%m.%d.%Y"
+      "%m/%d/%Y", "%m-%d-%Y", "%m.%d.%Y",
+      "%d/%m/%y", "%d-%m-%y", "%d.%m.%y",
+      "%m/%d/%y", "%m-%d-%y", "%m.%d.%y"
     )
   } else {
     ambiguous <- c(
       "%m/%d/%Y", "%m-%d-%Y", "%m.%d.%Y",
-      "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y"
+      "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y",
+      "%m/%d/%y", "%m-%d-%y", "%m.%d.%y",
+      "%d/%m/%y", "%d-%m-%y", "%d.%m.%y"
     )
   }
 
-  c(ymd, ambiguous, month_names)
+  c(ymd, ymd_short, ambiguous, month_names)
 }
 
 moose_normalize_datetime_text <- function(x) {
-  x <- sub("Z$", "", x)
-  x <- sub("([+-][0-9]{2}:?[0-9]{2})$", "", x)
+  has_time <- !is.na(x) & grepl(
+    "[T[:space:]][0-9]{1,2}:[0-9]{2}",
+    x,
+    perl = TRUE
+  )
+  x[has_time] <- sub("Z$", "+0000", x[has_time])
+  x[has_time] <- sub(
+    "([+-][0-9]{2}):([0-9]{2})$",
+    "\\1\\2",
+    x[has_time],
+    perl = TRUE
+  )
   trimws(x)
 }
 
@@ -390,6 +577,26 @@ moose_validate_single_logical <- function(x, arg) {
   }
 
   x
+}
+
+moose_validate_two_digit_year_cutoff <- function(x) {
+  valid <- is.numeric(x) &&
+    !is.logical(x) &&
+    length(x) == 1L &&
+    !is.na(x) &&
+    is.finite(x) &&
+    x >= 0 &&
+    x <= 99 &&
+    x == floor(x)
+
+  if (!valid) {
+    stop(
+      "`two_digit_year_cutoff` must be one whole number from 0 to 99.",
+      call. = FALSE
+    )
+  }
+
+  as.integer(x)
 }
 
 moose_validate_tz <- function(tz) {
