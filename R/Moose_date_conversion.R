@@ -5,8 +5,11 @@
 #'
 #' @param x Input vector. Supports `Date`, `POSIXt`, character, factor, integer,
 #'   and numeric values.
-#' @param day_first Logical. If `TRUE`, ambiguous dates such as `01/02/2024`
-#'   are parsed as day/month/year before month/day/year.
+#' @param day_first Logical fallback for ambiguous numeric dates. MooseR first
+#'   examines the input vector for unambiguous values such as `13/02/2024` or
+#'   `02/13/2024` and applies the better-supported order to the whole vector.
+#'   If the evidence is tied or absent, `TRUE` prefers day/month/year and
+#'   `FALSE` prefers month/day/year.
 #' @param numeric_origin Character. One of `"auto"`, `"excel"`, `"unix"`, or
 #'   `"r"`. In `"auto"` mode, compact values such as `20240131` and `240131`
 #'   are parsed as `YYYYMMDD` and `YYMMDD`, large values are parsed as Unix
@@ -20,6 +23,15 @@
 #'   interpreted as 2000 to 2068, and values from `69` to `99` are interpreted
 #'   as 1969 to 1999. Four-digit years are never parsed as two-digit years.
 #'   Prefer four-digit years whenever the century must be unambiguous.
+#'
+#'   Numeric dates with the year last are interpreted consistently across the
+#'   input vector. MooseR counts unambiguous day-first and month-first values,
+#'   then applies the better-supported order to ambiguous values. Ties use
+#'   `day_first`.
+#'
+#'   Inputs already stored as `Date` or `POSIXt` with a year from 0000 to 0099
+#'   are treated as having originated from a two-digit year and are normalized
+#'   using `two_digit_year_cutoff`.
 #'   Month-name inputs use the current R `LC_TIME` locale.
 #'
 #' @return `Moose_todate()` returns a `Date` vector. `Moose_todatetime()`
@@ -27,6 +39,8 @@
 #'
 #' @examples
 #' Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+#' Moose_todate(c("01/02/2026", "13/02/2026", "03/02/2026"))
+#' Moose_todate("13-Jul-26")
 #' Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
 #' Moose_todate("09/01/26", two_digit_year_cutoff = 20)
 #' Moose_todate(c(20240105, 45296))
@@ -53,11 +67,16 @@ Moose_todate <- function(x,
   }
 
   if (inherits(x, "Date")) {
-    return(x)
+    return(moose_normalize_date_year(x, two_digit_year_cutoff))
   }
 
   if (inherits(x, "POSIXt")) {
-    return(as.Date(x, tz = tz))
+    normalized <- moose_normalize_datetime_year(
+      x,
+      two_digit_year_cutoff,
+      tz
+    )
+    return(as.Date(normalized, tz = tz))
   }
 
   if (is.factor(x)) {
@@ -65,12 +84,13 @@ Moose_todate <- function(x,
   }
 
   if (is.numeric(x) || is.integer(x)) {
-    return(moose_numeric_to_date(
+    result <- moose_numeric_to_date(
       x,
       numeric_origin = numeric_origin,
       tz = tz,
       two_digit_year_cutoff = two_digit_year_cutoff
-    ))
+    )
+    return(moose_normalize_date_year(result, two_digit_year_cutoff))
   }
 
   if (is.character(x)) {
@@ -81,7 +101,8 @@ Moose_todate <- function(x,
       tz = tz,
       two_digit_year_cutoff = two_digit_year_cutoff
     )
-    return(as.Date(dt, tz = tz))
+    result <- as.Date(dt, tz = tz)
+    return(moose_normalize_date_year(result, two_digit_year_cutoff))
   }
 
   stop(
@@ -109,11 +130,12 @@ Moose_todatetime <- function(x,
   }
 
   if (inherits(x, "POSIXt")) {
-    return(as.POSIXct(x, tz = tz))
+    return(moose_normalize_datetime_year(x, two_digit_year_cutoff, tz))
   }
 
   if (inherits(x, "Date")) {
-    return(as.POSIXct(x, tz = tz))
+    normalized <- moose_normalize_date_year(x, two_digit_year_cutoff)
+    return(as.POSIXct(normalized, tz = tz))
   }
 
   if (is.factor(x)) {
@@ -121,21 +143,31 @@ Moose_todatetime <- function(x,
   }
 
   if (is.numeric(x) || is.integer(x)) {
-    return(moose_numeric_to_datetime(
+    result <- moose_numeric_to_datetime(
       x,
       numeric_origin = numeric_origin,
       tz = tz,
       two_digit_year_cutoff = two_digit_year_cutoff
+    )
+    return(moose_normalize_datetime_year(
+      result,
+      two_digit_year_cutoff,
+      tz
     ))
   }
 
   if (is.character(x)) {
-    return(moose_character_to_datetime(
+    result <- moose_character_to_datetime(
       x,
       day_first = day_first,
       numeric_origin = numeric_origin,
       tz = tz,
       two_digit_year_cutoff = two_digit_year_cutoff
+    )
+    return(moose_normalize_datetime_year(
+      result,
+      two_digit_year_cutoff,
+      tz
     ))
   }
 
@@ -158,7 +190,8 @@ moose_character_to_datetime <- function(x,
   parse_values <- moose_normalize_datetime_text(values)
   out <- moose_posix_na(length(values), tz)
 
-  formats <- moose_datetime_formats(day_first)
+  inferred_day_first <- moose_infer_day_first(parse_values, day_first)
+  formats <- moose_datetime_formats(inferred_day_first)
   out <- moose_parse_datetime_formats(
     parse_values,
     formats,
@@ -541,6 +574,99 @@ moose_date_formats <- function(day_first) {
   }
 
   c(ymd, ymd_short, ambiguous, month_names)
+}
+
+moose_infer_day_first <- function(x, fallback) {
+  candidate <- !is.na(x) & grepl(
+    paste0(
+      "^[0-9]{1,2}([-/.])[0-9]{1,2}\\1",
+      "[0-9]{2}(?:[0-9]{2})?(?=$|[T[:space:]])"
+    ),
+    x,
+    perl = TRUE
+  )
+
+  if (!any(candidate)) {
+    return(fallback)
+  }
+
+  values <- x[candidate]
+  first <- as.integer(sub(
+    "^([0-9]{1,2}).*$",
+    "\\1",
+    values,
+    perl = TRUE
+  ))
+  second <- as.integer(sub(
+    "^[0-9]{1,2}[-/.]([0-9]{1,2}).*$",
+    "\\1",
+    values,
+    perl = TRUE
+  ))
+
+  day_first_evidence <- sum(
+    first >= 13L & first <= 31L & second >= 1L & second <= 12L
+  )
+  month_first_evidence <- sum(
+    second >= 13L & second <= 31L & first >= 1L & first <= 12L
+  )
+
+  if (day_first_evidence > month_first_evidence) {
+    return(TRUE)
+  }
+
+  if (month_first_evidence > day_first_evidence) {
+    return(FALSE)
+  }
+
+  fallback
+}
+
+moose_normalize_date_year <- function(x, cutoff) {
+  if (!length(x)) {
+    return(x)
+  }
+
+  year <- suppressWarnings(as.integer(format(x, "%Y")))
+  needs_normalization <- !is.na(year) & year >= 0L & year <= 99L
+
+  if (!any(needs_normalization)) {
+    return(x)
+  }
+
+  full_year <- ifelse(
+    year[needs_normalization] <= cutoff,
+    2000L + year[needs_normalization],
+    1900L + year[needs_normalization]
+  )
+  replacement <- paste0(
+    sprintf("%04d", full_year),
+    format(x[needs_normalization], "-%m-%d")
+  )
+  x[needs_normalization] <- as.Date(replacement, format = "%Y-%m-%d")
+  x
+}
+
+moose_normalize_datetime_year <- function(x, cutoff, tz) {
+  if (!length(x)) {
+    return(as.POSIXct(x, tz = tz))
+  }
+
+  parts <- as.POSIXlt(x, tz = tz)
+  year <- parts$year + 1900L
+  needs_normalization <- !is.na(year) & year >= 0L & year <= 99L
+
+  if (!any(needs_normalization)) {
+    return(as.POSIXct(parts, tz = tz))
+  }
+
+  full_year <- ifelse(
+    year[needs_normalization] <= cutoff,
+    2000L + year[needs_normalization],
+    1900L + year[needs_normalization]
+  )
+  parts$year[needs_normalization] <- full_year - 1900L
+  as.POSIXct(parts, tz = tz)
 }
 
 moose_normalize_datetime_text <- function(x) {

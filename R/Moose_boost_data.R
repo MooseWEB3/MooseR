@@ -7,8 +7,10 @@
 #' positives.
 #'
 #' @param data A data frame or data-frame subclass.
-#' @param day_first Logical. If `TRUE`, ambiguous dates such as `01/02/2024`
-#'   are interpreted as day/month/year before month/day/year.
+#' @param day_first Logical fallback for ambiguous numeric dates. MooseR first
+#'   examines other values in the same column to infer month/day/year or
+#'   day/month/year. If the evidence is tied or absent, `TRUE` prefers
+#'   day/month/year and `FALSE` prefers month/day/year.
 #' @param numeric_origin Character. One of `"auto"`, `"excel"`, `"unix"`, or
 #'   `"r"`. Passed to [Moose_todate()] and [Moose_todatetime()].
 #' @param tz Time zone used when parsing date-time columns.

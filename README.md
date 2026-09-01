@@ -240,6 +240,8 @@ Convert common date and date-time inputs:
 
 ```r
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("01/02/2026", "13/02/2026", "03/02/2026"))
+Moose_todate("13-Jul-26") # 2026-07-13
 Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
 Moose_todate("09/01/26", two_digit_year_cutoff = 20) # 1926-09-01
 Moose_todate(c(20240105, 45296))
@@ -255,6 +257,12 @@ whole number from 0 to 99 to change the boundary: years at or below the cutoff
 use the 2000s, while larger years use the 1900s. Prefer four-digit years when
 the century must be unambiguous. Month names such as `Sep` use the current R
 `LC_TIME` locale.
+
+For ambiguous numeric dates, MooseR examines other values in the same vector.
+Values such as `13/02/2026` support day/month/year, while `02/13/2026`
+supports month/day/year. The order with more evidence is used; `day_first` is
+the fallback for a tie. Inputs already stored with a year from 0000 to 0099
+are also normalized using the two-digit-year cutoff.
 
 Automatically convert date-like columns in a data set:
 
@@ -721,6 +729,8 @@ Convertir les formats courants de date et de date et heure :
 
 ```r
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("01/02/2026", "13/02/2026", "03/02/2026"))
+Moose_todate("13-Jul-26") # 2026-07-13
 Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
 Moose_todate("09/01/26", two_digit_year_cutoff = 20) # 1926-09-01
 Moose_todate(c(20240105, 45296))
@@ -737,6 +747,12 @@ les années inférieures ou égales à la limite utilisent les années 2000, et 
 autres les années 1900. Préférez les années sur quatre chiffres lorsque le
 siècle doit être sans ambiguïté. Les noms de mois comme `Sep` utilisent les
 paramètres régionaux `LC_TIME` actuels de R.
+
+Pour les dates numériques ambiguës, MooseR examine les autres valeurs du même
+vecteur. `13/02/2026` appuie l'ordre jour/mois/année, tandis que `02/13/2026`
+appuie mois/jour/année. L'ordre ayant le plus d'éléments probants est utilisé;
+`day_first` sert en cas d'égalité. Les entrées déjà stockées avec une année de
+0000 à 0099 sont aussi normalisées selon la limite des années à deux chiffres.
 
 Convertir automatiquement les colonnes qui ressemblent à des dates :
 
@@ -1182,6 +1198,8 @@ Converter formatos comuns de data e de data e hora:
 
 ```r
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("01/02/2026", "13/02/2026", "03/02/2026"))
+Moose_todate("13-Jul-26") # 2026-07-13
 Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
 Moose_todate("09/01/26", two_digit_year_cutoff = 20) # 1926-09-01
 Moose_todate(c(20240105, 45296))
@@ -1198,6 +1216,12 @@ os anos iguais ou inferiores ao limite usam os anos 2000, e os restantes usam
 os anos 1900. Prefira anos com quatro dígitos quando o século tiver de ser
 inequívoco. Os nomes de meses, como `Sep`, usam a configuração regional
 `LC_TIME` atual do R.
+
+Para datas numéricas ambíguas, o MooseR examina os outros valores do mesmo
+vetor. `13/02/2026` apoia dia/mês/ano, enquanto `02/13/2026` apoia
+mês/dia/ano. É usada a ordem com mais evidência; `day_first` é o critério de
+desempate. Entradas já armazenadas com um ano entre 0000 e 0099 também são
+normalizadas usando o limite de anos com dois dígitos.
 
 Converter automaticamente colunas semelhantes a datas:
 

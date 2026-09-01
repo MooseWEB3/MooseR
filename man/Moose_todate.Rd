@@ -25,8 +25,11 @@ Moose_todatetime(
 \item{x}{Input vector. Supports \code{Date}, \code{POSIXt}, character, factor,
 integer, and numeric values.}
 
-\item{day_first}{Logical. If \code{TRUE}, ambiguous dates such as
-\code{01/02/2024} are parsed as day/month/year before month/day/year.}
+\item{day_first}{Logical fallback for ambiguous numeric dates. MooseR first
+examines the input vector for unambiguous values such as \code{13/02/2024} or
+\code{02/13/2024} and applies the better-supported order to the whole vector.
+If the evidence is tied or absent, \code{TRUE} prefers day/month/year and
+\code{FALSE} prefers month/day/year.}
 
 \item{numeric_origin}{Character. One of \code{"auto"}, \code{"excel"},
 \code{"unix"}, or \code{"r"}. In \code{"auto"} mode, compact values such as
@@ -55,10 +58,21 @@ With the default cutoff, two-digit years from \code{00} to \code{68} are
 interpreted as 2000 to 2068, and values from \code{69} to \code{99} are
 interpreted as 1969 to 1999. Four-digit years are never parsed as two-digit
 years. Prefer four-digit years whenever the century must be unambiguous.
+
+Numeric dates with the year last are interpreted consistently across the
+input vector. MooseR counts unambiguous day-first and month-first values, then
+applies the better-supported order to ambiguous values. Ties use
+\code{day_first}.
+
+Inputs already stored as \code{Date} or \code{POSIXt} with a year from 0000 to
+0099 are treated as having originated from a two-digit year and are normalized
+using \code{two_digit_year_cutoff}.
 Month-name inputs use the current R \code{LC_TIME} locale.
 }
 \examples{
 Moose_todate(c("2024-01-05", "01/06/2024", "20240107"))
+Moose_todate(c("01/02/2026", "13/02/2026", "03/02/2026"))
+Moose_todate("13-Jul-26")
 Moose_todate(c("09/01/26", "Sep 1, 26", "260901"))
 Moose_todate("09/01/26", two_digit_year_cutoff = 20)
 Moose_todate(c(20240105, 45296))
