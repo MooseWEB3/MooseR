@@ -547,7 +547,7 @@ not a guarantee that every personal name is found.
 
 ### License
 
-MIT license. Copyright (c) 2026 LisbonBulldog.
+MIT license. Copyright (c) 2026 MooseWeb3.
 
 ---
 
@@ -1016,7 +1016,7 @@ garantit pas que tous les noms de personnes seront détectés.
 
 ### Licence
 
-Licence MIT. Copyright (c) 2026 LisbonBulldog.
+Licence MIT. Copyright (c) 2026 MooseWeb3.
 
 ---
 
@@ -1483,4 +1483,4 @@ detetados.
 
 ### Licença
 
-Licença MIT. Copyright (c) 2026 LisbonBulldog.
+Licença MIT. Copyright (c) 2026 MooseWeb3.

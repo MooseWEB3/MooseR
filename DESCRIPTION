@@ -2,7 +2,7 @@ Package: MooseR
 Title: Data Cleaning and Summary Utility Functions
 Version: 0.0.0.9041
 Authors@R:
-    person("LisbonBulldog", email = "develop@lisbonbulldog.xyz", role = c("aut", "cre"))
+    person("MooseWeb3", email = "develop@mooseweb3.com", role = c("aut", "cre"))
 Description: A collection of utility functions for common data wrangling tasks,
     including column name cleaning, duplicate detection, uniqueness checks,
     quote removal, one-row summary tables for categorical and continuous variables,
