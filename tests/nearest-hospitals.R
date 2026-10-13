@@ -8,8 +8,15 @@ hospitals <- data.frame(
   latitude = rep(53.5, 6),
   emergency_24h = c(1L, 1L, 1L, 0L, 0L, 1L)
 )
-distances <- c(600, 100, 200, 400, 50, 100)
-durations <- c(600, 30, 20, 40, 100, 10)
+fixed_hospitals <- alberta_hospitals[match(
+  c("Foothills Medical Centre", "University of Alberta Hospital"),
+  alberta_hospitals$hospital_name
+), names(hospitals)]
+mock_hospitals <- rbind(hospitals, fixed_hospitals)
+# Fixed destinations outside a custom candidate list must not enter its top 3,
+# even when the fixed routes are shorter than every candidate route.
+distances <- c(600, 100, 200, 400, 50, 100, 5, 1)
+durations <- c(600, 30, 20, 40, 100, 10, 400, 500)
 locations <- data.frame(
   id = 1:8,
   lon = factor(c("-113.5", "-114", "-113.5", NA, "bad", "181", "-113", "Inf")),
@@ -30,14 +37,15 @@ route_mock <- function(req) {
   stopifnot(url$query$sources == "0",
             url$query$destinations == paste(seq_len(nrow(coords) - 1L), collapse = ";"),
             url$query$annotations == "duration,distance")
-  destinations <- match(as.numeric(coords[-1L, 1L]), hospitals$longitude)
-  stopifnot(!anyNA(destinations), all(as.numeric(coords[-1L, 2L]) == 53.5))
+  destinations <- match(as.numeric(coords[-1L, 1L]), mock_hospitals$longitude)
+  stopifnot(!anyNA(destinations),
+            all(as.numeric(coords[-1L, 2L]) == mock_hospitals$latitude[destinations]))
   seen_candidates <<- c(seen_candidates, destinations)
   # A second origin has different results, testing row alignment after reuse.
   offset <- if (as.numeric(coords[1L, 1L]) == -114) 1000 else 0
   response_json(req, jsonlite::toJSON(list(
-    code = "Ok", distances = list(distances[destinations] + offset),
-    durations = list(durations[destinations] + offset)
+    code = "Ok", distances = list(as.list(distances[destinations] + offset)),
+    durations = list(as.list(durations[destinations] + offset))
   ), auto_unbox = TRUE))
 }
 run <- function(dataset = locations, ...) {
@@ -54,15 +62,25 @@ columns <- c(
   "nearest_hospital_3", "nearest_hospital_3_travel_time_seconds",
   "nearest_hospital_3_travel_distance_meters"
 )
+nearest_columns <- columns
+fixed_columns <- c(
+  "foothills_medical_centre_travel_time_seconds",
+  "foothills_medical_centre_travel_distance_meters",
+  "university_of_alberta_hospital_travel_time_seconds",
+  "university_of_alberta_hospital_travel_distance_meters"
+)
+columns <- c(columns, fixed_columns)
 stopifnot(
-  length(requests) == 6L, # Three batches per unique valid origin.
-  identical(seen_candidates, rep(1:6, 2)),
+  length(requests) == 8L, # Four batches per unique valid origin.
+  identical(seen_candidates, rep(1:8, 2)),
   identical(names(result), c(names(locations), columns)),
   identical(result[names(locations)], locations),
   identical(unname(unlist(result[1, columns[c(1, 4, 7)]])), c("E", "F", "B")),
   identical(unname(unlist(result[1, columns[c(3, 6, 9)]])), c(50, 100, 100)),
   identical(unname(unlist(result[1, columns[c(2, 5, 8)]])), c(100, 10, 30)),
   identical(unname(unlist(result[2, columns[c(3, 6, 9)]])), c(1050, 1100, 1100)),
+  identical(unname(unlist(result[1, fixed_columns])), c(400, 5, 500, 1)),
+  identical(unname(unlist(result[2, fixed_columns])), c(1400, 1005, 1500, 1001)),
   identical(unname(unlist(result[1, columns])), unname(unlist(result[3, columns]))),
   all(is.na(result[4:8, columns])),
   all(vapply(result[columns[c(1, 4, 7)]], is.character, logical(1))),
@@ -74,8 +92,9 @@ seen_candidates <- integer()
 filtered <- httr2::with_mocked_responses(
   route_mock, run(locations[1, ], emergency_only = TRUE, on_error = "stop")
 )
-stopifnot(length(requests) == 2L, identical(seen_candidates, c(1L, 2L, 3L, 6L)),
-          identical(unname(unlist(filtered[columns[c(1, 4, 7)]])), c("F", "B", "C")))
+stopifnot(length(requests) == 3L, identical(seen_candidates, c(1L, 2L, 3L, 6L, 7L, 8L)),
+          identical(unname(unlist(filtered[columns[c(1, 4, 7)]])), c("F", "B", "C")),
+          identical(unname(unlist(filtered[fixed_columns])), c(400, 5, 500, 1)))
 
 # Zero rows and invalid origins preserve the schema and make no requests.
 no_request <- function(req) stop("Unexpected request")
@@ -89,6 +108,9 @@ must_error <- function(expr, pattern) {
   stopifnot(inherits(error, "error"), grepl(pattern, conditionMessage(error), fixed = TRUE))
 }
 must_error(run(result), "Output columns already exist")
+fixed_conflict <- locations
+fixed_conflict[[fixed_columns[1]]] <- 999
+must_error(run(fixed_conflict), fixed_columns[1])
 replaced <- httr2::with_mocked_responses(route_mock, run(result, overwrite = TRUE))
 stopifnot(identical(replaced, result))
 must_error(Moose_nearest_hospitals(1:3), "data frame")
@@ -140,6 +162,14 @@ must_error(httr2::with_mocked_responses(partial_failure,
 # (including co-located facilities) remain distinct and use candidate row order.
 one_location <- data.frame(longitude = -113.5, latitude = 53.5)
 fixed_run <- function(body, ...) {
+  payload <- jsonlite::fromJSON(body, simplifyVector = FALSE)
+  for (field in c("distances", "durations")) {
+    if (length(payload[[field]]) == 1L && length(payload[[field]][[1L]]) == 6L) {
+      values <- if (field == "distances") c(5, 1) else c(400, 500)
+      payload[[field]][[1L]] <- c(payload[[field]][[1L]], as.list(values))
+    }
+  }
+  body <- jsonlite::toJSON(payload, auto_unbox = TRUE, null = "null")
   httr2::with_mocked_responses(function(req) response_json(req, body),
     Moose_nearest_hospitals(one_location, hospitals = hospitals,
       server = "https://example.test", delay = 0, progress = FALSE, ...))
@@ -159,7 +189,8 @@ none <- fixed_run(
   '{"code":"Ok","distances":[[null,null,null,null,null,null]],"durations":[[null,null,null,null,null,null]]}',
   on_error = "na"
 )
-stopifnot(all(is.na(none[columns])))
+stopifnot(all(is.na(none[nearest_columns])),
+          identical(unname(unlist(none[fixed_columns])), c(400, 5, 500, 1)))
 for (body in c(
   '{"code":"NoTable"}',
   '{"code":"Ok","distances":[[10,20]],"durations":[[10,20]]}',
@@ -190,13 +221,73 @@ batch_lengths <- integer()
 hundred <- httr2::with_mocked_responses(constant_mock,
   Moose_nearest_hospitals(one_location, hospitals = alberta_hospitals[1:100, ],
     delay = 0, progress = FALSE, on_error = "stop"))
-stopifnot(identical(batch_lengths, c(99L, 1L)), ncol(hundred) == 11L)
+stopifnot(identical(batch_lengths, c(99L, 1L)), ncol(hundred) == 15L)
 batch_lengths <- integer()
 bundled_ed <- httr2::with_mocked_responses(constant_mock,
   Moose_nearest_hospitals(one_location, emergency_only = TRUE,
     delay = 0, progress = FALSE, on_error = "stop"))
 stopifnot(identical(batch_lengths, 94L), bundled_ed$nearest_hospital_1 %in%
-            alberta_hospitals$hospital_name[alberta_hospitals$emergency_24h == 1L])
+            alberta_hospitals$hospital_name[alberta_hospitals$emergency_24h == 1L],
+          identical(unname(unlist(bundled_ed[fixed_columns])), c(10, 100, 10, 100)))
+
+# Fixed columns remain present when those hospitals are nearest, and reuse the
+# existing routes rather than issuing duplicate requests.
+requests <- list()
+seen_candidates <- integer()
+overlap <- httr2::with_mocked_responses(route_mock,
+  Moose_nearest_hospitals(one_location, hospitals = mock_hospitals[c(1L, 7L, 8L), ],
+    delay = 0, progress = FALSE, on_error = "stop"))
+stopifnot(length(requests) == 1L, identical(seen_candidates, c(1L, 7L, 8L)),
+          overlap$nearest_hospital_1 == "University of Alberta Hospital",
+          overlap$nearest_hospital_2 == "Foothills Medical Centre",
+          overlap[[fixed_columns[1]]] == overlap$nearest_hospital_2_travel_time_seconds,
+          overlap[[fixed_columns[2]]] == overlap$nearest_hospital_2_travel_distance_meters,
+          overlap[[fixed_columns[3]]] == overlap$nearest_hospital_1_travel_time_seconds,
+          overlap[[fixed_columns[4]]] == overlap$nearest_hospital_1_travel_distance_meters)
+
+# Matching names with altered coordinates do not override the fixed locations.
+renamed <- hospitals
+renamed$hospital_name[1:2] <- fixed_hospitals$hospital_name
+changed_locations <- httr2::with_mocked_responses(route_mock,
+  Moose_nearest_hospitals(one_location, hospitals = renamed,
+    delay = 0, progress = FALSE, on_error = "stop"))
+stopifnot(identical(unname(unlist(changed_locations[fixed_columns])), c(400, 5, 500, 1)))
+
+# A failure in an unrelated candidate batch must not erase fixed results. A
+# fixed-only failure likewise must not erase a complete nearest-three ranking.
+fail_batch <- function(failed_batch) {
+  batch <- 0L
+  function(req) {
+    batch <<- batch + 1L
+    if (batch == failed_batch) return(response_json(req, '{"code":"TooBig"}', 400))
+    route_mock(req)
+  }
+}
+candidate_failed <- httr2::with_mocked_responses(fail_batch(2L),
+  run(locations[1, ], on_error = "na"))
+stopifnot(all(is.na(candidate_failed[nearest_columns])),
+          identical(unname(unlist(candidate_failed[fixed_columns])), c(400, 5, 500, 1)))
+fixed_failed <- httr2::with_mocked_responses(fail_batch(4L),
+  run(locations[1, ], on_error = "na"))
+stopifnot(identical(fixed_failed[nearest_columns], result[1, nearest_columns]),
+          all(is.na(fixed_failed[fixed_columns])))
+one_fixed_unreachable <- paste0('{"code":"Ok","distances":[[600,100,200,400,50,100,null,1]],',
+                                '"durations":[[600,30,20,40,100,10,null,500]]}')
+unreachable <- fixed_run(one_fixed_unreachable, on_error = "na")
+stopifnot(all(is.na(unreachable[fixed_columns[1:2]])),
+          identical(unname(unlist(unreachable[fixed_columns[3:4]])), c(500, 1)),
+          identical(unname(unlist(unreachable[nearest_columns])),
+                    unname(unlist(result[1, nearest_columns]))))
+must_error(fixed_run(one_fixed_unreachable, on_error = "stop"),
+           "No route to Foothills Medical Centre")
+fixed_warning <- character()
+warned_fixed <- withCallingHandlers(fixed_run(one_fixed_unreachable, on_error = "warn"),
+  warning = function(w) {
+    fixed_warning <<- c(fixed_warning, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
+stopifnot(length(fixed_warning) == 1L,
+          grepl("No route to Foothills Medical Centre", fixed_warning, fixed = TRUE))
 
 # Authentication follows the same transport rules as Moose_travel().
 requests <- list()

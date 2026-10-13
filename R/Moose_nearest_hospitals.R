@@ -1,8 +1,11 @@
-#' Add the three nearest hospitals by road distance
+#' Add the three nearest hospitals and routes to two fixed hospitals
 #'
 #' For each input location, queries road routes to every eligible hospital and
 #' appends the names, travel times and travel distances of the nearest three.
-#' By default, candidates are all facilities in [alberta_hospitals].
+#' By default, candidates are all facilities in [alberta_hospitals]. Also always
+#' appends travel time and distance to Foothills Medical Centre and University
+#' of Alberta Hospital, using their coordinates in the bundled data, regardless
+#' of the nearest-three results, `hospitals`, or `emergency_only`.
 #'
 #' Hospitals are ranked by increasing OSRM route distance, then travel time,
 #' then their row order in `hospitals`. OSRM returns fastest routes: their
@@ -13,10 +16,14 @@
 #'
 #' Uses the OSRM Table service with both distance and duration annotations.
 #' Every eligible hospital is considered; there is no straight-line prefilter.
-#' Repeated input coordinates are queried once per call. A failed request leaves
-#' all nine results for that origin as `NA`, because an incomplete comparison
-#' cannot establish the nearest hospitals. Unreachable hospitals are excluded;
-#' if fewer than three are reachable, the remaining ranks are `NA`.
+#' Repeated input coordinates are queried once per call. Fixed hospital routes
+#' reuse candidate routes when their coordinates match. A failed candidate
+#' request leaves all nine nearest-hospital results for that origin as `NA`,
+#' because an incomplete comparison cannot establish the nearest hospitals.
+#' Successful fixed-hospital results are retained independently. A failed or
+#' unreachable fixed destination has `NA` for its two columns. Unreachable
+#' candidates are excluded; if fewer than three are reachable, the remaining
+#' ranks are `NA`.
 #'
 #' The default public demonstration server is for light, interactive use. For
 #' larger workloads, supply an OSRM server you operate or are authorized to use.
@@ -26,13 +33,15 @@
 #' @param dataset A data frame or tibble. Original rows and columns are retained.
 #' @param longitude,latitude Names of columns containing origin coordinates in
 #'   decimal degrees. Numeric strings and factors are accepted. Missing,
-#'   non-numeric, non-finite or out-of-range coordinates return nine `NA` values
+#'   non-numeric, non-finite or out-of-range coordinates return 13 `NA` values
 #'   without making a request.
 #' @param hospitals Optional candidate data frame with unique, non-empty
 #'   `hospital_name` values and valid `longitude` and `latitude` columns. `NULL`
 #'   uses the bundled [alberta_hospitals]. At least three eligible rows are
 #'   required. Other columns are ignored except `emergency_24h` when filtering.
-#' @param emergency_only Logical. If `TRUE`, restrict candidates to rows with
+#'   This argument controls only the nearest-three candidates, not the two
+#'   fixed destinations.
+#' @param emergency_only Logical. If `TRUE`, restrict nearest-three candidates to rows with
 #'   `emergency_24h == 1`. This flag describes regular 24-hour emergency service,
 #'   not temporary closures or current availability.
 #' @param server HTTP(S) base URL of an OSRM server supporting the Table service
@@ -46,17 +55,23 @@
 #'   this value if your server has a lower limit.
 #' @param overwrite Logical. Replace existing output columns if `TRUE`.
 #' @param on_error One of `"warn"`, `"stop"`, or `"na"`. Controls request failures
-#'   and fewer than three reachable hospitals. `"warn"` gives a summary warning;
+#'   and unreachable fixed hospitals or fewer than three reachable candidates.
+#'   `"warn"` gives a summary warning;
 #'   `"na"` returns the available results silently. Invalid input coordinates
 #'   always return `NA`, regardless of this setting.
 #' @param timeout Positive seconds allowed for each request.
 #' @param delay Non-negative seconds to pause between requests.
 #' @param progress Logical. Print progress for unique input locations.
 #'
-#' @return The input data frame with exactly nine output columns: for each
+#' @return The input data frame with 13 output columns. The first nine are, for each
 #'   `i` in 1, 2, 3, `nearest_hospital_i` (character),
 #'   `nearest_hospital_i_travel_time_seconds` (numeric) and
-#'   `nearest_hospital_i_travel_distance_meters` (numeric).
+#'   `nearest_hospital_i_travel_distance_meters` (numeric). The four additional
+#'   numeric columns are `foothills_medical_centre_travel_time_seconds`,
+#'   `foothills_medical_centre_travel_distance_meters`,
+#'   `university_of_alberta_hospital_travel_time_seconds` and
+#'   `university_of_alberta_hospital_travel_distance_meters`. These are included
+#'   even when either fixed hospital is also among the nearest three.
 #' @seealso [alberta_hospitals], [Moose_travel()]
 #' @references \url{https://project-osrm.org/docs/v5.24.0/api/#table-service}
 #' @examples
@@ -149,17 +164,28 @@ Moose_nearest_hospitals <- function(dataset,
   output_names <- unlist(lapply(1:3, function(i) {
     paste0("nearest_hospital_", i, c("", "_travel_time_seconds", "_travel_distance_meters"))
   }), use.names = FALSE)
+  fixed_columns <- c(
+    "foothills_medical_centre_travel_time_seconds",
+    "foothills_medical_centre_travel_distance_meters",
+    "university_of_alberta_hospital_travel_time_seconds",
+    "university_of_alberta_hospital_travel_distance_meters"
+  )
+  output_names <- c(output_names, fixed_columns)
   conflicts <- intersect(output_names, names(dataset))
   if (length(conflicts) && !overwrite) {
     stop("Output columns already exist: ", paste(conflicts, collapse = ", "),
          ". Use `overwrite = TRUE` to replace them.", call. = FALSE)
   }
 
-  if (is.null(hospitals)) {
-    bundled <- new.env(parent = emptyenv())
-    utils::data("alberta_hospitals", package = "MooseR", envir = bundled)
-    hospitals <- bundled$alberta_hospitals
+  bundled <- new.env(parent = emptyenv())
+  utils::data("alberta_hospitals", package = "MooseR", envir = bundled)
+  fixed_names <- c("Foothills Medical Centre", "University of Alberta Hospital")
+  fixed_ids <- match(fixed_names, bundled$alberta_hospitals$hospital_name)
+  if (anyNA(fixed_ids)) {
+    stop("The bundled hospital data are missing a fixed destination.", call. = FALSE)
   }
+  fixed_hospitals <- bundled$alberta_hospitals[fixed_ids, , drop = FALSE]
+  if (is.null(hospitals)) hospitals <- bundled$alberta_hospitals
   required <- c("hospital_name", "longitude", "latitude",
                 if (emergency_only) "emergency_24h")
   if (!is.data.frame(hospitals) || anyDuplicated(names(hospitals)) ||
@@ -191,12 +217,25 @@ Moose_nearest_hospitals <- function(dataset,
     stop("Eligible hospital coordinates must be valid decimal degrees.", call. = FALSE)
   }
 
+  # Reuse a candidate's route only for the same coordinates. A custom list may
+  # give the same hospital name different coordinates; fixed outputs always use
+  # the bundled locations and never expand the nearest-three candidate set.
+  coordinate_key <- function(lon, lat) sprintf("%.17g|%.17g", lon, lat)
+  fixed_destinations <- match(
+    coordinate_key(fixed_hospitals$longitude, fixed_hospitals$latitude),
+    coordinate_key(hospital_lon, hospital_lat)
+  )
+  extra <- which(is.na(fixed_destinations))
+  fixed_destinations[extra] <- length(hospital_lon) + seq_along(extra)
+  destination_lon <- c(hospital_lon, fixed_hospitals$longitude[extra])
+  destination_lat <- c(hospital_lat, fixed_hospitals$latitude[extra])
+
   origin_lon <- as_coordinate(dataset[[longitude]])
   origin_lat <- as_coordinate(dataset[[latitude]])
   valid_rows <- which(valid_coordinates(origin_lon, origin_lat))
   result <- dataset
   for (j in seq_along(output_names)) {
-    result[[output_names[j]]] <- if (j %% 3L == 1L) {
+    result[[output_names[j]]] <- if (j %in% c(1L, 4L, 7L)) {
       rep(NA_character_, nrow(dataset))
     } else {
       rep(NA_real_, nrow(dataset))
@@ -208,51 +247,64 @@ Moose_nearest_hospitals <- function(dataset,
   unique_positions <- which(!duplicated(keys))
   unique_rows <- valid_rows[unique_positions]
   row_groups <- split(valid_rows, match(keys, keys[unique_positions]))
-  batches <- split(seq_len(nrow(hospitals)),
-                   ceiling(seq_len(nrow(hospitals)) / batch_size))
+  batches <- split(seq_along(destination_lon),
+                   ceiling(seq_along(destination_lon) / batch_size))
   request_count <- 0L
   failures <- character()
   for (i in seq_along(unique_rows)) {
     origin <- unique_rows[i]
     if (progress) message("Finding hospitals for location ", i, " of ", length(unique_rows), "...")
-    routes <- tryCatch({
-      distances <- durations <- rep(NA_real_, nrow(hospitals))
-      for (batch in batches) {
-        if (request_count > 0L && delay > 0) Sys.sleep(delay)
-        request_count <- request_count + 1L
-        table <- moose_osrm_table(
+    distances <- durations <- rep(NA_real_, length(destination_lon))
+    queried <- rep(FALSE, length(destination_lon))
+    issues <- character()
+    for (batch in batches) {
+      if (request_count > 0L && delay > 0) Sys.sleep(delay)
+      request_count <- request_count + 1L
+      table <- tryCatch(
+        moose_osrm_table(
           origin_lon[origin], origin_lat[origin],
-          hospital_lon[batch], hospital_lat[batch],
+          destination_lon[batch], destination_lat[batch],
           profile, server, username, password, timeout
-        )
+        ), error = identity
+      )
+      if (inherits(table, "error")) {
+        issue <- conditionMessage(table)
+        if (on_error == "stop") stop("Input row ", origin, ": ", issue, call. = FALSE)
+        issues <- c(issues, issue)
+      } else {
         distances[batch] <- table$distance
         durations[batch] <- table$duration
+        queried[batch] <- TRUE
       }
-      list(distance = distances, duration = durations)
-    }, error = identity)
+    }
 
-    issue <- NULL
-    if (inherits(routes, "error")) {
-      issue <- conditionMessage(routes)
-    } else {
-      reachable <- which(!is.na(routes$distance))
-      ranked <- reachable[order(routes$distance[reachable],
-                                routes$duration[reachable], reachable)]
+    rows <- row_groups[[as.character(i)]]
+    candidates <- seq_len(nrow(hospitals))
+    if (all(queried[candidates])) {
+      reachable <- candidates[!is.na(distances[candidates])]
+      ranked <- reachable[order(distances[reachable], durations[reachable], reachable)]
       selected <- utils::head(ranked, 3L)
-      rows <- row_groups[[as.character(i)]]
       for (rank in seq_along(selected)) {
         hospital <- selected[rank]
         offset <- (rank - 1L) * 3L
         result[[output_names[offset + 1L]]][rows] <- hospital_names[hospital]
-        result[[output_names[offset + 2L]]][rows] <- routes$duration[hospital]
-        result[[output_names[offset + 3L]]][rows] <- routes$distance[hospital]
+        result[[output_names[offset + 2L]]][rows] <- durations[hospital]
+        result[[output_names[offset + 3L]]][rows] <- distances[hospital]
       }
       if (length(reachable) < 3L) {
-        issue <- paste0("Only ", length(reachable), " hospitals are reachable; unfilled ranks are NA.")
+        issues <- c(issues, paste0("Only ", length(reachable), " hospitals are reachable; unfilled ranks are NA."))
       }
     }
-    if (!is.null(issue)) {
-      issue <- paste0("Input row ", origin, ": ", issue)
+    for (fixed in seq_along(fixed_destinations)) {
+      destination <- fixed_destinations[fixed]
+      result[[fixed_columns[2L * fixed - 1L]]][rows] <- durations[destination]
+      result[[fixed_columns[2L * fixed]]][rows] <- distances[destination]
+      if (queried[destination] && is.na(distances[destination])) {
+        issues <- c(issues, paste0("No route to ", fixed_names[fixed], "."))
+      }
+    }
+    if (length(issues)) {
+      issue <- paste0("Input row ", origin, ": ", paste(unique(issues), collapse = " "))
       if (on_error == "stop") stop(issue, call. = FALSE)
       failures <- c(failures, issue)
     }

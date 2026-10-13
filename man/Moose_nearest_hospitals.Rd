@@ -2,7 +2,7 @@
 % Please edit documentation in R/Moose_nearest_hospitals.R
 \name{Moose_nearest_hospitals}
 \alias{Moose_nearest_hospitals}
-\title{Add the three nearest hospitals by road distance}
+\title{Add the three nearest hospitals and routes to two fixed hospitals}
 \usage{
 Moose_nearest_hospitals(
   dataset,
@@ -24,25 +24,25 @@ Moose_nearest_hospitals(
 }
 \arguments{
 \item{dataset}{A data frame or tibble. Original rows and columns are retained.}
-\item{longitude, latitude}{Names of columns containing origin coordinates in decimal degrees. Numeric strings and factors are accepted. Missing, non-numeric, non-finite or out-of-range coordinates return nine \code{NA} values without making a request.}
-\item{hospitals}{Optional candidate data frame with unique, non-empty \code{hospital_name} values and valid \code{longitude} and \code{latitude} columns. \code{NULL} uses the bundled \link{alberta_hospitals}. At least three eligible rows are required. Other columns are ignored except \code{emergency_24h} when filtering.}
-\item{emergency_only}{Logical. If \code{TRUE}, restrict candidates to rows with \code{emergency_24h == 1}. This flag describes regular 24-hour emergency service, not temporary closures or current availability.}
+\item{longitude, latitude}{Names of columns containing origin coordinates in decimal degrees. Numeric strings and factors are accepted. Missing, non-numeric, non-finite or out-of-range coordinates return 13 \code{NA} values without making a request.}
+\item{hospitals}{Optional candidate data frame with unique, non-empty \code{hospital_name} values and valid \code{longitude} and \code{latitude} columns. \code{NULL} uses the bundled \link{alberta_hospitals}. At least three eligible rows are required. Other columns are ignored except \code{emergency_24h} when filtering. This argument controls only the nearest-three candidates, not the two fixed destinations.}
+\item{emergency_only}{Logical. If \code{TRUE}, restrict nearest-three candidates to rows with \code{emergency_24h == 1}. This flag describes regular 24-hour emergency service, not temporary closures or current availability.}
 \item{server}{HTTP(S) base URL of an OSRM server supporting the Table service with distance and duration annotations. Defaults to the public demo server.}
 \item{profile}{OSRM profile supported by the server, normally \code{"driving"}.}
 \item{username, password}{Optional HTTP Basic Authentication credentials. Supply both or neither. HTTPS is required with credentials; URL userinfo is rejected. Credentials are redacted from printed request objects.}
 \item{batch_size}{Maximum destinations per request, an integer from 1 to 99. One origin is added, keeping each request within 100 coordinates. Reduce this value if your server has a lower limit.}
 \item{overwrite}{Logical. Replace existing output columns if \code{TRUE}.}
-\item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request failures and fewer than three reachable hospitals. \code{"warn"} gives a summary warning; \code{"na"} returns the available results silently. Invalid input coordinates always return \code{NA}, regardless of this setting.}
+\item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request failures and unreachable fixed hospitals or fewer than three reachable candidates. \code{"warn"} gives a summary warning; \code{"na"} returns the available results silently. Invalid input coordinates always return \code{NA}, regardless of this setting.}
 \item{timeout}{Positive seconds allowed for each request.}
 \item{delay}{Non-negative seconds to pause between requests.}
 \item{progress}{Logical. Print progress for unique input locations.}
 }
-\value{The input data frame with exactly nine output columns: for each \code{i} in 1, 2, 3, \code{nearest_hospital_i} (character), \code{nearest_hospital_i_travel_time_seconds} (numeric) and \code{nearest_hospital_i_travel_distance_meters} (numeric).}
-\description{For each input location, queries road routes to every eligible hospital and appends the names, travel times and travel distances of the nearest three. By default, candidates are all facilities in \link{alberta_hospitals}.}
+\value{The input data frame with 13 output columns. The first nine are, for each \code{i} in 1, 2, 3, \code{nearest_hospital_i} (character), \code{nearest_hospital_i_travel_time_seconds} (numeric) and \code{nearest_hospital_i_travel_distance_meters} (numeric). The four additional numeric columns are \code{foothills_medical_centre_travel_time_seconds}, \code{foothills_medical_centre_travel_distance_meters}, \code{university_of_alberta_hospital_travel_time_seconds} and \code{university_of_alberta_hospital_travel_distance_meters}. These are included even when either fixed hospital is also among the nearest three.}
+\description{For each input location, queries road routes to every eligible hospital and appends the names, travel times and travel distances of the nearest three. By default, candidates are all facilities in \link{alberta_hospitals}. Also always appends travel time and distance to Foothills Medical Centre and University of Alberta Hospital, using their coordinates in the bundled data, regardless of the nearest-three results, \code{hospitals}, or \code{emergency_only}.}
 \details{
 Hospitals are ranked by increasing OSRM route distance, then travel time, then their row order in \code{hospitals}. OSRM returns fastest routes: their distances are not guaranteed to be the shortest possible road paths. Times are estimates without live traffic. Separately named facilities on the same campus remain separate candidates. Coordinates refer to facility locations, not verified emergency-department entrances.
 
-Uses the OSRM Table service with both distance and duration annotations. Every eligible hospital is considered; there is no straight-line prefilter. Repeated input coordinates are queried once per call. A failed request leaves all nine results for that origin as \code{NA}, because an incomplete comparison cannot establish the nearest hospitals. Unreachable hospitals are excluded; if fewer than three are reachable, the remaining ranks are \code{NA}.
+Uses the OSRM Table service with both distance and duration annotations. Every eligible hospital is considered; there is no straight-line prefilter. Repeated input coordinates are queried once per call. Fixed hospital routes reuse candidate routes when their coordinates match. A failed candidate request leaves all nine nearest-hospital results for that origin as \code{NA}, because an incomplete comparison cannot establish the nearest hospitals. Successful fixed-hospital results are retained independently. A failed or unreachable fixed destination has \code{NA} for its two columns. Unreachable candidates are excluded; if fewer than three are reachable, the remaining ranks are \code{NA}.
 
 The default public demonstration server is for light, interactive use. For larger workloads, supply an OSRM server you operate or are authorized to use. Coordinates are sent to that server and may appear in its request logs. Redirects are not followed. No API key is needed for the default server.
 }

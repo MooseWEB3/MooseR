@@ -89,11 +89,12 @@ and rebuild the R data with `data-raw/create-alberta-hospitals.R`.
 Scope, refresh instructions and source attribution are recorded in
 [`data-raw/alberta-hospitals-sources.txt`](data-raw/alberta-hospitals-sources.txt).
 
-### Three nearest hospitals
+### Three nearest hospitals and two fixed destinations
 
-`Moose_nearest_hospitals()` adds **nine columns** to a data frame, ranking the
-three nearest hospitals by increasing road-route distance for each location.
-It defaults to all facilities in `alberta_hospitals`.
+`Moose_nearest_hospitals()` adds **13 columns** to a data frame: nine for the
+three nearest hospitals by increasing road-route distance, plus four for routes
+to **Foothills Medical Centre** and **University of Alberta Hospital**. The
+nearest-three candidates default to all facilities in `alberta_hospitals`.
 
 ```r
 locations <- data.frame(
@@ -103,7 +104,8 @@ locations <- data.frame(
 
 result <- Moose_nearest_hospitals(locations)
 
-# Only hospitals with a regular 24-hour emergency department:
+# Restrict the nearest three to hospitals with a regular 24-hour ED;
+# the four fixed-destination columns are still included:
 result_ed <- Moose_nearest_hospitals(locations, emergency_only = TRUE)
 
 # If your coordinate columns have different names:
@@ -118,12 +120,29 @@ For each rank `1`, `2`, and `3`, the added columns are:
 | `nearest_hospital_i_travel_time_seconds` | Estimated driving time in seconds |
 | `nearest_hospital_i_travel_distance_meters` | Driving distance in metres |
 
+The four fixed-destination columns are always included, even when either
+hospital is already among the nearest three:
+
+| Column | Contents |
+| --- | --- |
+| `foothills_medical_centre_travel_time_seconds` | Time to Foothills Medical Centre, seconds |
+| `foothills_medical_centre_travel_distance_meters` | Distance to Foothills Medical Centre, metres |
+| `university_of_alberta_hospital_travel_time_seconds` | Time to University of Alberta Hospital, seconds |
+| `university_of_alberta_hospital_travel_distance_meters` | Distance to University of Alberta Hospital, metres |
+
+These two destinations always use their bundled coordinates. A custom
+`hospitals` list or `emergency_only = TRUE` affects only the nearest-three
+candidates. Fixed destinations outside that candidate list do not enter its
+ranking. Routes are reused when a candidate has the same coordinates.
+
 Original rows and columns are retained. Every eligible hospital is compared,
 and repeated origin coordinates share one lookup. Equal distances are ordered
 by travel time, then hospital row order. Co-located facilities remain separate
-candidates. Invalid input coordinates produce `NA`; request failures leave all
-nine results for that location as `NA` with a warning. If fewer than three
-hospitals are reachable, available ranks are returned and the rest are `NA`.
+candidates. Invalid input coordinates produce 13 `NA` values. A failed candidate
+request leaves all nine nearest-hospital results as `NA` with a warning.
+Successful fixed-hospital results are retained independently; a failed or
+unreachable fixed destination gets `NA` in its two columns. If fewer than three
+candidates are reachable, available ranks are returned and the rest are `NA`.
 Use `on_error = "stop"` to stop on these issues, or `"na"` to suppress warnings.
 
 Routing uses the [OSRM Table service](https://project-osrm.org/docs/v5.24.0/api/#table-service),
@@ -182,7 +201,7 @@ existing scripts do not break.
 | `Moose_fix_colname()` | `BD_fix_colname()` | Clean column names by replacing spaces and removing selected special characters. |
 | `Moose_get_duplicates()` | `BD_get_duplicates()` | Find duplicated rows by one or more key columns. |
 | `Moose_google_travel()` | - | In development: add Google Routes API travel distance and travel time; current traffic is disabled by default. |
-| `Moose_nearest_hospitals()` | - | Add the three nearest hospitals by road-route distance, with travel time and distance for each. |
+| `Moose_nearest_hospitals()` | - | Add the three nearest hospitals with route time and distance, plus fixed routes to Foothills Medical Centre and University of Alberta Hospital (13 columns). |
 | `Moose_check_unique()` | `BD_check_unique()` | Check whether a column contains unique values. |
 | `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Count unique categories in a variable. |
 | `Moose_cross_table()` | - | Build a two-variable cross table with counts and percentages. |
