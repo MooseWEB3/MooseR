@@ -230,6 +230,7 @@ existing scripts do not break.
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Apply supplementary regex-based name-masking rules. |
 | `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
 | `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
+| `Moose_second2format()` | - | Format seconds as `HH:MM:SS`, with cumulative hours. |
 | `Moose_travel()` | - | Experimental: add OSRM road travel distance and travel time for coordinate pairs. |
 | `Moose_boost_data()` | - | Detect and convert date-like columns in a data set. |
 | `Moose_load_packages()` | `load_packages()` | Install missing packages and load a package list. |
@@ -353,6 +354,25 @@ Get today's date:
 ```r
 Moose_today()
 ```
+
+Format a duration in seconds:
+
+```r
+Moose_second2format(1000)
+# [1] "00:16:40"
+
+Moose_second2format(c(60, 3661, 90061, NA))
+# [1] "00:01:00" "01:01:01" "25:01:01" NA
+
+trips <- data.frame(travel_time_seconds = c(1000, 3661, NA))
+trips$travel_time_formatted <- Moose_second2format(trips$travel_time_seconds)
+```
+
+The result is a character vector. Hours accumulate past 24; missing values
+remain `NA`. Fractional seconds are rounded to the nearest whole second, with
+half seconds rounded up. Non-missing input must be numeric, finite and
+non-negative. This also works with the travel-time columns returned by
+`Moose_travel()` and `Moose_nearest_hospitals()`.
 
 Convert common date and date-time inputs:
 
@@ -774,6 +794,7 @@ scripts existants.
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Appliquer des règles supplémentaires de masquage des noms avec des expressions régulières. |
 | `Moose_todate()` | - | Convertir les formats de date courants en valeurs R `Date`. |
 | `Moose_todatetime()` | - | Convertir les formats courants de date et heure en valeurs R `POSIXct`. |
+| `Moose_second2format()` | - | Formater une durée en secondes en `HH:MM:SS`, avec des heures cumulées. |
 | `Moose_boost_data()` | - | Détecter et convertir les colonnes qui ressemblent à des dates dans un jeu de données. |
 | `Moose_load_packages()` | `load_packages()` | Installer les packages manquants et charger une liste de packages. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Charger l'ensemble de packages MooseR par défaut. |
@@ -1243,6 +1264,7 @@ existentes.
 | `Moose_apply_name_masking_rules()` | `apply_name_masking_rules()` | Aplicar regras adicionais de mascaramento de nomes com expressões regulares. |
 | `Moose_todate()` | - | Converter formatos comuns de data em valores R `Date`. |
 | `Moose_todatetime()` | - | Converter formatos comuns de data e hora em valores R `POSIXct`. |
+| `Moose_second2format()` | - | Formatar segundos como `HH:MM:SS`, com horas acumuladas. |
 | `Moose_boost_data()` | - | Detetar e converter colunas semelhantes a datas num conjunto de dados. |
 | `Moose_load_packages()` | `load_packages()` | Instalar os pacotes em falta e carregar uma lista de pacotes. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Carregar o conjunto predefinido de pacotes MooseR. |
