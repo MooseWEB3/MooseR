@@ -38,6 +38,104 @@ If you need to reinstall the latest GitHub version over an existing local copy:
 remotes::install_github("MooseWEB3/MooseR", force = TRUE, upgrade = "never")
 ```
 
+### Built-in Alberta hospital data
+
+`alberta_hospitals` is an offline data frame containing **112 facilities** with
+hospital names, full addresses, cities, postal codes, latitude and longitude.
+Each record also includes its AHS facility ID, source links, inclusion basis and
+retrieval date (**October 12, 2026**).
+
+```r
+library(MooseR)
+data("alberta_hospitals", package = "MooseR")
+
+head(alberta_hospitals[c("hospital_name", "address", "latitude", "longitude")])
+subset(alberta_hospitals, city == "Edmonton")
+subset(alberta_hospitals, emergency_24h == 1L)
+?alberta_hospitals
+```
+
+The dataset covers the 104 Alberta locations listed in the official
+[AHS Hospitals directory](https://www.albertahealthservices.ca/findhealth/service.aspx?Id=1001416),
+plus eight inpatient specialist facilities documented in the help page.
+Lloydminster Hospital is excluded because its address is in Saskatchewan.
+Standalone outpatient clinics, continuing-care/auxiliary facilities and historical
+hospitals are outside the scope. Separately named facilities sharing a campus
+remain separate rows. This snapshot does not guarantee an exhaustive legal
+register or indicate current emergency-service availability.
+
+`emergency_24h` is an integer **1/0 flag** for a hospital's own emergency
+department with a published regular **24-hour, seven-day schedule**. `0` includes
+both facilities without an ED and those with limited scheduled ED hours.
+The October 12, 2026 review has **94 ones and 18 zeros**. It uses ED-specific
+hours, not general hospital opening hours. Individual temporary closures do not
+change the flag; ongoing reduced weekly schedules count as `0`.
+Per-facility sources, assessments and review dates are bundled in
+`alberta-hospitals-emergency.csv` alongside the location CSV.
+
+Coordinates come directly from the AHS web map in decimal degrees; they are
+facility locations, not verified vehicle entrances. Loading the data requires
+no internet connection, geocoding service or API key. The existing
+`alberta_health_facilities` dataset remains the broader list of facility names.
+
+An auditable CSV is included in the installed package:
+
+```r
+system.file("extdata", "alberta-hospitals.csv", package = "MooseR")
+```
+
+Maintainers can refresh the sources with `data-raw/update-alberta-hospitals.py`
+and rebuild the R data with `data-raw/create-alberta-hospitals.R`.
+Scope, refresh instructions and source attribution are recorded in
+[`data-raw/alberta-hospitals-sources.txt`](data-raw/alberta-hospitals-sources.txt).
+
+### Three nearest hospitals
+
+`Moose_nearest_hospitals()` adds **nine columns** to a data frame, ranking the
+three nearest hospitals by increasing road-route distance for each location.
+It defaults to all facilities in `alberta_hospitals`.
+
+```r
+locations <- data.frame(
+  longitude = c(-113.4938, -114.0719),
+  latitude = c(53.5461, 51.0447)
+)
+
+result <- Moose_nearest_hospitals(locations)
+
+# Only hospitals with a regular 24-hour emergency department:
+result_ed <- Moose_nearest_hospitals(locations, emergency_only = TRUE)
+
+# If your coordinate columns have different names:
+result <- Moose_nearest_hospitals(my_data, longitude = "lon", latitude = "lat")
+```
+
+For each rank `1`, `2`, and `3`, the added columns are:
+
+| Column (`i` = rank) | Contents |
+| --- | --- |
+| `nearest_hospital_i` | Hospital name |
+| `nearest_hospital_i_travel_time_seconds` | Estimated driving time in seconds |
+| `nearest_hospital_i_travel_distance_meters` | Driving distance in metres |
+
+Original rows and columns are retained. Every eligible hospital is compared,
+and repeated origin coordinates share one lookup. Equal distances are ordered
+by travel time, then hospital row order. Co-located facilities remain separate
+candidates. Invalid input coordinates produce `NA`; request failures leave all
+nine results for that location as `NA` with a warning. If fewer than three
+hospitals are reachable, available ranks are returned and the rest are `NA`.
+Use `on_error = "stop"` to stop on these issues, or `"na"` to suppress warnings.
+
+Routing uses the [OSRM Table service](https://project-osrm.org/docs/v5.24.0/api/#table-service),
+with the same metres/seconds units as `Moose_travel()`. Distances follow OSRM's
+fastest routes, rather than guaranteed minimum-length road paths; time estimates
+do not include live traffic. The default public server requires network access
+and no API key, and is intended for light use. Coordinates are sent to the chosen
+server. For larger datasets or local routing, supply your own server, for example
+`server = "http://127.0.0.1:5001"`. The server must support Table distance and
+duration annotations. See `?Moose_nearest_hospitals` for batching, credentials,
+custom hospital lists and overwrite options.
+
 ### Startup package loading
 
 Load the default MooseR workflow package set in the current R session:
@@ -84,6 +182,7 @@ existing scripts do not break.
 | `Moose_fix_colname()` | `BD_fix_colname()` | Clean column names by replacing spaces and removing selected special characters. |
 | `Moose_get_duplicates()` | `BD_get_duplicates()` | Find duplicated rows by one or more key columns. |
 | `Moose_google_travel()` | - | In development: add Google Routes API travel distance and travel time; current traffic is disabled by default. |
+| `Moose_nearest_hospitals()` | - | Add the three nearest hospitals by road-route distance, with travel time and distance for each. |
 | `Moose_check_unique()` | `BD_check_unique()` | Check whether a column contains unique values. |
 | `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Count unique categories in a variable. |
 | `Moose_cross_table()` | - | Build a two-variable cross table with counts and percentages. |

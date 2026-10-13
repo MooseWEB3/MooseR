@@ -116,6 +116,29 @@ result <- Moose_travel(
 result
 ```
 
+## Using a local server
+
+When OSRM is running on this computer at port 5001, select it explicitly:
+
+```r
+result <- Moose_travel(
+  dataset = trips,
+  start_latitude = "start_lat",
+  start_longitude = "start_lon",
+  end_latitude = "end_lat",
+  end_longitude = "end_lon",
+  server = "http://127.0.0.1:5001",
+  on_error = "stop"
+)
+```
+
+The `server` argument is required to select the local service; omitting it still
+uses the public OSRM demonstration server. An unauthenticated loopback service
+does not need a username or password. Use the actual port configured on your
+computer: macOS may already use port 5000. Coverage and transport mode depend on
+the loaded graph; an Alberta car graph provides driving estimates within its
+coverage area, without live traffic.
+
 ## Using an authenticated private server
 
 Store credentials in environment variables rather than embedding them directly in a script:

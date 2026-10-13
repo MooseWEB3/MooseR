@@ -9,6 +9,7 @@
 *.tar.gz
 *.zip
 .r-lib/
+.local-osrm/
 .agents/
 .codex/
 /MooseR_函数使用说明_中文.txt

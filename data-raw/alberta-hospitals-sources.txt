@@ -1,0 +1,127 @@
+Alberta hospital dataset: source and maintenance notes
+
+Snapshot date: 2026-10-12 (America/Edmonton).
+
+Scope
+The dataset includes every Alberta location listed under the AHS Find Healthcare
+"Hospitals" service (ID 1001416), plus eight explicitly reviewed inpatient
+specialist facilities missing from that service list. The service list includes
+some health centres; its presence does not imply a currently staffed inpatient
+bed or 24-hour emergency department. This is a directory snapshot, not a live
+operating-status register or a guarantee of every legally registered hospital.
+
+Specialist supplement:
+- Alberta Hospital Edmonton
+- Centennial Centre for Mental Health and Brain Injury
+- Claresholm Centre for Mental Health & Addictions
+- Southern Alberta Forensic Psychiatry Centre
+- Villa Caritas
+- Lois Hole Hospital for Women
+- Mazankowski Alberta Heart Institute
+- Cross Cancer Institute
+
+The first five are identified in Alberta's designated mental health facility
+list and AHS's standalone psychiatric facility definition. Lois Hole and
+Mazankowski appear on the AHS hospital/facility websites list and their facility
+pages list inpatient services. Cross Cancer is a tertiary cancer centre with
+inpatient services, also present on the AHS Alberta Hospitals map (2022 layer).
+Separately named facilities sharing a campus/address remain separate rows.
+
+The service directory also lists Lloydminster Hospital (Saskatchewan). It is
+excluded because its physical address is outside Alberta. Standalone outpatient
+clinics, urgent-care-only centres absent from the Hospitals service, continuing
+care/auxiliary facilities, and historical hospitals are outside this scope.
+
+Primary sources
+https://www.albertahealthservices.ca/findhealth/service.aspx?Id=1001416
+https://www.alberta.ca/detention-treatment-and-care-while-in-a-mental-health-facility
+https://www.albertahealthservices.ca/hf/Page18051.aspx
+https://www.albertahealthservices.ca/cci/cci.aspx
+https://www.albertahealthservices.ca/assets/about/publications/ahs-pub-quick-facts-q4-2024-25.pdf
+
+Cross-check only (not used for addresses or coordinates):
+https://www.arcgis.com/home/item.html?id=5d6702703b504379ac22d38e32a24bdc
+The older map includes out-of-province hospitals and older names/addresses.
+Statistics Canada's ODHF v1.1 (2020) and the Alberta approved-hospitals PDF (2018)
+were also considered, but not used because they predate important facility moves.
+
+Method
+Read service locations and fetch each linked service page. Take the unique AHS
+facility ID from its facility link, and the name, street, municipality, province,
+postal code and map latitude/longitude from labelled page fields. Read the eight
+supplements from their facility pages, deduplicating by facility ID. Exclude the
+Saskatchewan record. Decode HTML entities and normalize whitespace; assemble
+address as "street_address, city, province postal_code". Sort by hospital name.
+Keep the actual fetched URL and the inclusion-source URL in every row.
+
+Coordinates are the decimal-degree latitude/longitude supplied to the AHS web
+map, used as WGS84-compatible web-map positions. AHS does not state survey
+accuracy or a datum on these pages. No geocoder, postcode centroid, or routing
+service is used. They identify map locations, not validated vehicle entrances.
+No emergency/operating status is inferred from inclusion.
+
+24-hour emergency department flag (reviewed 2026-10-12)
+emergency_24h is an integer: 1 when the facility's own general/pediatric
+Emergency Services department has a published regular 24-hour, seven-day
+schedule; 0 when there is no ED or its scheduled hours are limited. There are
+94 ones and 18 zeros: 11 facilities without an ED and 7 with limited ED hours.
+This follows the user's requested regular-schedule definition. Individual
+temporary closures do not change the flag. Ongoing reduced weekly schedules
+published for the department count as limited hours, even if temporary staffing
+arrangements are the reason. This is not a live service-availability indicator.
+
+Every facility's AHS facility page and Emergency Services link (service ID 6915,
+where offered) were reviewed. Positive flags require the ED service page's
+Hours of Operation to state 24-hour service; general hospital opening hours
+are insufficient. Psychiatric consultation, maternity triage, urgent-care
+services and a different facility's ED on the same campus do not qualify.
+No-ED assessments use explicit no-ED descriptions or the reviewed specialist
+facility's service inventory. Missing or ambiguous evidence is not a default 0.
+
+Limited-hours facilities are Boyle, Consort, Grimshaw/Berwyn, Hardisty, Lamont,
+Swan Hills and Two Hills. The ED schedule takes precedence over the general
+facility description (notably Swan Hills). Two Hills' ED page still refers to
+January 2026, so the September 15, 2026 official advisory was also reviewed:
+https://www.albertahealthservices.ca/news/Page19947.aspx
+It confirms an ongoing reduced weekly schedule and virtual overnight support,
+not a published regular 24/7 ED schedule. General 24-hour opening at Alberta
+Hospital Edmonton, Claresholm's psychiatric centre and the forensic centre
+does not imply an ED. Coronation remains 1 despite individual temporary
+service advisories, in accordance with the regular-schedule definition.
+
+The separately reviewed evidence is installed in
+inst/extdata/alberta-hospitals-emergency.csv. Each row has the facility ID,
+name, flag, assessment, source URL, checked_on date and explanatory notes.
+Source URLs identify the ED service page or the facility's no-ED inventory;
+the newer advisory is used for Two Hills. The main dataset's retrieved_on
+refers to the location fields; checked_on records the separate ED review.
+
+Attribution and source rights
+Source: Alberta Health Services, Find Healthcare, retrieved 2026-10-12.
+MooseR is an independent compilation of factual location fields and is not
+endorsed by AHS. AHS page prose, imagery, logos and maps are not bundled. The
+package MIT licence covers MooseR code; it does not relicense source websites.
+Source terms: https://www.albertahealthservices.ca/about/Page635.aspx
+
+Refresh
+1. Review the scope and eight specialist additions against the official sources.
+   Review ED schedules separately against each emergency evidence source and
+   update alberta-hospitals-emergency.csv (including checked_on and notes).
+   The location updater joins the reviewed ED flags by exact facility ID/name;
+   it does not automatically refresh ED hours. Changed hospital membership or
+   missing evidence stops the updater rather than assigning an unverified 0.
+   When editing only ED evidence, copy its flag values by facility ID into
+   alberta-hospitals.csv before rebuilding; the R builder verifies consistency.
+2. From the package root, run:
+   python3 data-raw/update-alberta-hospitals.py
+   Rscript data-raw/create-alberta-hospitals.R
+3. Review changes to inst/extdata/alberta-hospitals.csv, especially removals,
+   relocations, changed facility IDs and ED schedule changes. Update counts/dates in
+   R/data.R, man/alberta_hospitals.Rd, README.md, these notes and the dataset test.
+4. Install/check the package and run tests/alberta-hospitals.R.
+
+The updater needs Python >= 3.9 and curl; installed-package users need neither.
+It fails on missing fields, invalid coordinates, name changes or duplicates,
+and replaces the CSV only after all downloads and validations succeed.
+The R build is deterministic and offline; the original CSV is bundled to make
+the binary data file auditable and rebuildable without revisiting the website.

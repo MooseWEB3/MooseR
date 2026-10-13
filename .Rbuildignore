@@ -5,6 +5,7 @@
 ^\.github$
 ^\.git
 ^\.r-lib$
+^\.local-osrm$
 ^\.agents$
 ^\.codex$
 ^.*\.Rcheck$
