@@ -62,8 +62,15 @@
 #' @param timeout Positive seconds allowed for each request.
 #' @param delay Non-negative seconds to pause between requests.
 #' @param progress Logical. Print progress for unique input locations.
+#' @param travel_time_format Logical. Defaults to `FALSE`, returning numeric
+#'   seconds. If `TRUE`, format all five travel-time columns as `HH:MM:SS`
+#'   character strings with [Moose_second2format()]. Fractional seconds round
+#'   to the nearest second, with half seconds rounded up; hours can exceed 24.
+#'   Missing values remain `NA`. Existing column names (including `_seconds`)
+#'   and the 13-column output schema are retained. Distances and ranking are
+#'   unchanged; ranking uses the original, unrounded numeric travel times.
 #'
-#' @return The input data frame with 13 output columns. The first nine are, for each
+#' @return The input data frame with 13 output columns. By default, the first nine are, for each
 #'   `i` in 1, 2, 3, `nearest_hospital_i` (character),
 #'   `nearest_hospital_i_travel_time_seconds` (numeric) and
 #'   `nearest_hospital_i_travel_distance_meters` (numeric). The four additional
@@ -72,13 +79,16 @@
 #'   `university_of_alberta_hospital_travel_time_seconds` and
 #'   `university_of_alberta_hospital_travel_distance_meters`. These are included
 #'   even when either fixed hospital is also among the nearest three.
-#' @seealso [alberta_hospitals], [Moose_travel()]
+#'   With `travel_time_format = TRUE`, all five travel-time columns contain
+#'   character strings instead of numeric seconds; distance columns stay numeric.
+#' @seealso [alberta_hospitals], [Moose_travel()], [Moose_second2format()]
 #' @references \url{https://project-osrm.org/docs/v5.24.0/api/#table-service}
 #' @examples
 #' \dontrun{
 #' locations <- data.frame(longitude = c(-113.4938, -114.0719),
 #'                         latitude = c(53.5461, 51.0447))
 #' result <- Moose_nearest_hospitals(locations)
+#' formatted_result <- Moose_nearest_hospitals(locations, travel_time_format = TRUE)
 #' emergency_result <- Moose_nearest_hospitals(locations, emergency_only = TRUE)
 #'
 #' # Custom column names and a local routing server:
@@ -101,7 +111,8 @@ Moose_nearest_hospitals <- function(dataset,
                                     on_error = c("warn", "stop", "na"),
                                     timeout = 60,
                                     delay = 0.1,
-                                    progress = interactive()) {
+                                    progress = interactive(),
+                                    travel_time_format = FALSE) {
   validate_text <- function(x, argument) {
     if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
       stop("`", argument, "` must be one non-empty character value.", call. = FALSE)
@@ -142,6 +153,7 @@ Moose_nearest_hospitals <- function(dataset,
   validate_flag(emergency_only, "emergency_only")
   validate_flag(overwrite, "overwrite")
   validate_flag(progress, "progress")
+  validate_flag(travel_time_format, "travel_time_format")
   on_error <- match.arg(on_error)
   validate_number(timeout, "timeout", 0, inclusive = FALSE)
   validate_number(delay, "delay", 0)
@@ -171,6 +183,15 @@ Moose_nearest_hospitals <- function(dataset,
     "university_of_alberta_hospital_travel_distance_meters"
   )
   output_names <- c(output_names, fixed_columns)
+  time_columns <- output_names[c(2L, 5L, 8L, 10L, 12L)]
+  format_times <- function(output) {
+    if (travel_time_format) {
+      for (column in time_columns) {
+        output[[column]] <- Moose_second2format(output[[column]])
+      }
+    }
+    output
+  }
   conflicts <- intersect(output_names, names(dataset))
   if (length(conflicts) && !overwrite) {
     stop("Output columns already exist: ", paste(conflicts, collapse = ", "),
@@ -241,7 +262,7 @@ Moose_nearest_hospitals <- function(dataset,
       rep(NA_real_, nrow(dataset))
     }
   }
-  if (!length(valid_rows)) return(result)
+  if (!length(valid_rows)) return(format_times(result))
 
   keys <- sprintf("%.17g|%.17g", origin_lon[valid_rows], origin_lat[valid_rows])
   unique_positions <- which(!duplicated(keys))
@@ -313,7 +334,7 @@ Moose_nearest_hospitals <- function(dataset,
     warning(length(failures), " unique location(s) had incomplete hospital results. First issue: ",
             failures[1L], call. = FALSE)
   }
-  result
+  format_times(result)
 }
 
 # Query a single source against a batch of destinations. Preserve JSON nulls

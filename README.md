@@ -104,6 +104,9 @@ locations <- data.frame(
 
 result <- Moose_nearest_hospitals(locations)
 
+# Format all five travel times as HH:MM:SS:
+result_hms <- Moose_nearest_hospitals(locations, travel_time_format = TRUE)
+
 # Restrict the nearest three to hospitals with a regular 24-hour ED;
 # the four fixed-destination columns are still included:
 result_ed <- Moose_nearest_hospitals(locations, emergency_only = TRUE)
@@ -129,6 +132,15 @@ hospital is already among the nearest three:
 | `foothills_medical_centre_travel_distance_meters` | Distance to Foothills Medical Centre, metres |
 | `university_of_alberta_hospital_travel_time_seconds` | Time to University of Alberta Hospital, seconds |
 | `university_of_alberta_hospital_travel_distance_meters` | Distance to University of Alberta Hospital, metres |
+
+Set `travel_time_format = TRUE` to return **all five travel-time columns** as
+`HH:MM:SS` character strings, using `Moose_second2format()`. For example, 1000
+seconds becomes `"00:16:40"`. The default is `FALSE` (numeric seconds).
+Column names, including their `_seconds` suffix, stay the same, and the function
+still adds 13 columns. Distances remain numeric metres. Missing times remain
+`NA`; fractional seconds round to the nearest second (half seconds round up),
+and hours can exceed 24. Formatting happens after ranking, so it does not change
+the selected hospitals or their order.
 
 These two destinations always use their bundled coordinates. A custom
 `hospitals` list or `emergency_only = TRUE` affects only the nearest-three

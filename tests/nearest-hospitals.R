@@ -303,3 +303,61 @@ stopifnot(identical(request$options$followlocation, 0L),
           identical(authorization, paste("Basic", token)),
           !grepl("test-password", printed, fixed = TRUE),
           !grepl(token, printed, fixed = TRUE))
+
+# Formatting changes only the five time columns, after numeric ranking. It
+# covers the fixed destinations and does not introduce extra route requests.
+time_columns <- columns[c(2L, 5L, 8L, 10L, 12L)]
+other_columns <- setdiff(names(result), time_columns)
+requests <- list()
+formatted <- httr2::with_mocked_responses(route_mock,
+  run(travel_time_format = TRUE, on_error = "stop"))
+stopifnot(
+  length(requests) == 8L,
+  identical(names(formatted), names(result)),
+  identical(formatted[other_columns], result[other_columns]),
+  all(vapply(formatted[time_columns], is.character, logical(1))),
+  identical(unname(unlist(formatted[1, time_columns])),
+            c("00:01:40", "00:00:10", "00:00:30", "00:06:40", "00:08:20")),
+  all(is.na(formatted[4:8, time_columns])),
+  identical(unname(unlist(formatted[1, time_columns])),
+            unname(unlist(formatted[3, time_columns])))
+)
+explicit_seconds <- httr2::with_mocked_responses(route_mock,
+  run(travel_time_format = FALSE, on_error = "stop"))
+stopifnot(identical(explicit_seconds, result))
+reformatted <- httr2::with_mocked_responses(route_mock,
+  run(result, overwrite = TRUE, travel_time_format = TRUE, on_error = "stop"))
+stopifnot(identical(reformatted, formatted))
+
+for (inputs in list(locations[FALSE, ], locations[4:8, ])) {
+  no_routes <- httr2::with_mocked_responses(no_request,
+    run(inputs, travel_time_format = TRUE, on_error = "stop"))
+  stopifnot(nrow(no_routes) == nrow(inputs), all(is.na(no_routes[columns])),
+            all(vapply(no_routes[time_columns], is.character, logical(1))))
+}
+for (flag in list(NA, "TRUE", 1, c(TRUE, FALSE), NULL)) {
+  must_error(run(travel_time_format = flag), "`travel_time_format` must be TRUE or FALSE")
+}
+
+# The distance tie still uses fractional seconds, even if both formatted times
+# are identical. Longer durations and rounding carry over correctly.
+rounded <- fixed_run(paste0(
+  '{"code":"Ok","distances":[[600,100,200,400,50,100,5,1]],',
+  '"durations":[[600,59.49,20,40,90061,59.4,3599.5,86399.5]]}'
+), travel_time_format = TRUE, on_error = "stop")
+stopifnot(
+  identical(unname(unlist(rounded[columns[c(1, 4, 7)]])), c("E", "F", "B")),
+  identical(unname(unlist(rounded[time_columns])),
+            c("25:01:01", "00:00:59", "00:00:59", "01:00:00", "24:00:00"))
+)
+formatted_failure <- httr2::with_mocked_responses(fail_batch(2L),
+  run(locations[1, ], travel_time_format = TRUE, on_error = "na"))
+stopifnot(all(is.na(formatted_failure[nearest_columns])),
+          all(vapply(formatted_failure[time_columns], is.character, logical(1))),
+          formatted_failure[[fixed_columns[1L]]] == "00:06:40",
+          formatted_failure[[fixed_columns[3L]]] == "00:08:20")
+formatted_unreachable <- fixed_run(one_fixed_unreachable,
+  travel_time_format = TRUE, on_error = "na")
+stopifnot(is.na(formatted_unreachable[[fixed_columns[1L]]]),
+          is.character(formatted_unreachable[[fixed_columns[1L]]]),
+          formatted_unreachable[[fixed_columns[3L]]] == "00:08:20")

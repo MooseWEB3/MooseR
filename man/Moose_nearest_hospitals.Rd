@@ -19,7 +19,8 @@ Moose_nearest_hospitals(
   on_error = c("warn", "stop", "na"),
   timeout = 60,
   delay = 0.1,
-  progress = interactive()
+  progress = interactive(),
+  travel_time_format = FALSE
 )
 }
 \arguments{
@@ -36,8 +37,9 @@ Moose_nearest_hospitals(
 \item{timeout}{Positive seconds allowed for each request.}
 \item{delay}{Non-negative seconds to pause between requests.}
 \item{progress}{Logical. Print progress for unique input locations.}
+\item{travel_time_format}{Logical. Defaults to \code{FALSE}, returning numeric seconds. If \code{TRUE}, format all five travel-time columns as \code{HH:MM:SS} character strings with \code{\link{Moose_second2format}}. Fractional seconds round to the nearest second, with half seconds rounded up; hours can exceed 24. Missing values remain \code{NA}. Existing column names (including \code{_seconds}) and the 13-column output schema are retained. Distances and ranking are unchanged; ranking uses the original, unrounded numeric travel times.}
 }
-\value{The input data frame with 13 output columns. The first nine are, for each \code{i} in 1, 2, 3, \code{nearest_hospital_i} (character), \code{nearest_hospital_i_travel_time_seconds} (numeric) and \code{nearest_hospital_i_travel_distance_meters} (numeric). The four additional numeric columns are \code{foothills_medical_centre_travel_time_seconds}, \code{foothills_medical_centre_travel_distance_meters}, \code{university_of_alberta_hospital_travel_time_seconds} and \code{university_of_alberta_hospital_travel_distance_meters}. These are included even when either fixed hospital is also among the nearest three.}
+\value{The input data frame with 13 output columns. By default, the first nine are, for each \code{i} in 1, 2, 3, \code{nearest_hospital_i} (character), \code{nearest_hospital_i_travel_time_seconds} (numeric) and \code{nearest_hospital_i_travel_distance_meters} (numeric). The four additional numeric columns are \code{foothills_medical_centre_travel_time_seconds}, \code{foothills_medical_centre_travel_distance_meters}, \code{university_of_alberta_hospital_travel_time_seconds} and \code{university_of_alberta_hospital_travel_distance_meters}. These are included even when either fixed hospital is also among the nearest three. With \code{travel_time_format = TRUE}, all five travel-time columns contain character strings instead of numeric seconds; distance columns stay numeric.}
 \description{For each input location, queries road routes to every eligible hospital and appends the names, travel times and travel distances of the nearest three. By default, candidates are all facilities in \link{alberta_hospitals}. Also always appends travel time and distance to Foothills Medical Centre and University of Alberta Hospital, using their coordinates in the bundled data, regardless of the nearest-three results, \code{hospitals}, or \code{emergency_only}.}
 \details{
 Hospitals are ranked by increasing OSRM route distance, then travel time, then their row order in \code{hospitals}. OSRM returns fastest routes: their distances are not guaranteed to be the shortest possible road paths. Times are estimates without live traffic. Separately named facilities on the same campus remain separate candidates. Coordinates refer to facility locations, not verified emergency-department entrances.
@@ -47,12 +49,13 @@ Uses the OSRM Table service with both distance and duration annotations. Every e
 The default public demonstration server is for light, interactive use. For larger workloads, supply an OSRM server you operate or are authorized to use. Coordinates are sent to that server and may appear in its request logs. Redirects are not followed. No API key is needed for the default server.
 }
 \references{\url{https://project-osrm.org/docs/v5.24.0/api/#table-service}}
-\seealso{\link{alberta_hospitals}, \code{\link{Moose_travel}}}
+\seealso{\link{alberta_hospitals}, \code{\link{Moose_travel}}, \code{\link{Moose_second2format}}}
 \examples{
 \dontrun{
 locations <- data.frame(longitude = c(-113.4938, -114.0719),
                         latitude = c(53.5461, 51.0447))
 result <- Moose_nearest_hospitals(locations)
+formatted_result <- Moose_nearest_hospitals(locations, travel_time_format = TRUE)
 emergency_result <- Moose_nearest_hospitals(locations, emergency_only = TRUE)
 
 # Custom column names and a local routing server:
