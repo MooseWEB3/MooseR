@@ -243,6 +243,8 @@ existing scripts do not break.
 | `Moose_todate()` | - | Convert common date inputs to R `Date` values. |
 | `Moose_todatetime()` | - | Convert common date and date-time inputs to R `POSIXct` values. |
 | `Moose_second2format()` | - | Format seconds as `HH:MM:SS`, with cumulative hours. |
+| `Moose_similarscore()` | - | Compare strings or numbers with a similarity score from 0 to 1, allowing common typos. |
+| `Moose_withintime()` | - | Return 1/0 for whether two date-times are within a chosen interval; missing times return 0. |
 | `Moose_travel()` | - | Experimental: add OSRM road travel distance and travel time for coordinate pairs. |
 | `Moose_boost_data()` | - | Detect and convert date-like columns in a data set. |
 | `Moose_load_packages()` | `load_packages()` | Install missing packages and load a package list. |
@@ -386,6 +388,44 @@ half seconds rounded up. Non-missing input must be numeric, finite and
 non-negative. This also works with the travel-time columns returned by
 `Moose_travel()` and `Moose_nearest_hospitals()`.
 
+Compare strings or numeric identifiers:
+
+```r
+Moose_similarscore("E123456", "e1223456")
+# [1] 0.875
+
+Moose_similarscore(123456, "123456")
+# [1] 1
+
+Moose_similarscore("AB12", "AB21")
+# [1] 0.75
+
+Moose_similarscore("ABC", "abc", ignore_case = FALSE)
+# [1] 0
+
+records <- data.frame(
+  original = c("E123456", "ABC", NA),
+  entered = c("e1223456", "abc", "XYZ")
+)
+records$similarity <- Moose_similarscore(records$original, records$entered)
+# Scores: 0.875, 1, NA
+```
+
+`Moose_similarscore()` converts numbers to strings and ignores case by default.
+It uses normalized optimal string alignment (restricted Damerau-Levenshtein)
+distance: `1 - edits / longer_string_length`. Each insertion, deletion,
+substitution or adjacent swap costs one edit, without editing a substring more
+than once. Thus `0.875` means 87.5% similarity under this rule; it is not a
+probability that two identifiers belong to the same record.
+
+Two vectors are compared row by row; a single value can be compared with every
+element of a vector. Other unequal lengths are rejected. Missing values return
+`NA`; two empty strings score `1`, and an empty/non-empty pair scores `0`.
+Spaces and punctuation count as characters. Keep identifiers as strings when
+leading zeros or exact long numbers matter: numeric conversion uses R's
+`as.character()` formatting and cannot recover digits already lost on import.
+See `?Moose_similarscore` for details.
+
 Convert common date and date-time inputs:
 
 ```r
@@ -413,6 +453,55 @@ Values such as `13/02/2026` support day/month/year, while `02/13/2026`
 supports month/day/year. The order with more evidence is used; `day_first` is
 the fallback for a tie. Inputs already stored with a year from 0000 to 0099
 are also normalized using the two-digit-year cutoff.
+
+Flag date-times that are within a chosen interval:
+
+```r
+# The third argument is the threshold; the default unit is hours.
+Moose_withintime("2026-10-14 09:00", "2026-10-14 12:00", 3)
+# [1] 1
+
+Moose_withintime("2026-10-14 09:00", "2026-10-14 12:01", 3)
+# [1] 0
+
+Moose_withintime("2026-10-14 09:00", "2026-10-14 09:30", 30, unit = "minute")
+# [1] 1
+
+Moose_withintime(NA, "2026-10-14 09:00", 3)
+# [1] 0
+
+visits <- data.frame(
+  arrival = c("2026-10-14 09:00", "2026-10-14 09:00", NA),
+  assessment = c("2026-10-14 11:00", "2026-10-14 13:00", "2026-10-14 10:00")
+)
+visits$within_3h <- Moose_withintime(
+  visits$arrival, visits$assessment, 3, tz = "America/Edmonton"
+)
+# Flags: 1, 0, 0
+```
+
+`Moose_withintime(time1, time2, threshold)` compares the **absolute** elapsed
+time difference with an **inclusive** threshold. Units are `"day"`, `"hour"`,
+`"minute"`, and `"second"`; fractional thresholds are allowed. A day means
+24 elapsed hours. Either order of the two times gives the same result.
+Vectors are compared row by row, and a scalar can be compared with an entire
+column. Missing values always return integer `0`, even when both are missing.
+
+Existing date-times are used directly. For text or factor inputs, each column's
+first **50 non-missing values** are used to infer day/month order, then every
+row is parsed using MooseR's supported date-time formats. Use `sample_size = 30`
+to inspect 30 values instead. Unambiguous sampled dates determine the preferred
+order; ties or no evidence use `day_first = FALSE` (month/day/year), or
+`day_first = TRUE` for day/month/year. A different supported format appearing
+after the sample is still parsed. Unparseable non-missing values return `0`
+with a warning identifying the input and count.
+
+Text without an explicit offset defaults to `tz = "UTC"`; use
+`tz = "America/Edmonton"` for Alberta local time. `Date` inputs mean midnight
+in that zone. Existing `POSIXct`/`POSIXlt` instants and explicit UTC offsets
+are respected. Numeric date inputs use the same conversion as
+`Moose_todatetime()`; set `numeric_origin` when the origin is known. Input
+columns are retained unchanged. See `?Moose_withintime` for full details.
 
 Automatically convert date-like columns in a data set:
 
@@ -807,6 +896,8 @@ scripts existants.
 | `Moose_todate()` | - | Convertir les formats de date courants en valeurs R `Date`. |
 | `Moose_todatetime()` | - | Convertir les formats courants de date et heure en valeurs R `POSIXct`. |
 | `Moose_second2format()` | - | Formater une durée en secondes en `HH:MM:SS`, avec des heures cumulées. |
+| `Moose_similarscore()` | - | Comparer des chaînes ou des nombres avec un score de similarité de 0 à 1, en tenant compte des fautes de frappe. |
+| `Moose_withintime()` | - | Renvoyer 1/0 selon que deux dates-heures sont dans l'intervalle choisi ; les valeurs manquantes donnent 0. |
 | `Moose_boost_data()` | - | Détecter et convertir les colonnes qui ressemblent à des dates dans un jeu de données. |
 | `Moose_load_packages()` | `load_packages()` | Installer les packages manquants et charger une liste de packages. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Charger l'ensemble de packages MooseR par défaut. |
@@ -1277,6 +1368,8 @@ existentes.
 | `Moose_todate()` | - | Converter formatos comuns de data em valores R `Date`. |
 | `Moose_todatetime()` | - | Converter formatos comuns de data e hora em valores R `POSIXct`. |
 | `Moose_second2format()` | - | Formatar segundos como `HH:MM:SS`, com horas acumuladas. |
+| `Moose_similarscore()` | - | Comparar cadeias ou números com uma pontuação de semelhança de 0 a 1, considerando erros de digitação. |
+| `Moose_withintime()` | - | Devolver 1/0 conforme duas datas-horas estejam no intervalo escolhido; valores em falta devolvem 0. |
 | `Moose_boost_data()` | - | Detetar e converter colunas semelhantes a datas num conjunto de dados. |
 | `Moose_load_packages()` | `load_packages()` | Instalar os pacotes em falta e carregar uma lista de pacotes. |
 | `Moose_load_mooser_packages()` | `load_mooser_packages()` | Carregar o conjunto predefinido de pacotes MooseR. |

@@ -181,7 +181,8 @@ moose_character_to_datetime <- function(x,
                                         day_first,
                                         numeric_origin,
                                         tz,
-                                        two_digit_year_cutoff = 68L) {
+                                        two_digit_year_cutoff = 68L,
+                                        sample_size = NULL) {
   values <- trimws(as.character(x))
   missing <- is.na(values) |
     !nzchar(values) |
@@ -190,7 +191,12 @@ moose_character_to_datetime <- function(x,
   parse_values <- moose_normalize_datetime_text(values)
   out <- moose_posix_na(length(values), tz)
 
-  inferred_day_first <- moose_infer_day_first(parse_values, day_first)
+  inference_values <- if (is.null(sample_size)) {
+    parse_values
+  } else {
+    utils::head(parse_values[!missing], sample_size)
+  }
+  inferred_day_first <- moose_infer_day_first(inference_values, day_first)
   formats <- moose_datetime_formats(inferred_day_first)
   out <- moose_parse_datetime_formats(
     parse_values,
