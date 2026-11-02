@@ -20,6 +20,10 @@ synthetic <- list(grids = list(
 lon <- c(0.5, 1.25, 1.5, 2, 2, 5, 50, NA, 0, 0, 2)
 lat <- c(0.5, 0.5, 1.5, 0, 2, 5, 50, 1, 95, 0, 1)
 estimate <- lookup(lon, lat, synthetic)
+# The outer edge of a grid belongs to that grid despite floating-point error.
+# Without the tolerance both would fall through to the coarse grid (600).
+edge <- lookup(c(0.5, 2 + 1e-12), c((0.1 + 0.2) / 0.3 * 2, 1), synthetic)
+stopifnot(isTRUE(all.equal(edge$duration, c(150, 180))))
 stopifnot(
   isTRUE(all.equal(estimate$duration, c(60, 105, 160, 120, 600, 600, NA, NA, NA, 0, 180))),
   isTRUE(all.equal(estimate$distance,
@@ -83,3 +87,32 @@ must_error(Moose_travel2FMC(places), "Unknown coordinate columns")
 must_error(Moose_travel2FMC(places, "lon", "lat", time_column = "x", distance_column = "x"),
            "must be different")
 must_error(Moose_travel2FMC(places, "lon", "lat", overwrite = NA), "overwrite")
+
+# The bundled point table matches the grid: at grid points the interpolated
+# lookup returns the table's values, up to rounding.
+points <- fmc_travel_points
+stopifnot(
+  identical(names(points), c("grid", "longitude", "latitude", "lon_min", "lon_max",
+                             "lat_min", "lat_max", "fmc_travel_time_minutes",
+                             "fmc_travel_distance_km")),
+  nrow(points) > 100000L,
+  !anyNA(points),
+  identical(unique(points$grid), c("calgary", "alberta")),
+  all(points$lon_min < points$longitude & points$longitude < points$lon_max),
+  all(points$lat_min < points$latitude & points$latitude < points$lat_max)
+)
+# Alberta points on or near the Calgary grid's edge are read from the Calgary
+# grid, so compare only Alberta points clearly outside it.
+calgary_grid <- fmc_travel_grid$grids$calgary
+margin <- 1e-6
+outside_calgary <- with(calgary_grid,
+  points$longitude < lon0 - margin | points$longitude > lon0 + (nlon - 1) * dlon + margin |
+    points$latitude < lat0 - margin | points$latitude > lat0 + (nlat - 1) * dlat + margin)
+comparable <- points[points$grid == "calgary" | outside_calgary, ]
+set.seed(20261102)
+sampled <- comparable[sample.int(nrow(comparable), 500L), ]
+looked_up <- Moose_travel2FMC(sampled, overwrite = TRUE)
+stopifnot(
+  all(abs(looked_up$fmc_travel_time_minutes - sampled$fmc_travel_time_minutes) <= 0.1 + 1e-9),
+  all(abs(looked_up$fmc_travel_distance_km - sampled$fmc_travel_distance_km) <= 0.01 + 1e-9)
+)

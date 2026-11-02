@@ -192,3 +192,6 @@ output <- file.path("data", "fmc_travel_grid.rda")
 save(fmc_travel_grid, file = output, compress = "xz", version = 2)
 print(validation)
 message(sprintf("Saved %s (%.1f MB).", output, file.size(output) / 1024^2))
+
+# Keep the one-row-per-point table in step with the grid.
+source(file.path("data-raw", "create-fmc-travel-points.R"))

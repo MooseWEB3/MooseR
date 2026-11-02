@@ -217,6 +217,15 @@ measured error against exact routes. Maintainers rebuild the grid on a computer
 running the local Alberta OSRM server with
 `source("data-raw/create-fmc-travel-grid.R")`.
 
+To browse or export the precomputed values, use the bundled table
+`fmc_travel_points`: one row per grid point, with the cell's longitude and
+latitude range, driving time in minutes and distance in kilometres.
+
+```r
+View(fmc_travel_points)
+write.csv(fmc_travel_points, "fmc_travel_points.csv", row.names = FALSE)
+```
+
 ### Startup package loading
 
 Load the default MooseR workflow package set in the current R session:

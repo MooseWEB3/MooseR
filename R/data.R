@@ -177,3 +177,39 @@
 #' fmc_travel_grid$routing
 #'
 "fmc_travel_grid"
+
+#' Driving time and distance to Foothills Medical Centre, one row per grid point
+#'
+#' The [fmc_travel_grid] values as a table for viewing, filtering and export.
+#' Each row is one grid point with a route, with the longitude and latitude
+#' range of the cell it represents. Calgary-region points are about 280 m
+#' apart; elsewhere in Alberta they are about 1 km apart. Alberta points whose
+#' whole cell lies inside the Calgary region are omitted, because the finer
+#' Calgary grid covers that area. [Moose_travel2FMC()] interpolates between
+#' neighbouring points rather than reading the single nearest row, so its
+#' results between grid points can differ slightly from this table.
+#'
+#' @format A data frame with one row per grid point and 9 columns:
+#' \describe{
+#'   \item{grid}{Character. `calgary` (about 280 m spacing) or `alberta`
+#'     (about 1 km spacing).}
+#'   \item{longitude,latitude}{Numeric. Grid point in decimal degrees.}
+#'   \item{lon_min,lon_max,lat_min,lat_max}{Numeric. Cell represented by the
+#'     point: half the grid spacing on each side.}
+#'   \item{fmc_travel_time_minutes}{Numeric. Free-flow OSRM driving time to
+#'     Foothills Medical Centre, in minutes, rounded to one decimal place.}
+#'   \item{fmc_travel_distance_km}{Numeric. Road distance to Foothills Medical
+#'     Centre, in kilometres, rounded to two decimal places.}
+#' }
+#'
+#' @source Derived from [fmc_travel_grid] by
+#'   `data-raw/create-fmc-travel-points.R`. Routes computed with OSRM on
+#'   OpenStreetMap data, (c) OpenStreetMap contributors, available under the
+#'   Open Database License (\url{https://www.openstreetmap.org/copyright}).
+#'
+#' @examples
+#' head(fmc_travel_points)
+#' table(fmc_travel_points$grid)
+#' subset(fmc_travel_points, fmc_travel_time_minutes <= 15)
+#'
+"fmc_travel_points"

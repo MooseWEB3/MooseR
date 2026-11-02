@@ -129,12 +129,16 @@ moose_fmc_lookup <- function(lon, lat, grid_data) {
     if (!any(pending)) break
     x <- (lon - grid$lon0) / grid$dlon
     y <- (lat - grid$lat0) / grid$dlat
-    rows <- which(pending & x >= 0 & y >= 0 & x <= grid$nlon - 1 & y <= grid$nlat - 1)
+    # A small tolerance keeps points on a grid's outer edge inside that grid
+    # despite floating-point error (for example latitude 51.45 in Calgary).
+    tolerance <- 1e-9
+    rows <- which(pending & x >= -tolerance & y >= -tolerance &
+                    x <= grid$nlon - 1 + tolerance & y <= grid$nlat - 1 + tolerance)
     if (!length(rows)) next
-    i0 <- pmin(floor(x[rows]), grid$nlon - 2)
-    j0 <- pmin(floor(y[rows]), grid$nlat - 2)
-    fx <- x[rows] - i0
-    fy <- y[rows] - j0
+    i0 <- pmin(pmax(floor(x[rows]), 0), grid$nlon - 2)
+    j0 <- pmin(pmax(floor(y[rows]), 0), grid$nlat - 2)
+    fx <- pmin(pmax(x[rows] - i0, 0), 1)
+    fy <- pmin(pmax(y[rows] - j0, 0), 1)
     weights <- cbind((1 - fx) * (1 - fy), fx * (1 - fy), (1 - fx) * fy, fx * fy)
     cells <- cbind(i0, i0 + 1, i0, i0 + 1) + cbind(j0, j0, j0 + 1, j0 + 1) * grid$nlon + 1
     seconds <- matrix(as.numeric(grid$time_s[c(cells)]), ncol = 4L)
