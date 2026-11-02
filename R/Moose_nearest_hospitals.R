@@ -7,15 +7,32 @@
 #' of Alberta Hospital, using their coordinates in the bundled data, regardless
 #' of the nearest-three results, `hospitals`, or `emergency_only`.
 #'
-#' Hospitals are ranked by increasing OSRM route distance, then travel time,
-#' then their row order in `hospitals`. OSRM returns fastest routes: their
+#' Hospitals are ranked by increasing route distance, then travel time, then
+#' their row order in `hospitals`. OSRM and Google return fastest routes: their
 #' distances are not guaranteed to be the shortest possible road paths. Times
 #' are estimates without live traffic. Separately named facilities on the same
 #' campus remain separate candidates. Coordinates refer to facility locations,
 #' not verified emergency-department entrances.
 #'
-#' Uses the OSRM Table service with both distance and duration annotations.
-#' Every eligible hospital is considered; there is no straight-line prefilter.
+#' The default `engine = "osrm"` uses the OSRM Table service with both distance
+#' and duration annotations. Every eligible hospital is considered; there is no
+#' straight-line prefilter.
+#'
+#' `engine = "google"` uses the Google Routes API through the fixed,
+#' password-protected MooseR proxy (`https://google-routes.mooseweb3.com`). The
+#' Google API key stays on the proxy server and is never needed or sent by the
+#' client; the proxy username and password are sent over HTTPS with Basic
+#' Authentication, and a rejected username or password always stops the call.
+#' Each route is one billable Compute Routes request (`TRAFFIC_UNAWARE`). To
+#' limit requests, candidates are routed in order of straight-line distance,
+#' stopping once no unrouted hospital could be nearer by road than the current
+#' third-nearest route. A road route is never shorter than the straight-line
+#' distance apart from road snapping at either end, which the stopping rule
+#' allows for with a 1 km margin. A location usually needs a few candidate
+#' requests plus the two fixed hospitals. `max_candidates` caps the candidates
+#' routed per location; locations that reach the cap get a warning, because
+#' their ranking compares only those candidates. The computer hosting the proxy
+#' must be on and online.
 #' Repeated input coordinates are queried once per call. Fixed hospital routes
 #' reuse candidate routes when their coordinates match. A failed candidate
 #' request leaves all nine nearest-hospital results for that origin as `NA`,
@@ -46,13 +63,19 @@
 #'   not temporary closures or current availability.
 #' @param server HTTP(S) base URL of an OSRM server supporting the Table service
 #'   with distance and duration annotations. Defaults to the public demo server.
+#'   OSRM only; it cannot be supplied with `engine = "google"`.
 #' @param profile OSRM profile supported by the server, normally `"driving"`.
-#' @param username,password Optional HTTP Basic Authentication credentials.
-#'   Supply both or neither. HTTPS is required with credentials; URL userinfo is
-#'   rejected. Credentials are redacted from printed request objects.
+#'   OSRM only.
+#' @param username,password HTTP Basic Authentication credentials. Supply both
+#'   or neither. HTTPS is required with credentials; URL userinfo is rejected.
+#'   Credentials are redacted from printed request objects. Optional for OSRM.
+#'   Required for `engine = "google"`: when omitted, they are read from
+#'   `MOOSER_GOOGLE_USER` and `MOOSER_GOOGLE_PASSWORD`, or else from
+#'   `MOOSER_ROUTING_USER` and `MOOSER_ROUTING_PASSWORD`. Keep them in a private
+#'   `.Renviron` file, not in scripts or Git.
 #' @param batch_size Maximum destinations per request, an integer from 1 to 99.
 #'   One origin is added, keeping each request within 100 coordinates. Reduce
-#'   this value if your server has a lower limit.
+#'   this value if your server has a lower limit. OSRM only.
 #' @param overwrite Logical. Replace existing output columns if `TRUE`.
 #' @param on_error One of `"warn"`, `"stop"`, or `"na"`. Controls request failures
 #'   and unreachable fixed hospitals or fewer than three reachable candidates.
@@ -69,6 +92,9 @@
 #'   Missing values remain `NA`. Existing column names (including `_seconds`)
 #'   and the 13-column output schema are retained. Distances and ranking are
 #'   unchanged; ranking uses the original, unrounded numeric travel times.
+#' @param engine Routing engine: `"osrm"` (the default) or `"google"`.
+#' @param max_candidates Google only. Maximum number of candidate hospitals
+#'   routed per location, an integer of at least 3.
 #'
 #' @return The input data frame with 13 output columns. By default, the first nine are, for each
 #'   `i` in 1, 2, 3, `nearest_hospital_i` (character),
@@ -95,6 +121,11 @@
 #' locations <- data.frame(lon = -113.4938, lat = 53.5461)
 #' result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat",
 #'                                   server = "http://127.0.0.1:5001")
+#'
+#' # Google Routes through the password-protected MooseR proxy, from any
+#' # computer. Set MOOSER_GOOGLE_USER and MOOSER_GOOGLE_PASSWORD in ~/.Renviron.
+#' result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat",
+#'                                   engine = "google")
 #' }
 #' @export
 Moose_nearest_hospitals <- function(dataset,
@@ -112,7 +143,9 @@ Moose_nearest_hospitals <- function(dataset,
                                     timeout = 60,
                                     delay = 0.1,
                                     progress = interactive(),
-                                    travel_time_format = FALSE) {
+                                    travel_time_format = FALSE,
+                                    engine = c("osrm", "google"),
+                                    max_candidates = 15L) {
   validate_text <- function(x, argument) {
     if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
       stop("`", argument, "` must be one non-empty character value.", call. = FALSE)
@@ -157,12 +190,25 @@ Moose_nearest_hospitals <- function(dataset,
   on_error <- match.arg(on_error)
   validate_number(timeout, "timeout", 0, inclusive = FALSE)
   validate_number(delay, "delay", 0)
+  engine <- match.arg(engine)
+  osrm_arguments <- c(server = !missing(server), profile = !missing(profile),
+                      batch_size = !missing(batch_size))
+  if (engine == "google" && any(osrm_arguments)) {
+    stop("`", paste(names(osrm_arguments)[osrm_arguments], collapse = "`, `"),
+         "` cannot be used with `engine = \"google\"`; Google requests go only ",
+         "to the MooseR proxy.", call. = FALSE)
+  }
+  if (engine == "osrm" && !missing(max_candidates)) {
+    stop("`max_candidates` is only used with `engine = \"google\"`.", call. = FALSE)
+  }
   validate_number(batch_size, "batch_size", 1)
   if (batch_size > 99 || batch_size != floor(batch_size)) {
     stop("`batch_size` must be an integer from 1 to 99.", call. = FALSE)
   }
-  profile <- trimws(validate_text(profile, "profile"))
-  server <- trimws(validate_text(server, "server"))
+  validate_number(max_candidates, "max_candidates", 3)
+  if (max_candidates != floor(max_candidates)) {
+    stop("`max_candidates` must be an integer of at least 3.", call. = FALSE)
+  }
   credentials <- c(!is.null(username), !is.null(password))
   if (any(credentials) && !all(credentials)) {
     stop("`username` and `password` must be supplied together.", call. = FALSE)
@@ -171,7 +217,17 @@ Moose_nearest_hospitals <- function(dataset,
     username <- trimws(validate_text(username, "username"))
     password <- validate_text(password, "password")
   }
-  server <- moose_validate_routing_server(server, authenticated = all(credentials))
+  if (engine == "google") {
+    if (!all(credentials)) {
+      proxy_credentials <- moose_google_proxy_credentials()
+      username <- proxy_credentials$username
+      password <- proxy_credentials$password
+    }
+  } else {
+    profile <- trimws(validate_text(profile, "profile"))
+    server <- trimws(validate_text(server, "server"))
+    server <- moose_validate_routing_server(server, authenticated = all(credentials))
+  }
 
   output_names <- unlist(lapply(1:3, function(i) {
     paste0("nearest_hospital_", i, c("", "_travel_time_seconds", "_travel_distance_meters"))
@@ -270,17 +326,20 @@ Moose_nearest_hospitals <- function(dataset,
   row_groups <- split(valid_rows, match(keys, keys[unique_positions]))
   batches <- split(seq_along(destination_lon),
                    ceiling(seq_along(destination_lon) / batch_size))
+  candidates <- seq_len(nrow(hospitals))
   request_count <- 0L
+  capped <- 0L
   failures <- character()
-  for (i in seq_along(unique_rows)) {
-    origin <- unique_rows[i]
-    if (progress) message("Finding hospitals for location ", i, " of ", length(unique_rows), "...")
+
+  # Each engine returns routes for all destinations, which destinations were
+  # queried, any issues, and whether the candidate comparison is complete.
+  route_osrm <- function(origin) {
     distances <- durations <- rep(NA_real_, length(destination_lon))
     queried <- rep(FALSE, length(destination_lon))
     issues <- character()
     for (batch in batches) {
       if (request_count > 0L && delay > 0) Sys.sleep(delay)
-      request_count <- request_count + 1L
+      request_count <<- request_count + 1L
       table <- tryCatch(
         moose_osrm_table(
           origin_lon[origin], origin_lat[origin],
@@ -298,11 +357,81 @@ Moose_nearest_hospitals <- function(dataset,
         queried[batch] <- TRUE
       }
     }
+    list(distances = distances, durations = durations, queried = queried,
+         issues = issues, complete = all(queried[candidates]))
+  }
+
+  route_google <- function(origin) {
+    distances <- durations <- rep(NA_real_, length(destination_lon))
+    queried <- rep(FALSE, length(destination_lon))
+    issues <- character()
+    route_to <- function(destination) {
+      if (request_count > 0L && delay > 0) Sys.sleep(delay)
+      request_count <<- request_count + 1L
+      route <- tryCatch(
+        moose_google_proxy_route(
+          origin_lon[origin], origin_lat[origin],
+          destination_lon[destination], destination_lat[destination],
+          username, password, timeout
+        ), error = identity
+      )
+      if (inherits(route, "error")) {
+        # Wrong credentials fail every request; stop instead of retrying them.
+        if (inherits(route, "httr2_http_401")) {
+          stop("The MooseR Google proxy rejected the username or password. ",
+               "Check MOOSER_GOOGLE_USER and MOOSER_GOOGLE_PASSWORD.", call. = FALSE)
+        }
+        issue <- conditionMessage(route)
+        if (on_error == "stop") stop("Input row ", origin, ": ", issue, call. = FALSE)
+        issues <<- c(issues, issue)
+        return(FALSE)
+      }
+      distances[destination] <<- route[["distance"]]
+      durations[destination] <<- route[["duration"]]
+      queried[destination] <<- TRUE
+      TRUE
+    }
+    # Apart from road snapping at either end (allowed for by 1 km), a road
+    # route is never shorter than the straight-line distance. Route candidates
+    # in order of that lower bound until no unrouted hospital can beat the
+    # current third-nearest route.
+    bound <- pmax(0, moose_great_circle_meters(
+      origin_lon[origin], origin_lat[origin], hospital_lon, hospital_lat
+    ) * 0.995 - 1000)
+    search_order <- order(bound, candidates)
+    complete <- TRUE
+    for (position in seq_along(search_order)) {
+      candidate <- search_order[position]
+      found <- sort(distances[candidates][queried[candidates]])
+      if (length(found) >= 3L && found[3L] < bound[candidate]) break
+      if (position > max_candidates) {
+        capped <<- capped + 1L
+        break
+      }
+      if (!route_to(candidate)) {
+        complete <- FALSE
+        break
+      }
+    }
+    for (destination in fixed_destinations) {
+      if (!queried[destination]) route_to(destination)
+    }
+    list(distances = distances, durations = durations, queried = queried,
+         issues = issues, complete = complete)
+  }
+
+  for (i in seq_along(unique_rows)) {
+    origin <- unique_rows[i]
+    if (progress) message("Finding hospitals for location ", i, " of ", length(unique_rows), "...")
+    routes <- if (engine == "google") route_google(origin) else route_osrm(origin)
+    distances <- routes$distances
+    durations <- routes$durations
+    queried <- routes$queried
+    issues <- routes$issues
 
     rows <- row_groups[[as.character(i)]]
-    candidates <- seq_len(nrow(hospitals))
-    if (all(queried[candidates])) {
-      reachable <- candidates[!is.na(distances[candidates])]
+    if (routes$complete) {
+      reachable <- candidates[queried[candidates] & !is.na(distances[candidates])]
       ranked <- reachable[order(distances[reachable], durations[reachable], reachable)]
       selected <- utils::head(ranked, 3L)
       for (rank in seq_along(selected)) {
@@ -333,6 +462,11 @@ Moose_nearest_hospitals <- function(dataset,
   if (length(failures) && on_error == "warn") {
     warning(length(failures), " unique location(s) had incomplete hospital results. First issue: ",
             failures[1L], call. = FALSE)
+  }
+  if (capped && on_error != "na") {
+    warning(capped, " unique location(s) reached `max_candidates = ", max_candidates,
+            "` before the nearest three were confirmed; their ranking compares only the ",
+            max_candidates, " hospitals nearest in a straight line.", call. = FALSE)
   }
   format_times(result)
 }
@@ -382,4 +516,60 @@ moose_osrm_table <- function(start_lon, start_lat, end_lon, end_lat, profile,
     stop("OSRM returned inconsistent distance and duration availability.", call. = FALSE)
   }
   list(distance = distances, duration = durations)
+}
+
+# Read the MooseR Google proxy credentials from the environment.
+moose_google_proxy_credentials <- function() {
+  for (prefix in c("MOOSER_GOOGLE", "MOOSER_ROUTING")) {
+    username <- trimws(Sys.getenv(paste0(prefix, "_USER")))
+    password <- Sys.getenv(paste0(prefix, "_PASSWORD"))
+    if (nzchar(username) && nzchar(password)) {
+      return(list(username = username, password = password))
+    }
+  }
+  stop("`engine = \"google\"` needs the MooseR proxy username and password. ",
+       "Supply `username` and `password`, or set MOOSER_GOOGLE_USER and ",
+       "MOOSER_GOOGLE_PASSWORD in a private ~/.Renviron file.", call. = FALSE)
+}
+
+# Great-circle distance in metres on a sphere with the mean Earth radius.
+moose_great_circle_meters <- function(lon1, lat1, lon2, lat2) {
+  radians <- pi / 180
+  a <- sin((lat2 - lat1) * radians / 2)^2 +
+    cos(lat1 * radians) * cos(lat2 * radians) * sin((lon2 - lon1) * radians / 2)^2
+  2 * 6371008.8 * asin(pmin(1, sqrt(a)))
+}
+
+# Route one origin-destination pair through the fixed MooseR Google proxy. An
+# empty response means Google found no route. Google omits zero-valued fields,
+# so a route without `distanceMeters` or `duration` has a zero value.
+moose_google_proxy_route <- function(start_lon, start_lat, end_lon, end_lat,
+                                     username, password, request_timeout) {
+  request <- moose_google_request(
+    start_lon = start_lon, start_lat = start_lat,
+    end_lon = end_lon, end_lat = end_lat,
+    profile = "DRIVE", server = .mooser_google_proxy_server,
+    username = username, password = password, backend = "mooser_proxy",
+    api_key = NULL, routing_preference = "TRAFFIC_UNAWARE",
+    request_timeout = request_timeout
+  )
+  payload <- httr2::resp_body_json(httr2::req_perform(request), simplifyVector = TRUE)
+  if (!is.list(payload)) {
+    stop("Google Routes API returned an invalid response.", call. = FALSE)
+  }
+  routes <- payload$routes
+  if (!length(routes) || !NROW(routes)) {
+    return(c(distance = NA_real_, duration = NA_real_))
+  }
+  first <- function(field, default) {
+    value <- routes[[field]]
+    if (is.null(value) || is.na(value[1L])) default else value[1L]
+  }
+  distance <- suppressWarnings(as.numeric(first("distanceMeters", 0)))
+  duration <- suppressWarnings(as.numeric(sub("s$", "", as.character(first("duration", "0s")))))
+  if (length(distance) != 1L || length(duration) != 1L ||
+      !is.finite(distance) || !is.finite(duration) || distance < 0 || duration < 0) {
+    stop("Google Routes API returned an invalid distance or duration.", call. = FALSE)
+  }
+  c(distance = distance, duration = duration)
 }

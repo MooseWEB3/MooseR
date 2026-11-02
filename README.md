@@ -157,7 +157,7 @@ unreachable fixed destination gets `NA` in its two columns. If fewer than three
 candidates are reachable, available ranks are returned and the rest are `NA`.
 Use `on_error = "stop"` to stop on these issues, or `"na"` to suppress warnings.
 
-Routing uses the [OSRM Table service](https://project-osrm.org/docs/v5.24.0/api/#table-service),
+By default, routing uses the [OSRM Table service](https://project-osrm.org/docs/v5.24.0/api/#table-service),
 with the same metres/seconds units as `Moose_travel()`. Distances follow OSRM's
 fastest routes, rather than guaranteed minimum-length road paths; time estimates
 do not include live traffic. The default public server requires network access
@@ -166,6 +166,34 @@ server. For larger datasets or local routing, supply your own server, for exampl
 `server = "http://127.0.0.1:5001"`. The server must support Table distance and
 duration annotations. See `?Moose_nearest_hospitals` for batching, credentials,
 custom hospital lists and overwrite options.
+
+#### Google Routes from any computer
+
+`engine = "google"` routes through the password-protected MooseR Google proxy
+(`https://google-routes.mooseweb3.com`). The Google API key stays on the proxy
+server, so the computer running R needs only the proxy username and password.
+Keep them in that computer's private `~/.Renviron` (open it with
+`usethis::edit_r_environ()`), never in a script or in Git:
+
+```text
+MOOSER_GOOGLE_USER=your_username
+MOOSER_GOOGLE_PASSWORD=your_password
+```
+
+Restart R, then:
+
+```r
+result <- Moose_nearest_hospitals(my_data, longitude = "lon", latitude = "lat",
+                                  engine = "google")
+```
+
+Each Google route is a billable Compute Routes request (`TRAFFIC_UNAWARE`).
+Hospitals are routed in order of straight-line distance until no remaining
+hospital could be nearer by road than the current third-nearest, so a location
+usually needs a few requests plus the two fixed hospitals; `max_candidates`
+(default 15) caps this. A wrong username or password stops immediately.
+`server`, `profile` and `batch_size` apply only to OSRM. The computer hosting
+the proxy must be on, awake and online.
 
 ### Startup package loading
 

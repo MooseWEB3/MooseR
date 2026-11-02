@@ -361,3 +361,185 @@ formatted_unreachable <- fixed_run(one_fixed_unreachable,
 stopifnot(is.na(formatted_unreachable[[fixed_columns[1L]]]),
           is.character(formatted_unreachable[[fixed_columns[1L]]]),
           formatted_unreachable[[fixed_columns[3L]]] == "00:08:20")
+
+# Google engine: requests go only to the fixed MooseR proxy with Basic
+# authentication and no API key. Candidates are routed in straight-line order,
+# stopping once no unrouted hospital can beat the third-nearest road distance.
+google_env_names <- c("MOOSER_GOOGLE_USER", "MOOSER_GOOGLE_PASSWORD",
+                      "MOOSER_ROUTING_USER", "MOOSER_ROUTING_PASSWORD")
+old_google_env <- Sys.getenv(google_env_names, unset = NA_character_)
+Sys.unsetenv(google_env_names)
+Sys.setenv(MOOSER_GOOGLE_USER = "google-user", MOOSER_GOOGLE_PASSWORD = "google-password")
+
+google_hospitals <- data.frame(
+  hospital_name = paste0("G", 1:8),
+  longitude = c(-113.1, -113.2, -113.3, -113.4, -113.5, -113.6, -113.7, -113.8),
+  latitude = rep(53.5, 8)
+)
+google_origin <- data.frame(lon = c(-113, -113, NA), lat = c(53.5, 53.5, 53.5))
+straight_line <- function(lon, lat) MooseR:::moose_great_circle_meters(-113, 53.5, lon, lat)
+# Road distance is a per-hospital multiple of the straight line; G2 is a detour.
+google_factor <- c(1.2, 3, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)
+google_requests <- list()
+google_destination <- function(req) {
+  point <- req$body$data$destination$location$latLng
+  hit <- which(abs(google_hospitals$longitude - point$longitude) < 1e-9 &
+                 abs(google_hospitals$latitude - point$latitude) < 1e-9)
+  if (length(hit)) google_hospitals$hospital_name[hit] else "fixed"
+}
+google_mock <- function(req) {
+  google_requests[[length(google_requests) + 1L]] <<- req
+  body <- req$body$data
+  stopifnot(
+    identical(req$url, "https://google-routes.mooseweb3.com/directions/v2:computeRoutes"),
+    "Authorization" %in% names(req$headers),
+    !"X-Goog-Api-Key" %in% names(req$headers),
+    identical(req$options$followlocation, 0L),
+    identical(body$travelMode, "DRIVE"),
+    identical(body$routingPreference, "TRAFFIC_UNAWARE")
+  )
+  origin <- body$origin$location$latLng
+  point <- body$destination$location$latLng
+  hit <- match(google_destination(req), google_hospitals$hospital_name)
+  factor <- if (is.na(hit)) 1.3 else google_factor[hit]
+  distance <- round(MooseR:::moose_great_circle_meters(
+    origin$longitude, origin$latitude, point$longitude, point$latitude
+  ) * factor)
+  response_json(req, sprintf('{"routes":[{"distanceMeters":%.0f,"duration":"%.0fs"}]}',
+                             distance, round(distance / 20)))
+}
+google_run <- function(dataset = google_origin, hospitals = google_hospitals, ...) {
+  Moose_nearest_hospitals(dataset, longitude = "lon", latitude = "lat",
+                          hospitals = hospitals, engine = "google",
+                          delay = 0, progress = FALSE, ...)
+}
+# Expected nearest three if every candidate were routed.
+brute_force <- function() {
+  distance <- round(straight_line(google_hospitals$longitude, google_hospitals$latitude) *
+                      google_factor)
+  ranked <- order(distance, round(distance / 20), seq_along(distance))[1:3]
+  list(names = google_hospitals$hospital_name[ranked], distances = distance[ranked])
+}
+fixed_expected <- round(straight_line(fixed_hospitals$longitude, fixed_hospitals$latitude) * 1.3)
+
+google_result <- httr2::with_mocked_responses(google_mock, google_run(on_error = "stop"))
+expected <- brute_force()
+stopifnot(
+  identical(vapply(google_requests, google_destination, character(1)),
+            c("G1", "G2", "G3", "G4", "fixed", "fixed")),
+  identical(expected$names, c("G1", "G3", "G4")),
+  identical(names(google_result), c(names(google_origin), columns)),
+  identical(unname(unlist(google_result[1, nearest_columns[c(1, 4, 7)]])), expected$names),
+  isTRUE(all.equal(unname(unlist(google_result[1, nearest_columns[c(3, 6, 9)]])),
+                   expected$distances)),
+  isTRUE(all.equal(unname(unlist(google_result[1, nearest_columns[c(2, 5, 8)]])),
+                   round(expected$distances / 20))),
+  isTRUE(all.equal(unname(unlist(google_result[1, fixed_columns[c(2, 4)]])), fixed_expected)),
+  identical(unname(unlist(google_result[1, columns])), unname(unlist(google_result[2, columns]))),
+  all(is.na(google_result[3, columns]))
+)
+
+# The early stop always matches routing every candidate.
+set.seed(20261102)
+for (trial in 1:25) {
+  google_factor <- stats::runif(8, 1, 2.5)
+  trial_result <- httr2::with_mocked_responses(google_mock,
+    google_run(google_origin[1, ], on_error = "stop"))
+  stopifnot(identical(unname(unlist(trial_result[nearest_columns[c(1, 4, 7)]])),
+                      brute_force()$names))
+}
+
+# Reaching max_candidates warns and ranks only the routed candidates.
+google_factor <- c(5, 5, 5, 1.1, 1.1, 1.1, 1.1, 1.1)
+cap_warning <- character()
+capped_result <- withCallingHandlers(
+  httr2::with_mocked_responses(google_mock,
+    google_run(google_origin[1, ], max_candidates = 3L, on_error = "stop")),
+  warning = function(w) {
+    cap_warning <<- c(cap_warning, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  }
+)
+stopifnot(length(cap_warning) == 1L,
+          grepl("max_candidates = 3", cap_warning, fixed = TRUE),
+          identical(unname(unlist(capped_result[nearest_columns[c(1, 4, 7)]])),
+                    c("G1", "G2", "G3")))
+
+# An empty Google response means no route; a zero distance may be omitted.
+google_factor <- rep(1.1, 8)
+g1_responds <- function(body, status = 200) {
+  function(req) {
+    if (google_destination(req) == "G1") return(response_json(req, body, status))
+    google_mock(req)
+  }
+}
+no_route <- httr2::with_mocked_responses(g1_responds("{}"),
+  google_run(google_origin[1, ], on_error = "stop"))
+stopifnot(identical(unname(unlist(no_route[nearest_columns[c(1, 4, 7)]])),
+                    c("G2", "G3", "G4")))
+zero <- httr2::with_mocked_responses(g1_responds('{"routes":[{"duration":"0s"}]}'),
+  google_run(google_origin[1, ], on_error = "stop"))
+stopifnot(zero$nearest_hospital_1 == "G1",
+          zero$nearest_hospital_1_travel_distance_meters == 0,
+          zero$nearest_hospital_1_travel_time_seconds == 0)
+
+# A failed candidate leaves the ranking NA but keeps fixed results; a rejected
+# password stops at once, whatever `on_error` says.
+google_requests <- list()
+failed_google <- httr2::with_mocked_responses(
+  g1_responds('{"error":"unavailable"}', 500),
+  google_run(google_origin[1, ], on_error = "na")
+)
+stopifnot(all(is.na(failed_google[nearest_columns])),
+          isTRUE(all.equal(unname(unlist(failed_google[fixed_columns[c(2, 4)]])),
+                           fixed_expected)),
+          identical(vapply(google_requests, google_destination, character(1)),
+                    c("fixed", "fixed")))
+must_error(httr2::with_mocked_responses(g1_responds('{"error":"unavailable"}', 500),
+  google_run(google_origin[1, ], on_error = "stop")), "Input row 1")
+unauthorized <- function(req) response_json(req, '{"error":"unauthorized"}', 401)
+must_error(httr2::with_mocked_responses(unauthorized,
+  google_run(google_origin[1, ], on_error = "na")), "rejected the username or password")
+
+# Fixed hospitals among the candidates reuse their routes.
+google_requests <- list()
+fixed_candidates <- rbind(google_hospitals[1, ], fixed_hospitals[names(google_hospitals)])
+overlap_google <- httr2::with_mocked_responses(google_mock,
+  google_run(google_origin[1, ], hospitals = fixed_candidates, on_error = "stop"))
+stopifnot(length(google_requests) == 3L,
+          identical(unname(unlist(overlap_google[nearest_columns[c(1, 4, 7)]])),
+                    c("G1", "University of Alberta Hospital", "Foothills Medical Centre")),
+          overlap_google[[fixed_columns[4]]] == overlap_google$nearest_hospital_2_travel_distance_meters,
+          overlap_google[[fixed_columns[2]]] == overlap_google$nearest_hospital_3_travel_distance_meters)
+
+# OSRM-only and Google-only arguments are not mixed, and nothing is requested.
+must_error(google_run(google_origin[1, ], server = "http://127.0.0.1:5001"), "cannot be used with")
+must_error(google_run(google_origin[1, ], batch_size = 10L), "`batch_size` cannot be used")
+must_error(Moose_nearest_hospitals(one_location, max_candidates = 5L), "only used with")
+must_error(google_run(google_origin[1, ], max_candidates = 2L), "max_candidates")
+must_error(google_run(google_origin[1, ], max_candidates = 4.5), "integer of at least 3")
+must_error(google_run(google_origin[1, ], username = "google-user"), "supplied together")
+
+# Credentials come from MOOSER_GOOGLE_*, then MOOSER_ROUTING_*, and are never printed.
+Sys.unsetenv(google_env_names)
+must_error(google_run(google_origin[1, ]), "MOOSER_GOOGLE_USER")
+Sys.setenv(MOOSER_ROUTING_USER = "routing-user", MOOSER_ROUTING_PASSWORD = "routing-password")
+stopifnot(identical(MooseR:::moose_google_proxy_credentials(),
+                    list(username = "routing-user", password = "routing-password")))
+google_requests <- list()
+fallback <- httr2::with_mocked_responses(google_mock,
+  google_run(google_origin[1, ], on_error = "stop"))
+fallback_printed <- paste(capture.output(print(google_requests[[1L]])),
+                          capture.output(str(google_requests[[1L]])), collapse = "\n")
+fallback_token <- jsonlite::base64_enc(charToRaw("routing-user:routing-password"))
+stopifnot(fallback$nearest_hospital_1 == "G1",
+          !grepl("routing-password", fallback_printed, fixed = TRUE),
+          !grepl(fallback_token, fallback_printed, fixed = TRUE))
+
+for (name in google_env_names) {
+  if (is.na(old_google_env[[name]])) {
+    Sys.unsetenv(name)
+  } else {
+    do.call(Sys.setenv, stats::setNames(list(old_google_env[[name]]), name))
+  }
+}
