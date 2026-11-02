@@ -1,6 +1,6 @@
 Package: MooseR
 Title: Data Cleaning and Summary Utility Functions
-Version: 0.0.0.9042
+Version: 0.0.0.9043
 Authors@R: c(
     person("MooseWeb3", email = "develop@mooseweb3.com", role = c("aut", "cre")),
     person("MissV", role = "ctb")
@@ -13,6 +13,7 @@ Description: A collection of utility functions for common data wrangling tasks,
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Depends:
     R (>= 4.1.0)
 Imports:

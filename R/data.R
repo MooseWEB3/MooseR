@@ -135,3 +135,45 @@
 #' subset(alberta_hospitals, emergency_24h == 1L)
 #'
 "alberta_hospitals"
+
+#' Precomputed driving times and distances to Foothills Medical Centre
+#'
+#' Offline lookup grids used by [Moose_travel2FMC()]. Each grid point holds the
+#' OSRM car route time and road distance from that point to Foothills Medical
+#' Centre in Calgary, computed on an OpenStreetMap road graph for Alberta,
+#' without traffic. Only regularly spaced grid points were routed; no
+#' person-level data was used.
+#'
+#' @format A list with five elements:
+#' \describe{
+#'   \item{destination}{Data frame with the hospital name and the longitude and
+#'     latitude routed to, taken from [alberta_hospitals].}
+#'   \item{grids}{Named list of grids, finest first. `calgary` spans longitude
+#'     -114.75 to -113.35 and latitude 50.55 to 51.45 every 0.004 by 0.0025
+#'     degrees (about 280 m). `alberta` spans longitude -120 to -110 and
+#'     latitude 49 to 60 every 0.015 by 0.01 degrees (about 1 km). Each grid
+#'     is a list with its first point `lon0` and `lat0`, spacing `dlon` and
+#'     `dlat`, size `nlon` and `nlat`, and integer matrices `time_s` (route
+#'     seconds) and `distance_m` (route metres) with one row per longitude and
+#'     one column per latitude. Points with no road within `max_snap_meters`
+#'     are `NA`.}
+#'   \item{max_snap_meters}{Largest distance, in metres, from a grid point to
+#'     the road position it was routed from.}
+#'   \item{routing}{List describing the routing engine, version, profile, road
+#'     graph, traffic assumption and build date.}
+#'   \item{validation}{Data frame comparing interpolated estimates with exact
+#'     routes for random locations within 500 m of a road, by region: the
+#'     number of locations and the median, 90th and 95th percentile absolute
+#'     errors in minutes and kilometres.}
+#' }
+#'
+#' @source Routes computed with OSRM (\url{https://project-osrm.org}) on
+#'   OpenStreetMap data, (c) OpenStreetMap contributors, available under the
+#'   Open Database License (\url{https://www.openstreetmap.org/copyright}).
+#'   Rebuild with `data-raw/create-fmc-travel-grid.R`.
+#'
+#' @examples
+#' fmc_travel_grid$validation
+#' fmc_travel_grid$routing
+#'
+"fmc_travel_grid"

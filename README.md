@@ -195,6 +195,28 @@ usually needs a few requests plus the two fixed hospitals; `max_candidates`
 `server`, `profile` and `batch_size` apply only to OSRM. The computer hosting
 the proxy must be on, awake and online.
 
+### Offline driving time to Foothills Medical Centre
+
+`Moose_travel2FMC()` adds the estimated driving time (minutes) and road distance
+(kilometres) to **Foothills Medical Centre** without any network access, so
+coordinates never leave the computer. It reads the bundled `fmc_travel_grid`:
+OSRM car routes to the hospital precomputed for grid points about every 280 m
+in the Calgary region and about every 1 km elsewhere in Alberta. Each location
+is interpolated from its four surrounding grid points.
+
+```r
+events <- Moose_travel2FMC(events,
+                           longitude = "Event_Longitude",
+                           latitude = "Event_Latitude")
+# Adds fmc_travel_time_minutes and fmc_travel_distance_km
+```
+
+Times are free-flow estimates without traffic. Locations outside the grids, or
+with no road within 5 km, return `NA`. `fmc_travel_grid$validation` reports the
+measured error against exact routes. Maintainers rebuild the grid on a computer
+running the local Alberta OSRM server with
+`source("data-raw/create-fmc-travel-grid.R")`.
+
 ### Startup package loading
 
 Load the default MooseR workflow package set in the current R session:
@@ -242,6 +264,7 @@ existing scripts do not break.
 | `Moose_get_duplicates()` | `BD_get_duplicates()` | Find duplicated rows by one or more key columns. |
 | `Moose_google_travel()` | - | In development: add Google Routes API travel distance and travel time; current traffic is disabled by default. |
 | `Moose_nearest_hospitals()` | - | Add the three nearest hospitals with route time and distance, plus fixed routes to Foothills Medical Centre and University of Alberta Hospital (13 columns). |
+| `Moose_travel2FMC()` | - | Add offline estimated driving time (minutes) and distance (km) to Foothills Medical Centre from a bundled precomputed grid. |
 | `Moose_check_unique()` | `BD_check_unique()` | Check whether a column contains unique values. |
 | `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Count unique categories in a variable. |
 | `Moose_cross_table()` | - | Build a two-variable cross table with counts and percentages. |
