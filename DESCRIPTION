@@ -1,6 +1,6 @@
 Package: MooseR
 Title: Data Cleaning and Summary Utility Functions
-Version: 0.0.0.9044
+Version: 0.0.0.9046
 Authors@R: c(
     person("MooseWeb3", email = "develop@mooseweb3.com", role = c("aut", "cre")),
     person("MissV", role = "ctb")
@@ -20,8 +20,10 @@ Imports:
     httr2 (>= 1.1.1),
     jsonlite
 Suggests:
+    osrm (>= 4.0.0),
     readxl,
-    reticulate (>= 1.41)
+    reticulate (>= 1.41),
+    sf (>= 1.0-0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 URL: https://github.com/MooseWEB3/MooseR

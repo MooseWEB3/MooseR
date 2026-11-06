@@ -169,13 +169,26 @@ custom hospital lists and overwrite options.
 
 #### Google Routes from any computer
 
-`engine = "google"` routes through the password-protected MooseR Google proxy
-(`https://google-routes.mooseweb3.com`). The Google API key stays on the proxy
-server, so the computer running R needs only the proxy username and password.
-Keep them in that computer's private `~/.Renviron` (open it with
-`usethis::edit_r_environ()`), never in a script or in Git:
+`engine = "google"` uses the Google Routes API in one of two ways
+(`google_backend`):
+
+- **Directly with your own API key** (`google_backend = "google"`): requests go
+  straight to Google (`https://routes.googleapis.com`), so they work on work
+  networks that block the MooseR proxy, and no MooseR computer needs to be on.
+- **Through the MooseR proxy** (`google_backend = "mooser_proxy"`): requests go
+  to the password-protected proxy (`https://google-routes.mooseweb3.com`), which
+  keeps the API key; the computer running R needs only the proxy username and
+  password, but the computer hosting the proxy must be on, awake and online.
+
+The default, `google_backend = "auto"`, uses your API key when one is set and
+the proxy otherwise. Keep either in that computer's private `~/.Renviron` (open
+it with `usethis::edit_r_environ()`), never in a script or in Git:
 
 ```text
+# Direct to Google:
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+# Or through the MooseR proxy:
 MOOSER_GOOGLE_USER=your_username
 MOOSER_GOOGLE_PASSWORD=your_password
 ```
@@ -187,13 +200,68 @@ result <- Moose_nearest_hospitals(my_data, longitude = "lon", latitude = "lat",
                                   engine = "google")
 ```
 
+For a direct key, enable the Routes API and billing for its Google Cloud
+project, and in the Google Cloud console restrict the key to the Routes API and
+to your office's IP addresses, and set a daily quota. Requests are billed to
+that project.
+
 Each Google route is a billable Compute Routes request (`TRAFFIC_UNAWARE`).
 Hospitals are routed in order of straight-line distance until no remaining
 hospital could be nearer by road than the current third-nearest, so a location
 usually needs a few requests plus the two fixed hospitals; `max_candidates`
-(default 15) caps this. A wrong username or password stops immediately.
-`server`, `profile` and `batch_size` apply only to OSRM. The computer hosting
-the proxy must be on, awake and online.
+(default 15) caps this. A rejected API key, username or password stops
+immediately. `server`, `profile` and `batch_size` apply only to OSRM.
+
+### The same result with sf and osrm: `Moose_nearest_hospitals_2()`
+
+`Moose_nearest_hospitals_2()` adds the same **13 columns** with the same ranking
+rules, but is built only on the [`sf`](https://cran.r-project.org/package=sf)
+and [`osrm`](https://cran.r-project.org/package=osrm) packages: locations and
+hospitals become `sf` points, and routes come from `osrm::osrmTable()` on the
+server the `osrm` package uses by default (the public
+[routing.openstreetmap.de](https://routing.openstreetmap.de/about.html) server,
+`"car"` profile). No MooseR or private server is involved.
+`Moose_nearest_hospitals()` is unchanged. Install the two packages once; both
+install on R 4.3.0 (current `sf` needs R 4.1.0 or later, `osrm` R 3.5.0 or later):
+
+```r
+install.packages(c("sf", "osrm"))
+```
+
+```r
+result <- Moose_nearest_hospitals_2(locations)
+result <- Moose_nearest_hospitals_2(my_data, longitude = "lon", latitude = "lat",
+                                    travel_time_format = TRUE)
+
+# sf points in any coordinate reference system; the result stays an sf object:
+points <- sf::st_as_sf(locations, coords = c("longitude", "latitude"), crs = 4326)
+result_sf <- Moose_nearest_hospitals_2(sf::st_transform(points, 3400))
+```
+
+Differences from `Moose_nearest_hospitals()`:
+
+- One request routes up to 89 locations against all 112 hospitals (at most
+  `max_table_size` locations and `max_table_size^2` location-hospital pairs;
+  default 100), so even large data sets need few requests. A failed request
+  affects every location in it.
+- The default server differs from `Moose_nearest_hospitals()`
+  (`router.project-osrm.org`), so default results can differ by more than
+  rounding.
+- The public server allows one request per second and no heavy use, so
+  requests are at least 1 second apart by default (`delay = 1`), also across
+  calls. Coordinates are sent to that server. Routes use OpenStreetMap data,
+  © OpenStreetMap contributors (ODbL).
+- `osrm` reports minutes to one decimal place, so travel times are multiples of
+  6 seconds, and distances are whole metres. Values can differ slightly from
+  `Moose_nearest_hospitals()`, and hospitals less than a metre apart in route
+  distance can swap ranks.
+- `dataset` and `hospitals` can be `sf` POINT objects.
+- OSRM through `osrm` only: there is no `engine = "google"`, `max_candidates`,
+  `timeout`, `username` or `password`; `osrm.server` and `osrm.profile`
+  (defaulting to the `osrm` package's options) replace `server` and `profile`,
+  and `max_table_size` replaces `batch_size`.
+
+See `?Moose_nearest_hospitals_2` for details.
 
 ### Offline driving time to Foothills Medical Centre
 
@@ -273,6 +341,7 @@ existing scripts do not break.
 | `Moose_get_duplicates()` | `BD_get_duplicates()` | Find duplicated rows by one or more key columns. |
 | `Moose_google_travel()` | - | In development: add Google Routes API travel distance and travel time; current traffic is disabled by default. |
 | `Moose_nearest_hospitals()` | - | Add the three nearest hospitals with route time and distance, plus fixed routes to Foothills Medical Centre and University of Alberta Hospital (13 columns). |
+| `Moose_nearest_hospitals_2()` | - | Same 13 columns as `Moose_nearest_hospitals()`, built only on the `sf` and `osrm` packages and the `osrm` default server; also accepts `sf` points. |
 | `Moose_travel2FMC()` | - | Add offline estimated driving time (minutes) and distance (km) to Foothills Medical Centre from a bundled precomputed grid. |
 | `Moose_check_unique()` | `BD_check_unique()` | Check whether a column contains unique values. |
 | `Moose_count_unique_categories()` | `BD_count_unique_categories()` | Count unique categories in a variable. |

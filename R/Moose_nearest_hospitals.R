@@ -18,12 +18,26 @@
 #' and duration annotations. Every eligible hospital is considered; there is no
 #' straight-line prefilter.
 #'
-#' `engine = "google"` uses the Google Routes API through the fixed,
-#' password-protected MooseR proxy (`https://google-routes.mooseweb3.com`). The
-#' Google API key stays on the proxy server and is never needed or sent by the
-#' client; the proxy username and password are sent over HTTPS with Basic
-#' Authentication, and a rejected username or password always stops the call.
-#' Each route is one billable Compute Routes request (`TRAFFIC_UNAWARE`). To
+#' `engine = "google"` uses the Google Routes API, reached in one of two ways
+#' chosen by `google_backend`:
+#' * `"google"` calls Google's official endpoint
+#'   (`https://routes.googleapis.com`) directly with your own Google Maps
+#'   Platform API key, which is sent only to Google, in the `X-Goog-Api-Key`
+#'   header. Use it where the MooseR proxy is blocked, for example on work
+#'   networks. In the Google Cloud console, restrict the key to the Routes API
+#'   and to your network's IP addresses, and set a daily quota.
+#' * `"mooser_proxy"` calls the fixed, password-protected MooseR proxy
+#'   (`https://google-routes.mooseweb3.com`). The Google API key stays on the
+#'   proxy server and is never needed or sent by the client; the proxy username
+#'   and password are sent over HTTPS with Basic Authentication. The computer
+#'   hosting the proxy must be on and online.
+#' * `"auto"`, the default, uses `"google"` when an API key is available
+#'   (`api_key`, or the `GOOGLE_MAPS_API_KEY` environment variable) and no
+#'   `username` or `password` is supplied; otherwise it uses the proxy.
+#'
+#' A rejected API key, username or password always stops the call, whatever
+#' `on_error` says. Each route is one billable Compute Routes request
+#' (`TRAFFIC_UNAWARE`), billed to the key's Google Cloud project. To
 #' limit requests, candidates are routed in order of straight-line distance,
 #' stopping once no unrouted hospital could be nearer by road than the current
 #' third-nearest route. A road route is never shorter than the straight-line
@@ -31,8 +45,7 @@
 #' allows for with a 1 km margin. A location usually needs a few candidate
 #' requests plus the two fixed hospitals. `max_candidates` caps the candidates
 #' routed per location; locations that reach the cap get a warning, because
-#' their ranking compares only those candidates. The computer hosting the proxy
-#' must be on and online.
+#' their ranking compares only those candidates.
 #' Repeated input coordinates are queried once per call. Fixed hospital routes
 #' reuse candidate routes when their coordinates match. A failed candidate
 #' request leaves all nine nearest-hospital results for that origin as `NA`,
@@ -69,10 +82,11 @@
 #' @param username,password HTTP Basic Authentication credentials. Supply both
 #'   or neither. HTTPS is required with credentials; URL userinfo is rejected.
 #'   Credentials are redacted from printed request objects. Optional for OSRM.
-#'   Required for `engine = "google"`: when omitted, they are read from
+#'   Required for the MooseR Google proxy: when omitted, they are read from
 #'   `MOOSER_GOOGLE_USER` and `MOOSER_GOOGLE_PASSWORD`, or else from
-#'   `MOOSER_ROUTING_USER` and `MOOSER_ROUTING_PASSWORD`. Keep them in a private
-#'   `.Renviron` file, not in scripts or Git.
+#'   `MOOSER_ROUTING_USER` and `MOOSER_ROUTING_PASSWORD`. Not used with
+#'   `google_backend = "google"`. Keep them in a private `.Renviron` file, not
+#'   in scripts or Git.
 #' @param batch_size Maximum destinations per request, an integer from 1 to 99.
 #'   One origin is added, keeping each request within 100 coordinates. Reduce
 #'   this value if your server has a lower limit. OSRM only.
@@ -95,6 +109,14 @@
 #' @param engine Routing engine: `"osrm"` (the default) or `"google"`.
 #' @param max_candidates Google only. Maximum number of candidate hospitals
 #'   routed per location, an integer of at least 3.
+#' @param google_backend Google only. `"auto"` (the default), `"google"` to
+#'   call Google directly with an API key, or `"mooser_proxy"` to use the
+#'   MooseR proxy. See Details.
+#' @param api_key Google only. A Google Maps Platform API key with the Routes
+#'   API enabled, used when `google_backend` is `"google"` or `"auto"`. `NULL`
+#'   reads the `GOOGLE_MAPS_API_KEY` environment variable. Keep the key in a
+#'   private `.Renviron` file, not in scripts or Git; it is redacted from
+#'   printed request objects.
 #'
 #' @return The input data frame with 13 output columns. By default, the first nine are, for each
 #'   `i` in 1, 2, 3, `nearest_hospital_i` (character),
@@ -122,10 +144,15 @@
 #' result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat",
 #'                                   server = "http://127.0.0.1:5001")
 #'
+#' # Google Routes directly with your own API key, for networks that block the
+#' # MooseR proxy. Set GOOGLE_MAPS_API_KEY in ~/.Renviron.
+#' result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat",
+#'                                   engine = "google", google_backend = "google")
+#'
 #' # Google Routes through the password-protected MooseR proxy, from any
 #' # computer. Set MOOSER_GOOGLE_USER and MOOSER_GOOGLE_PASSWORD in ~/.Renviron.
 #' result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat",
-#'                                   engine = "google")
+#'                                   engine = "google", google_backend = "mooser_proxy")
 #' }
 #' @export
 Moose_nearest_hospitals <- function(dataset,
@@ -145,7 +172,9 @@ Moose_nearest_hospitals <- function(dataset,
                                     progress = interactive(),
                                     travel_time_format = FALSE,
                                     engine = c("osrm", "google"),
-                                    max_candidates = 15L) {
+                                    max_candidates = 15L,
+                                    google_backend = c("auto", "google", "mooser_proxy"),
+                                    api_key = NULL) {
   validate_text <- function(x, argument) {
     if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
       stop("`", argument, "` must be one non-empty character value.", call. = FALSE)
@@ -196,11 +225,16 @@ Moose_nearest_hospitals <- function(dataset,
   if (engine == "google" && any(osrm_arguments)) {
     stop("`", paste(names(osrm_arguments)[osrm_arguments], collapse = "`, `"),
          "` cannot be used with `engine = \"google\"`; Google requests go only ",
-         "to the MooseR proxy.", call. = FALSE)
+         "to Google's Routes API or the MooseR proxy.", call. = FALSE)
   }
   if (engine == "osrm" && !missing(max_candidates)) {
     stop("`max_candidates` is only used with `engine = \"google\"`.", call. = FALSE)
   }
+  if (engine == "osrm" && (!missing(google_backend) || !is.null(api_key))) {
+    stop("`google_backend` and `api_key` are only used with `engine = \"google\"`.",
+         call. = FALSE)
+  }
+  google_backend <- match.arg(google_backend)
   validate_number(batch_size, "batch_size", 1)
   if (batch_size > 99 || batch_size != floor(batch_size)) {
     stop("`batch_size` must be an integer from 1 to 99.", call. = FALSE)
@@ -218,10 +252,36 @@ Moose_nearest_hospitals <- function(dataset,
     password <- validate_text(password, "password")
   }
   if (engine == "google") {
-    if (!all(credentials)) {
-      proxy_credentials <- moose_google_proxy_credentials()
-      username <- proxy_credentials$username
-      password <- proxy_credentials$password
+    key_supplied <- !is.null(api_key)
+    if (key_supplied) {
+      api_key <- trimws(validate_text(api_key, "api_key"))
+    } else if (nzchar(trimws(Sys.getenv("GOOGLE_MAPS_API_KEY")))) {
+      api_key <- trimws(Sys.getenv("GOOGLE_MAPS_API_KEY"))
+    }
+    if (google_backend == "auto") {
+      google_backend <- if (!is.null(api_key) && !any(credentials)) "google" else "mooser_proxy"
+    }
+    if (google_backend == "google") {
+      if (any(credentials)) {
+        stop("`username` and `password` are only used with the MooseR proxy, not with ",
+             "`google_backend = \"google\"`.", call. = FALSE)
+      }
+      if (is.null(api_key)) {
+        stop("`google_backend = \"google\"` needs a Google Maps Platform API key. Supply ",
+             "`api_key`, or set GOOGLE_MAPS_API_KEY in a private ~/.Renviron file.",
+             call. = FALSE)
+      }
+    } else {
+      if (key_supplied) {
+        stop("`api_key` is only used with `google_backend = \"google\"`; the MooseR proxy ",
+             "keeps its own key.", call. = FALSE)
+      }
+      api_key <- NULL
+      if (!all(credentials)) {
+        proxy_credentials <- moose_google_proxy_credentials()
+        username <- proxy_credentials$username
+        password <- proxy_credentials$password
+      }
     }
   } else {
     profile <- trimws(validate_text(profile, "profile"))
@@ -369,17 +429,23 @@ Moose_nearest_hospitals <- function(dataset,
       if (request_count > 0L && delay > 0) Sys.sleep(delay)
       request_count <<- request_count + 1L
       route <- tryCatch(
-        moose_google_proxy_route(
+        moose_google_route_pair(
           origin_lon[origin], origin_lat[origin],
           destination_lon[destination], destination_lat[destination],
-          username, password, timeout
+          google_backend, username, password, api_key, timeout
         ), error = identity
       )
       if (inherits(route, "error")) {
-        # Wrong credentials fail every request; stop instead of retrying them.
-        if (inherits(route, "httr2_http_401")) {
+        # Wrong credentials or keys fail every request; stop instead of retrying.
+        if (google_backend == "mooser_proxy" && inherits(route, "httr2_http_401")) {
           stop("The MooseR Google proxy rejected the username or password. ",
                "Check MOOSER_GOOGLE_USER and MOOSER_GOOGLE_PASSWORD.", call. = FALSE)
+        }
+        key_problem <- if (google_backend == "google") moose_google_key_problem(route)
+        if (!is.null(key_problem)) {
+          stop("Google rejected the API key: ", key_problem, " Check GOOGLE_MAPS_API_KEY, ",
+               "that the Routes API and billing are enabled for its project, and the key's ",
+               "API and IP restrictions.", call. = FALSE)
         }
         issue <- conditionMessage(route)
         if (on_error == "stop") stop("Input row ", origin, ": ", issue, call. = FALSE)
@@ -540,17 +606,49 @@ moose_great_circle_meters <- function(lon1, lat1, lon2, lat2) {
   2 * 6371008.8 * asin(pmin(1, sqrt(a)))
 }
 
-# Route one origin-destination pair through the fixed MooseR Google proxy. An
-# empty response means Google found no route. Google omits zero-valued fields,
-# so a route without `distanceMeters` or `duration` has a zero value.
-moose_google_proxy_route <- function(start_lon, start_lat, end_lon, end_lat,
-                                     username, password, request_timeout) {
+# Google's explanation when it refuses an API key: HTTP 400 with an API key
+# reason, or 401/403 (for example a disabled API, billing or key
+# restrictions). NULL for other failures. Google's messages do not include the
+# key itself.
+moose_google_key_problem <- function(error) {
+  if (!inherits(error, c("httr2_http_400", "httr2_http_401", "httr2_http_403"))) {
+    return(NULL)
+  }
+  payload <- tryCatch(
+    httr2::resp_body_json(error$resp, check_type = FALSE, simplifyVector = FALSE),
+    error = function(e) NULL
+  )
+  details <- if (is.list(payload) && is.list(payload$error)) payload$error else list()
+  explanation <- if (is.character(details$message)) details$message[1L] else ""
+  reasons <- unlist(lapply(details$details, function(item) {
+    if (is.list(item) && is.character(item$reason)) item$reason
+  }), use.names = FALSE)
+  text <- paste(c(explanation, if (is.character(details$status)) details$status, reasons),
+                collapse = " ")
+  if (inherits(error, "httr2_http_400") && !grepl("API_KEY|API key", text)) {
+    return(NULL)
+  }
+  if (!nzchar(explanation)) {
+    status <- tryCatch(httr2::resp_status(error$resp), error = function(e) NA)
+    explanation <- paste0("HTTP ", status, ".")
+  }
+  explanation
+}
+
+# Route one origin-destination pair with the Google Routes API, directly
+# (`backend = "google"`, with an API key) or through the fixed MooseR proxy
+# (`backend = "mooser_proxy"`). An empty response means Google found no route.
+# Google omits zero-valued fields, so a route without `distanceMeters` or
+# `duration` has a zero value.
+moose_google_route_pair <- function(start_lon, start_lat, end_lon, end_lat, backend,
+                                    username, password, api_key, request_timeout) {
   request <- moose_google_request(
     start_lon = start_lon, start_lat = start_lat,
     end_lon = end_lon, end_lat = end_lat,
-    profile = "DRIVE", server = .mooser_google_proxy_server,
-    username = username, password = password, backend = "mooser_proxy",
-    api_key = NULL, routing_preference = "TRAFFIC_UNAWARE",
+    profile = "DRIVE",
+    server = if (backend == "google") .mooser_google_server else .mooser_google_proxy_server,
+    username = username, password = password, backend = backend,
+    api_key = api_key, routing_preference = "TRAFFIC_UNAWARE",
     request_timeout = request_timeout
   )
   payload <- httr2::resp_body_json(httr2::req_perform(request), simplifyVector = TRUE)

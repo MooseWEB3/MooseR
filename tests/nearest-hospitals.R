@@ -365,8 +365,11 @@ stopifnot(is.na(formatted_unreachable[[fixed_columns[1L]]]),
 # Google engine: requests go only to the fixed MooseR proxy with Basic
 # authentication and no API key. Candidates are routed in straight-line order,
 # stopping once no unrouted hospital can beat the third-nearest road distance.
+# A real GOOGLE_MAPS_API_KEY would switch "auto" to direct Google, so the
+# proxy tests run without one.
 google_env_names <- c("MOOSER_GOOGLE_USER", "MOOSER_GOOGLE_PASSWORD",
-                      "MOOSER_ROUTING_USER", "MOOSER_ROUTING_PASSWORD")
+                      "MOOSER_ROUTING_USER", "MOOSER_ROUTING_PASSWORD",
+                      "GOOGLE_MAPS_API_KEY")
 old_google_env <- Sys.getenv(google_env_names, unset = NA_character_)
 Sys.unsetenv(google_env_names)
 Sys.setenv(MOOSER_GOOGLE_USER = "google-user", MOOSER_GOOGLE_PASSWORD = "google-password")
@@ -387,13 +390,21 @@ google_destination <- function(req) {
                  abs(google_hospitals$latitude - point$latitude) < 1e-9)
   if (length(hit)) google_hospitals$hospital_name[hit] else "fixed"
 }
+# "proxy": the MooseR proxy with Basic Authentication and no API key.
+# "google": Google's own endpoint with the API key and no Basic Authentication.
+google_expect <- "proxy"
 google_mock <- function(req) {
   google_requests[[length(google_requests) + 1L]] <<- req
   body <- req$body$data
+  direct <- identical(google_expect, "google")
   stopifnot(
-    identical(req$url, "https://google-routes.mooseweb3.com/directions/v2:computeRoutes"),
-    "Authorization" %in% names(req$headers),
-    !"X-Goog-Api-Key" %in% names(req$headers),
+    identical(req$url, if (direct) {
+      "https://routes.googleapis.com/directions/v2:computeRoutes"
+    } else {
+      "https://google-routes.mooseweb3.com/directions/v2:computeRoutes"
+    }),
+    xor(direct, "Authorization" %in% names(req$headers)),
+    !xor(direct, "X-Goog-Api-Key" %in% names(req$headers)),
     identical(req$options$followlocation, 0L),
     identical(body$travelMode, "DRIVE"),
     identical(body$routingPreference, "TRAFFIC_UNAWARE")
@@ -535,6 +546,85 @@ fallback_token <- jsonlite::base64_enc(charToRaw("routing-user:routing-password"
 stopifnot(fallback$nearest_hospital_1 == "G1",
           !grepl("routing-password", fallback_printed, fixed = TRUE),
           !grepl(fallback_token, fallback_printed, fixed = TRUE))
+
+# Direct Google: with GOOGLE_MAPS_API_KEY set, "auto" calls Google's own
+# endpoint with the key and no proxy credentials, and gives the same results.
+Sys.unsetenv(google_env_names)
+Sys.setenv(GOOGLE_MAPS_API_KEY = " test-google-key ")
+google_expect <- "google"
+google_factor <- c(1.2, 3, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)
+google_requests <- list()
+direct_google <- httr2::with_mocked_responses(google_mock, google_run(on_error = "stop"))
+unwrap <- get("wref_value", envir = asNamespace("httr2"), inherits = TRUE)
+direct_printed <- paste(capture.output(print(google_requests[[1L]])),
+                        capture.output(str(google_requests[[1L]])), collapse = "\n")
+stopifnot(
+  identical(direct_google[columns], google_result[columns]),
+  identical(vapply(google_requests, google_destination, character(1)),
+            c("G1", "G2", "G3", "G4", "fixed", "fixed")),
+  identical(unwrap(google_requests[[1L]]$headers[["X-Goog-Api-Key"]]), "test-google-key"),
+  !grepl("test-google-key", direct_printed, fixed = TRUE)
+)
+# An explicit key and an explicit backend work the same way.
+Sys.unsetenv("GOOGLE_MAPS_API_KEY")
+google_requests <- list()
+explicit_key <- httr2::with_mocked_responses(google_mock,
+  google_run(google_origin[1, ], google_backend = "google", api_key = "test-google-key",
+             on_error = "stop"))
+stopifnot(identical(explicit_key[columns], google_result[1, columns]),
+          identical(unwrap(google_requests[[1L]]$headers[["X-Goog-Api-Key"]]), "test-google-key"))
+# A key wins over proxy settings in the environment, but explicit proxy
+# credentials or google_backend = "mooser_proxy" use the proxy.
+Sys.setenv(GOOGLE_MAPS_API_KEY = "test-google-key",
+           MOOSER_GOOGLE_USER = "google-user", MOOSER_GOOGLE_PASSWORD = "google-password")
+google_requests <- list()
+httr2::with_mocked_responses(google_mock, google_run(google_origin[1, ], on_error = "stop"))
+stopifnot(length(google_requests) > 0L)
+google_expect <- "proxy"
+google_requests <- list()
+httr2::with_mocked_responses(google_mock,
+  google_run(google_origin[1, ], username = "google-user", password = "google-password",
+             on_error = "stop"))
+httr2::with_mocked_responses(google_mock,
+  google_run(google_origin[1, ], google_backend = "mooser_proxy", on_error = "stop"))
+stopifnot(length(google_requests) > 0L)
+
+# Argument checks for the two Google backends; nothing is requested.
+google_expect <- "google"
+Sys.unsetenv(google_env_names)
+must_error(google_run(google_origin[1, ], google_backend = "google"),
+           "needs a Google Maps Platform API key")
+must_error(google_run(google_origin[1, ], google_backend = "google", api_key = "k",
+                      username = "u", password = "p"), "only used with the MooseR proxy")
+must_error(google_run(google_origin[1, ], google_backend = "mooser_proxy", api_key = "k"),
+           "only used with `google_backend = \"google\"`")
+must_error(google_run(google_origin[1, ], api_key = c("a", "b")), "`api_key`")
+must_error(Moose_nearest_hospitals(one_location, api_key = "k"), "only used with")
+must_error(Moose_nearest_hospitals(one_location, google_backend = "google"), "only used with")
+
+# A rejected key stops at once, whatever on_error says, with Google's reason.
+# Other Google errors are ordinary request failures.
+google_error <- function(status, body) function(req) response_json(req, body, status)
+bad_key <- paste0('{"error":{"code":400,"message":"API key not valid. Please pass a valid ',
+                  'API key.","status":"INVALID_ARGUMENT","details":[{"reason":"API_KEY_INVALID"}]}}')
+blocked <- paste0('{"error":{"code":403,"message":"Requests from this IP address are blocked.",',
+                  '"status":"PERMISSION_DENIED"}}')
+google_requests <- list()
+must_error(httr2::with_mocked_responses(google_error(400, bad_key),
+  google_run(google_origin[1, ], api_key = "bad-key", on_error = "na")),
+  "Google rejected the API key: API key not valid")
+must_error(httr2::with_mocked_responses(google_error(403, blocked),
+  google_run(google_origin[1, ], api_key = "test-google-key", on_error = "na")),
+  "Requests from this IP address are blocked.")
+bad_request <- '{"error":{"code":400,"message":"Invalid waypoint.","status":"INVALID_ARGUMENT"}}'
+for (status_body in list(list(400, bad_request), list(500, '{"error":"unavailable"}'))) {
+  failed_direct <- httr2::with_mocked_responses(
+    google_error(status_body[[1]], status_body[[2]]),
+    google_run(google_origin[1, ], api_key = "test-google-key", on_error = "na")
+  )
+  stopifnot(all(is.na(failed_direct[columns])))
+}
+google_expect <- "proxy"
 
 for (name in google_env_names) {
   if (is.na(old_google_env[[name]])) {
