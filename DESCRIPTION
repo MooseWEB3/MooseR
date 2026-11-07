@@ -1,6 +1,6 @@
 Package: MooseR
 Title: Data Cleaning and Summary Utility Functions
-Version: 0.0.0.9046
+Version: 0.0.0.9047
 Authors@R: c(
     person("MooseWeb3", email = "develop@mooseweb3.com", role = c("aut", "cre")),
     person("MissV", role = "ctb")
@@ -18,7 +18,10 @@ Depends:
     R (>= 4.1.0)
 Imports:
     httr2 (>= 1.1.1),
-    jsonlite
+    jsonlite,
+    stats,
+    tools,
+    utils
 Suggests:
     osrm (>= 4.0.0),
     readxl,

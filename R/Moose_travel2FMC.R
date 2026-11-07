@@ -54,26 +54,13 @@ Moose_travel2FMC <- function(dataset,
                              time_column = "fmc_travel_time_minutes",
                              distance_column = "fmc_travel_distance_km",
                              overwrite = FALSE) {
-  validate_text <- function(x, argument) {
-    if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
-      stop("`", argument, "` must be one non-empty character value.", call. = FALSE)
-    }
-    x
-  }
-  as_coordinate <- function(x) {
-    if (!is.atomic(x) || !is.null(dim(x))) {
-      stop("Coordinate columns must be atomic vectors.", call. = FALSE)
-    }
-    suppressWarnings(as.numeric(as.character(x)))
-  }
-
   if (!is.data.frame(dataset) || anyDuplicated(names(dataset))) {
     stop("`dataset` must be a data frame or tibble with unique column names.", call. = FALSE)
   }
-  longitude <- validate_text(longitude, "longitude")
-  latitude <- validate_text(latitude, "latitude")
-  time_column <- validate_text(time_column, "time_column")
-  distance_column <- validate_text(distance_column, "distance_column")
+  longitude <- moose_check_text(longitude, "longitude")
+  latitude <- moose_check_text(latitude, "latitude")
+  time_column <- moose_check_text(time_column, "time_column")
+  distance_column <- moose_check_text(distance_column, "distance_column")
   if (identical(time_column, distance_column)) {
     stop("`time_column` and `distance_column` must be different.", call. = FALSE)
   }
@@ -92,8 +79,8 @@ Moose_travel2FMC <- function(dataset,
   }
 
   estimate <- moose_fmc_lookup(
-    as_coordinate(dataset[[longitude]]),
-    as_coordinate(dataset[[latitude]]),
+    moose_as_coordinate(dataset[[longitude]]),
+    moose_as_coordinate(dataset[[latitude]]),
     moose_fmc_travel_grid()
   )
   dataset[[time_column]] <- round(estimate$duration / 60, 1)

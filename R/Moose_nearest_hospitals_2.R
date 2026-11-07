@@ -175,31 +175,6 @@ Moose_nearest_hospitals_2 <- function(dataset,
   }
   moose_require_sf_osrm()
   if (length(user_options)) options(user_options)
-  validate_text <- function(x, argument) {
-    if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
-      stop("`", argument, "` must be one non-empty character value.", call. = FALSE)
-    }
-    x
-  }
-  validate_flag <- function(x, argument) {
-    if (!is.logical(x) || length(x) != 1L || is.na(x)) {
-      stop("`", argument, "` must be TRUE or FALSE.", call. = FALSE)
-    }
-  }
-  validate_number <- function(x, argument, minimum) {
-    if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || x < minimum) {
-      stop("`", argument, "` must be a finite number >= ", minimum, ".", call. = FALSE)
-    }
-  }
-  as_coordinate <- function(x) {
-    if (!is.atomic(x) || !is.null(dim(x))) {
-      stop("Coordinate columns must be atomic vectors.", call. = FALSE)
-    }
-    suppressWarnings(as.numeric(as.character(x)))
-  }
-  valid_coordinates <- function(lon, lat) {
-    is.finite(lon) & abs(lon) <= 180 & is.finite(lat) & abs(lat) <= 90
-  }
 
   if (!is.data.frame(dataset) || anyDuplicated(names(dataset))) {
     stop("`dataset` must be a data frame, tibble or sf object with unique column names.",
@@ -212,33 +187,33 @@ Moose_nearest_hospitals_2 <- function(dataset,
            "coordinates are read from its geometry.", call. = FALSE)
     }
   } else {
-    longitude <- validate_text(longitude, "longitude")
-    latitude <- validate_text(latitude, "latitude")
+    longitude <- moose_check_text(longitude, "longitude")
+    latitude <- moose_check_text(latitude, "latitude")
     missing_columns <- setdiff(c(longitude, latitude), names(dataset))
     if (length(missing_columns)) {
       stop("Unknown coordinate columns: ", paste(missing_columns, collapse = ", "), ".",
            call. = FALSE)
     }
   }
-  validate_flag(emergency_only, "emergency_only")
-  validate_flag(overwrite, "overwrite")
-  validate_flag(progress, "progress")
-  validate_flag(travel_time_format, "travel_time_format")
+  moose_check_flag(emergency_only, "emergency_only")
+  moose_check_flag(overwrite, "overwrite")
+  moose_check_flag(progress, "progress")
+  moose_check_flag(travel_time_format, "travel_time_format")
   on_error <- match.arg(on_error)
-  validate_number(delay, "delay", 0)
-  validate_number(max_table_size, "max_table_size", 1)
+  moose_check_number(delay, "delay", 0)
+  moose_check_number(max_table_size, "max_table_size", 1)
   if (max_table_size != floor(max_table_size)) {
     stop("`max_table_size` must be a whole number of at least 1.", call. = FALSE)
   }
   # The same defaults osrm sets for these options when it loads.
   if (is.null(osrm.server)) osrm.server <- "https://routing.openstreetmap.de/"
   if (is.null(osrm.profile)) osrm.profile <- "car"
-  osrm.profile <- trimws(validate_text(osrm.profile, "osrm.profile"))
+  osrm.profile <- trimws(moose_check_text(osrm.profile, "osrm.profile"))
   if (!grepl("^[A-Za-z0-9._~-]+\\z", osrm.profile, perl = TRUE)) {
     stop("`osrm.profile` can contain only letters, digits, `.`, `_`, `~` and `-`.",
          call. = FALSE)
   }
-  osrm.server <- trimws(validate_text(osrm.server, "osrm.server"))
+  osrm.server <- trimws(moose_check_text(osrm.server, "osrm.server"))
   # osrm escapes its request URL only when the URL has no percent-escape yet,
   # so a "%" in the server URL would leave the encoded coordinates unescaped.
   if (grepl("[?#%]", osrm.server)) {
@@ -303,7 +278,7 @@ Moose_nearest_hospitals_2 <- function(dataset,
          }, ".", call. = FALSE)
   }
   if (emergency_only) {
-    flags <- as_coordinate(hospitals$emergency_24h)
+    flags <- moose_as_coordinate(hospitals$emergency_24h)
     if (anyNA(flags) || !all(flags %in% c(0, 1))) {
       stop("`hospitals$emergency_24h` must contain only 0 and 1.", call. = FALSE)
     }
@@ -325,10 +300,10 @@ Moose_nearest_hospitals_2 <- function(dataset,
     hospital_lon <- hospital_points$lon
     hospital_lat <- hospital_points$lat
   } else {
-    hospital_lon <- as_coordinate(hospitals$longitude)
-    hospital_lat <- as_coordinate(hospitals$latitude)
+    hospital_lon <- moose_as_coordinate(hospitals$longitude)
+    hospital_lat <- moose_as_coordinate(hospitals$latitude)
   }
-  if (!all(valid_coordinates(hospital_lon, hospital_lat))) {
+  if (!all(moose_valid_lonlat(hospital_lon, hospital_lat))) {
     stop("Eligible hospital coordinates must be valid decimal degrees.", call. = FALSE)
   }
 
@@ -350,10 +325,10 @@ Moose_nearest_hospitals_2 <- function(dataset,
     origin_lon <- origin_points$lon
     origin_lat <- origin_points$lat
   } else {
-    origin_lon <- as_coordinate(dataset[[longitude]])
-    origin_lat <- as_coordinate(dataset[[latitude]])
+    origin_lon <- moose_as_coordinate(dataset[[longitude]])
+    origin_lat <- moose_as_coordinate(dataset[[latitude]])
   }
-  valid_rows <- which(valid_coordinates(origin_lon, origin_lat))
+  valid_rows <- which(moose_valid_lonlat(origin_lon, origin_lat))
   keys <- coordinate_key(origin_lon[valid_rows], origin_lat[valid_rows])
   unique_positions <- which(!duplicated(keys))
   unique_rows <- valid_rows[unique_positions]

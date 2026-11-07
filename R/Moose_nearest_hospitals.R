@@ -175,50 +175,22 @@ Moose_nearest_hospitals <- function(dataset,
                                     max_candidates = 15L,
                                     google_backend = c("auto", "google", "mooser_proxy"),
                                     api_key = NULL) {
-  validate_text <- function(x, argument) {
-    if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
-      stop("`", argument, "` must be one non-empty character value.", call. = FALSE)
-    }
-    x
-  }
-  validate_flag <- function(x, argument) {
-    if (!is.logical(x) || length(x) != 1L || is.na(x)) {
-      stop("`", argument, "` must be TRUE or FALSE.", call. = FALSE)
-    }
-  }
-  validate_number <- function(x, argument, minimum, inclusive = TRUE) {
-    if (!is.numeric(x) || length(x) != 1L || !is.finite(x) ||
-        (if (inclusive) x < minimum else x <= minimum)) {
-      stop("`", argument, "` must be a finite number ",
-           if (inclusive) ">= " else "> ", minimum, ".", call. = FALSE)
-    }
-  }
-  as_coordinate <- function(x) {
-    if (!is.atomic(x) || !is.null(dim(x))) {
-      stop("Coordinate columns must be atomic vectors.", call. = FALSE)
-    }
-    suppressWarnings(as.numeric(as.character(x)))
-  }
-  valid_coordinates <- function(lon, lat) {
-    is.finite(lon) & abs(lon) <= 180 & is.finite(lat) & abs(lat) <= 90
-  }
-
   if (!is.data.frame(dataset) || anyDuplicated(names(dataset))) {
     stop("`dataset` must be a data frame or tibble with unique column names.", call. = FALSE)
   }
-  longitude <- validate_text(longitude, "longitude")
-  latitude <- validate_text(latitude, "latitude")
+  longitude <- moose_check_text(longitude, "longitude")
+  latitude <- moose_check_text(latitude, "latitude")
   missing_columns <- setdiff(c(longitude, latitude), names(dataset))
   if (length(missing_columns)) {
     stop("Unknown coordinate columns: ", paste(missing_columns, collapse = ", "), ".", call. = FALSE)
   }
-  validate_flag(emergency_only, "emergency_only")
-  validate_flag(overwrite, "overwrite")
-  validate_flag(progress, "progress")
-  validate_flag(travel_time_format, "travel_time_format")
+  moose_check_flag(emergency_only, "emergency_only")
+  moose_check_flag(overwrite, "overwrite")
+  moose_check_flag(progress, "progress")
+  moose_check_flag(travel_time_format, "travel_time_format")
   on_error <- match.arg(on_error)
-  validate_number(timeout, "timeout", 0, inclusive = FALSE)
-  validate_number(delay, "delay", 0)
+  moose_check_number(timeout, "timeout", 0, inclusive = FALSE)
+  moose_check_number(delay, "delay", 0)
   engine <- match.arg(engine)
   osrm_arguments <- c(server = !missing(server), profile = !missing(profile),
                       batch_size = !missing(batch_size))
@@ -235,11 +207,11 @@ Moose_nearest_hospitals <- function(dataset,
          call. = FALSE)
   }
   google_backend <- match.arg(google_backend)
-  validate_number(batch_size, "batch_size", 1)
+  moose_check_number(batch_size, "batch_size", 1)
   if (batch_size > 99 || batch_size != floor(batch_size)) {
     stop("`batch_size` must be an integer from 1 to 99.", call. = FALSE)
   }
-  validate_number(max_candidates, "max_candidates", 3)
+  moose_check_number(max_candidates, "max_candidates", 3)
   if (max_candidates != floor(max_candidates)) {
     stop("`max_candidates` must be an integer of at least 3.", call. = FALSE)
   }
@@ -248,13 +220,13 @@ Moose_nearest_hospitals <- function(dataset,
     stop("`username` and `password` must be supplied together.", call. = FALSE)
   }
   if (all(credentials)) {
-    username <- trimws(validate_text(username, "username"))
-    password <- validate_text(password, "password")
+    username <- trimws(moose_check_text(username, "username"))
+    password <- moose_check_text(password, "password")
   }
   if (engine == "google") {
     key_supplied <- !is.null(api_key)
     if (key_supplied) {
-      api_key <- trimws(validate_text(api_key, "api_key"))
+      api_key <- trimws(moose_check_text(api_key, "api_key"))
     } else if (nzchar(trimws(Sys.getenv("GOOGLE_MAPS_API_KEY")))) {
       api_key <- trimws(Sys.getenv("GOOGLE_MAPS_API_KEY"))
     }
@@ -284,8 +256,8 @@ Moose_nearest_hospitals <- function(dataset,
       }
     }
   } else {
-    profile <- trimws(validate_text(profile, "profile"))
-    server <- trimws(validate_text(server, "server"))
+    profile <- trimws(moose_check_text(profile, "profile"))
+    server <- trimws(moose_check_text(server, "server"))
     server <- moose_validate_routing_server(server, authenticated = all(credentials))
   }
 
@@ -331,7 +303,7 @@ Moose_nearest_hospitals <- function(dataset,
          paste(required, collapse = ", "), ".", call. = FALSE)
   }
   if (emergency_only) {
-    flags <- as_coordinate(hospitals$emergency_24h)
+    flags <- moose_as_coordinate(hospitals$emergency_24h)
     if (anyNA(flags) || !all(flags %in% c(0, 1))) {
       stop("`hospitals$emergency_24h` must contain only 0 and 1.", call. = FALSE)
     }
@@ -348,9 +320,9 @@ Moose_nearest_hospitals <- function(dataset,
       anyDuplicated(hospital_names)) {
     stop("Eligible hospital names must be non-empty, non-missing and unique.", call. = FALSE)
   }
-  hospital_lon <- as_coordinate(hospitals$longitude)
-  hospital_lat <- as_coordinate(hospitals$latitude)
-  if (!all(valid_coordinates(hospital_lon, hospital_lat))) {
+  hospital_lon <- moose_as_coordinate(hospitals$longitude)
+  hospital_lat <- moose_as_coordinate(hospitals$latitude)
+  if (!all(moose_valid_lonlat(hospital_lon, hospital_lat))) {
     stop("Eligible hospital coordinates must be valid decimal degrees.", call. = FALSE)
   }
 
@@ -367,9 +339,9 @@ Moose_nearest_hospitals <- function(dataset,
   destination_lon <- c(hospital_lon, fixed_hospitals$longitude[extra])
   destination_lat <- c(hospital_lat, fixed_hospitals$latitude[extra])
 
-  origin_lon <- as_coordinate(dataset[[longitude]])
-  origin_lat <- as_coordinate(dataset[[latitude]])
-  valid_rows <- which(valid_coordinates(origin_lon, origin_lat))
+  origin_lon <- moose_as_coordinate(dataset[[longitude]])
+  origin_lat <- moose_as_coordinate(dataset[[latitude]])
+  valid_rows <- which(moose_valid_lonlat(origin_lon, origin_lat))
   result <- dataset
   for (j in seq_along(output_names)) {
     result[[output_names[j]]] <- if (j %in% c(1L, 4L, 7L)) {
