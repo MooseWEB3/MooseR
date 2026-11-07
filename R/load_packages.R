@@ -9,6 +9,11 @@
 #'
 #' @return Invisibly returns the package names that were requested.
 #'
+#' @examples
+#' \dontrun{
+#' load_packages(c("tidyverse", "MooseR", "lubridate"))
+#' }
+#'
 #' @export
 load_packages <- function(pkgs,
                           install_missing = TRUE,
@@ -67,6 +72,11 @@ load_packages <- function(pkgs,
 #'
 #' @return Invisibly returns the package names that were requested.
 #'
+#' @examples
+#' \dontrun{
+#' load_mooser_packages()
+#' }
+#'
 #' @export
 load_mooser_packages <- function(
     pkgs = default_mooser_packages(),
@@ -81,7 +91,12 @@ load_mooser_packages <- function(
 
 #' Return the default MooseR startup package set
 #'
+#' Returns the default package list used by \code{load_mooser_packages()}.
+#'
 #' @return A character vector of package names.
+#'
+#' @examples
+#' default_mooser_packages()
 #'
 #' @export
 default_mooser_packages <- function() {
@@ -113,6 +128,11 @@ default_mooser_packages <- function() {
 #'   packages before loading them.
 #'
 #' @return Invisibly returns the profile path.
+#'
+#' @examples
+#' \dontrun{
+#' enable_mooser_startup_packages()
+#' }
 #'
 #' @export
 enable_mooser_startup_packages <- function(
@@ -163,6 +183,11 @@ enable_mooser_startup_packages <- function(
 #' @param profile Path to the R profile file to update.
 #'
 #' @return Invisibly returns the profile path.
+#'
+#' @examples
+#' \dontrun{
+#' disable_mooser_startup_packages()
+#' }
 #'
 #' @export
 disable_mooser_startup_packages <- function(profile = "~/.Rprofile") {

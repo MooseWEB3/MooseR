@@ -46,6 +46,7 @@
 #' requests plus the two fixed hospitals. `max_candidates` caps the candidates
 #' routed per location; locations that reach the cap get a warning, because
 #' their ranking compares only those candidates.
+#'
 #' Repeated input coordinates are queried once per call. Fixed hospital routes
 #' reuse candidate routes when their coordinates match. A failed candidate
 #' request leaves all nine nearest-hospital results for that origin as `NA`,

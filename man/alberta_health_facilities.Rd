@@ -6,8 +6,8 @@
 \title{Alberta Health Services facility names}
 \format{
 A named list of character vectors. Elements are named \code{0-9} and
-\code{A} through \code{Z} where facilities with that initial are present.
-Across all elements, the list contains 1,150 unique facility names.
+\code{A} through \code{Z} where facilities with that initial are present. Across all
+elements, the list contains 1,150 unique facility names.
 }
 \source{
 Alberta Health Services, Find Healthcare,
@@ -26,5 +26,6 @@ is grouped alphabetically by the first character of each facility name.
 names(alberta_health_facilities)
 head(alberta_health_facilities$A)
 unlist(alberta_health_facilities, use.names = FALSE)
+
 }
 \keyword{datasets}

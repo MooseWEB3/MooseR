@@ -20,6 +20,6 @@ Strips common quote characters from character and factor columns,
 leaving other column types unchanged.
 }
 \examples{
-df <- data.frame(a = "O'Neil", b = factor('“Hello”'), n = 1)
+df <- data.frame(a = "O'Neil", b = factor("\u201cHello\u201d"), n = 1)
 BD_quote_rm(df)
 }

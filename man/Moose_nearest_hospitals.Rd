@@ -29,46 +29,158 @@ Moose_nearest_hospitals(
 }
 \arguments{
 \item{dataset}{A data frame or tibble. Original rows and columns are retained.}
-\item{longitude, latitude}{Names of columns containing origin coordinates in decimal degrees. Numeric strings and factors are accepted. Missing, non-numeric, non-finite or out-of-range coordinates return 13 \code{NA} values without making a request.}
-\item{hospitals}{Optional candidate data frame with unique, non-empty \code{hospital_name} values and valid \code{longitude} and \code{latitude} columns. \code{NULL} uses the bundled \link{alberta_hospitals}. At least three eligible rows are required. Other columns are ignored except \code{emergency_24h} when filtering. This argument controls only the nearest-three candidates, not the two fixed destinations.}
-\item{emergency_only}{Logical. If \code{TRUE}, restrict nearest-three candidates to rows with \code{emergency_24h == 1}. This flag describes regular 24-hour emergency service, not temporary closures or current availability.}
-\item{server}{HTTP(S) base URL of an OSRM server supporting the Table service with distance and duration annotations. Defaults to the public demo server. OSRM only; it cannot be supplied with \code{engine = "google"}.}
-\item{profile}{OSRM profile supported by the server, normally \code{"driving"}. OSRM only.}
-\item{username, password}{HTTP Basic Authentication credentials. Supply both or neither. HTTPS is required with credentials; URL userinfo is rejected. Credentials are redacted from printed request objects. Optional for OSRM. Required for the MooseR Google proxy: when omitted, they are read from \code{MOOSER_GOOGLE_USER} and \code{MOOSER_GOOGLE_PASSWORD}, or else from \code{MOOSER_ROUTING_USER} and \code{MOOSER_ROUTING_PASSWORD}. Not used with \code{google_backend = "google"}. Keep them in a private \code{.Renviron} file, not in scripts or Git.}
-\item{batch_size}{Maximum destinations per request, an integer from 1 to 99. One origin is added, keeping each request within 100 coordinates. Reduce this value if your server has a lower limit. OSRM only.}
+
+\item{longitude, latitude}{Names of columns containing origin coordinates in
+decimal degrees. Numeric strings and factors are accepted. Missing,
+non-numeric, non-finite or out-of-range coordinates return 13 \code{NA} values
+without making a request.}
+
+\item{hospitals}{Optional candidate data frame with unique, non-empty
+\code{hospital_name} values and valid \code{longitude} and \code{latitude} columns. \code{NULL}
+uses the bundled \link{alberta_hospitals}. At least three eligible rows are
+required. Other columns are ignored except \code{emergency_24h} when filtering.
+This argument controls only the nearest-three candidates, not the two
+fixed destinations.}
+
+\item{emergency_only}{Logical. If \code{TRUE}, restrict nearest-three candidates to rows with
+\code{emergency_24h == 1}. This flag describes regular 24-hour emergency service,
+not temporary closures or current availability.}
+
+\item{server}{HTTP(S) base URL of an OSRM server supporting the Table service
+with distance and duration annotations. Defaults to the public demo server.
+OSRM only; it cannot be supplied with \code{engine = "google"}.}
+
+\item{profile}{OSRM profile supported by the server, normally \code{"driving"}.
+OSRM only.}
+
+\item{username, password}{HTTP Basic Authentication credentials. Supply both
+or neither. HTTPS is required with credentials; URL userinfo is rejected.
+Credentials are redacted from printed request objects. Optional for OSRM.
+Required for the MooseR Google proxy: when omitted, they are read from
+\code{MOOSER_GOOGLE_USER} and \code{MOOSER_GOOGLE_PASSWORD}, or else from
+\code{MOOSER_ROUTING_USER} and \code{MOOSER_ROUTING_PASSWORD}. Not used with
+\code{google_backend = "google"}. Keep them in a private \code{.Renviron} file, not
+in scripts or Git.}
+
+\item{batch_size}{Maximum destinations per request, an integer from 1 to 99.
+One origin is added, keeping each request within 100 coordinates. Reduce
+this value if your server has a lower limit. OSRM only.}
+
 \item{overwrite}{Logical. Replace existing output columns if \code{TRUE}.}
-\item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request failures and unreachable fixed hospitals or fewer than three reachable candidates. \code{"warn"} gives a summary warning; \code{"na"} returns the available results silently. Invalid input coordinates always return \code{NA}, regardless of this setting.}
+
+\item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request failures
+and unreachable fixed hospitals or fewer than three reachable candidates.
+\code{"warn"} gives a summary warning;
+\code{"na"} returns the available results silently. Invalid input coordinates
+always return \code{NA}, regardless of this setting.}
+
 \item{timeout}{Positive seconds allowed for each request.}
+
 \item{delay}{Non-negative seconds to pause between requests.}
+
 \item{progress}{Logical. Print progress for unique input locations.}
-\item{travel_time_format}{Logical. Defaults to \code{FALSE}, returning numeric seconds. If \code{TRUE}, format all five travel-time columns as \code{HH:MM:SS} character strings with \code{\link{Moose_second2format}}. Fractional seconds round to the nearest second, with half seconds rounded up; hours can exceed 24. Missing values remain \code{NA}. Existing column names (including \code{_seconds}) and the 13-column output schema are retained. Distances and ranking are unchanged; ranking uses the original, unrounded numeric travel times.}
+
+\item{travel_time_format}{Logical. Defaults to \code{FALSE}, returning numeric
+seconds. If \code{TRUE}, format all five travel-time columns as \code{HH:MM:SS}
+character strings with \code{\link[=Moose_second2format]{Moose_second2format()}}. Fractional seconds round
+to the nearest second, with half seconds rounded up; hours can exceed 24.
+Missing values remain \code{NA}. Existing column names (including \verb{_seconds})
+and the 13-column output schema are retained. Distances and ranking are
+unchanged; ranking uses the original, unrounded numeric travel times.}
+
 \item{engine}{Routing engine: \code{"osrm"} (the default) or \code{"google"}.}
-\item{max_candidates}{Google only. Maximum number of candidate hospitals routed per location, an integer of at least 3.}
-\item{google_backend}{Google only. \code{"auto"} (the default), \code{"google"} to call Google directly with an API key, or \code{"mooser_proxy"} to use the MooseR proxy. See Details.}
-\item{api_key}{Google only. A Google Maps Platform API key with the Routes API enabled, used when \code{google_backend} is \code{"google"} or \code{"auto"}. \code{NULL} reads the \code{GOOGLE_MAPS_API_KEY} environment variable. Keep the key in a private \code{.Renviron} file, not in scripts or Git; it is redacted from printed request objects.}
+
+\item{max_candidates}{Google only. Maximum number of candidate hospitals
+routed per location, an integer of at least 3.}
+
+\item{google_backend}{Google only. \code{"auto"} (the default), \code{"google"} to
+call Google directly with an API key, or \code{"mooser_proxy"} to use the
+MooseR proxy. See Details.}
+
+\item{api_key}{Google only. A Google Maps Platform API key with the Routes
+API enabled, used when \code{google_backend} is \code{"google"} or \code{"auto"}. \code{NULL}
+reads the \code{GOOGLE_MAPS_API_KEY} environment variable. Keep the key in a
+private \code{.Renviron} file, not in scripts or Git; it is redacted from
+printed request objects.}
 }
-\value{The input data frame with 13 output columns. By default, the first nine are, for each \code{i} in 1, 2, 3, \code{nearest_hospital_i} (character), \code{nearest_hospital_i_travel_time_seconds} (numeric) and \code{nearest_hospital_i_travel_distance_meters} (numeric). The four additional numeric columns are \code{foothills_medical_centre_travel_time_seconds}, \code{foothills_medical_centre_travel_distance_meters}, \code{university_of_alberta_hospital_travel_time_seconds} and \code{university_of_alberta_hospital_travel_distance_meters}. These are included even when either fixed hospital is also among the nearest three. With \code{travel_time_format = TRUE}, all five travel-time columns contain character strings instead of numeric seconds; distance columns stay numeric.}
-\description{For each input location, queries road routes to every eligible hospital and appends the names, travel times and travel distances of the nearest three. By default, candidates are all facilities in \link{alberta_hospitals}. Also always appends travel time and distance to Foothills Medical Centre and University of Alberta Hospital, using their coordinates in the bundled data, regardless of the nearest-three results, \code{hospitals}, or \code{emergency_only}.}
+\value{
+The input data frame with 13 output columns. By default, the first nine are, for each
+\code{i} in 1, 2, 3, \code{nearest_hospital_i} (character),
+\code{nearest_hospital_i_travel_time_seconds} (numeric) and
+\code{nearest_hospital_i_travel_distance_meters} (numeric). The four additional
+numeric columns are \code{foothills_medical_centre_travel_time_seconds},
+\code{foothills_medical_centre_travel_distance_meters},
+\code{university_of_alberta_hospital_travel_time_seconds} and
+\code{university_of_alberta_hospital_travel_distance_meters}. These are included
+even when either fixed hospital is also among the nearest three.
+With \code{travel_time_format = TRUE}, all five travel-time columns contain
+character strings instead of numeric seconds; distance columns stay numeric.
+}
+\description{
+For each input location, queries road routes to every eligible hospital and
+appends the names, travel times and travel distances of the nearest three.
+By default, candidates are all facilities in \link{alberta_hospitals}. Also always
+appends travel time and distance to Foothills Medical Centre and University
+of Alberta Hospital, using their coordinates in the bundled data, regardless
+of the nearest-three results, \code{hospitals}, or \code{emergency_only}.
+}
 \details{
-Hospitals are ranked by increasing route distance, then travel time, then their row order in \code{hospitals}. OSRM and Google return fastest routes: their distances are not guaranteed to be the shortest possible road paths. Times are estimates without live traffic. Separately named facilities on the same campus remain separate candidates. Coordinates refer to facility locations, not verified emergency-department entrances.
+Hospitals are ranked by increasing route distance, then travel time, then
+their row order in \code{hospitals}. OSRM and Google return fastest routes: their
+distances are not guaranteed to be the shortest possible road paths. Times
+are estimates without live traffic. Separately named facilities on the same
+campus remain separate candidates. Coordinates refer to facility locations,
+not verified emergency-department entrances.
 
-The default \code{engine = "osrm"} uses the OSRM Table service with both distance and duration annotations. Every eligible hospital is considered; there is no straight-line prefilter.
+The default \code{engine = "osrm"} uses the OSRM Table service with both distance
+and duration annotations. Every eligible hospital is considered; there is no
+straight-line prefilter.
 
-\code{engine = "google"} uses the Google Routes API, reached in one of two ways chosen by \code{google_backend}:
+\code{engine = "google"} uses the Google Routes API, reached in one of two ways
+chosen by \code{google_backend}:
 \itemize{
-\item \code{"google"} calls Google's official endpoint (\verb{https://routes.googleapis.com}) directly with your own Google Maps Platform API key, which is sent only to Google, in the \code{X-Goog-Api-Key} header. Use it where the MooseR proxy is blocked, for example on work networks. In the Google Cloud console, restrict the key to the Routes API and to your network's IP addresses, and set a daily quota.
-\item \code{"mooser_proxy"} calls the fixed, password-protected MooseR proxy (\verb{https://google-routes.mooseweb3.com}). The Google API key stays on the proxy server and is never needed or sent by the client; the proxy username and password are sent over HTTPS with Basic Authentication. The computer hosting the proxy must be on and online.
-\item \code{"auto"}, the default, uses \code{"google"} when an API key is available (\code{api_key}, or the \code{GOOGLE_MAPS_API_KEY} environment variable) and no \code{username} or \code{password} is supplied; otherwise it uses the proxy.
+\item \code{"google"} calls Google's official endpoint
+(\verb{https://routes.googleapis.com}) directly with your own Google Maps
+Platform API key, which is sent only to Google, in the \code{X-Goog-Api-Key}
+header. Use it where the MooseR proxy is blocked, for example on work
+networks. In the Google Cloud console, restrict the key to the Routes API
+and to your network's IP addresses, and set a daily quota.
+\item \code{"mooser_proxy"} calls the fixed, password-protected MooseR proxy
+(\verb{https://google-routes.mooseweb3.com}). The Google API key stays on the
+proxy server and is never needed or sent by the client; the proxy username
+and password are sent over HTTPS with Basic Authentication. The computer
+hosting the proxy must be on and online.
+\item \code{"auto"}, the default, uses \code{"google"} when an API key is available
+(\code{api_key}, or the \code{GOOGLE_MAPS_API_KEY} environment variable) and no
+\code{username} or \code{password} is supplied; otherwise it uses the proxy.
 }
 
-A rejected API key, username or password always stops the call, whatever \code{on_error} says. Each route is one billable Compute Routes request (\code{TRAFFIC_UNAWARE}), billed to the key's Google Cloud project. To limit requests, candidates are routed in order of straight-line distance, stopping once no unrouted hospital could be nearer by road than the current third-nearest route. A road route is never shorter than the straight-line distance apart from road snapping at either end, which the stopping rule allows for with a 1 km margin. A location usually needs a few candidate requests plus the two fixed hospitals. \code{max_candidates} caps the candidates routed per location; locations that reach the cap get a warning, because their ranking compares only those candidates.
+A rejected API key, username or password always stops the call, whatever
+\code{on_error} says. Each route is one billable Compute Routes request
+(\code{TRAFFIC_UNAWARE}), billed to the key's Google Cloud project. To
+limit requests, candidates are routed in order of straight-line distance,
+stopping once no unrouted hospital could be nearer by road than the current
+third-nearest route. A road route is never shorter than the straight-line
+distance apart from road snapping at either end, which the stopping rule
+allows for with a 1 km margin. A location usually needs a few candidate
+requests plus the two fixed hospitals. \code{max_candidates} caps the candidates
+routed per location; locations that reach the cap get a warning, because
+their ranking compares only those candidates.
 
-Repeated input coordinates are queried once per call. Fixed hospital routes reuse candidate routes when their coordinates match. A failed candidate request leaves all nine nearest-hospital results for that origin as \code{NA}, because an incomplete comparison cannot establish the nearest hospitals. Successful fixed-hospital results are retained independently. A failed or unreachable fixed destination has \code{NA} for its two columns. Unreachable candidates are excluded; if fewer than three are reachable, the remaining ranks are \code{NA}.
+Repeated input coordinates are queried once per call. Fixed hospital routes
+reuse candidate routes when their coordinates match. A failed candidate
+request leaves all nine nearest-hospital results for that origin as \code{NA},
+because an incomplete comparison cannot establish the nearest hospitals.
+Successful fixed-hospital results are retained independently. A failed or
+unreachable fixed destination has \code{NA} for its two columns. Unreachable
+candidates are excluded; if fewer than three are reachable, the remaining
+ranks are \code{NA}.
 
-The default public demonstration server is for light, interactive use. For larger workloads, supply an OSRM server you operate or are authorized to use. Coordinates are sent to that server and may appear in its request logs. Redirects are not followed. No API key is needed for the default server.
+The default public demonstration server is for light, interactive use. For
+larger workloads, supply an OSRM server you operate or are authorized to use.
+Coordinates are sent to that server and may appear in its request logs.
+Redirects are not followed. No API key is needed for the default server.
 }
-\references{\url{https://project-osrm.org/docs/v5.24.0/api/#table-service}}
-\seealso{\link{alberta_hospitals}, \code{\link{Moose_travel}}, \code{\link{Moose_second2format}}}
 \examples{
 \dontrun{
 locations <- data.frame(longitude = c(-113.4938, -114.0719),
@@ -92,4 +204,10 @@ result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat"
 result <- Moose_nearest_hospitals(locations, longitude = "lon", latitude = "lat",
                                   engine = "google", google_backend = "mooser_proxy")
 }
+}
+\references{
+\url{https://project-osrm.org/docs/v5.24.0/api/#table-service}
+}
+\seealso{
+\link{alberta_hospitals}, \code{\link[=Moose_travel]{Moose_travel()}}, \code{\link[=Moose_second2format]{Moose_second2format()}}
 }

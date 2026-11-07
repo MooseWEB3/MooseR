@@ -19,4 +19,5 @@ Removes the managed MooseR startup block from an R profile.
 \dontrun{
 disable_mooser_startup_packages()
 }
+
 }

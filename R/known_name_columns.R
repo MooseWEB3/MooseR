@@ -308,14 +308,7 @@ known_name_fuzzy_token_pattern <- function() {
 }
 
 normalize_known_name_fuzzy_token <- function(value) {
-  transliterated <- suppressWarnings(iconv(
-    value,
-    from = "",
-    to = "ASCII//TRANSLIT",
-    sub = ""
-  ))
-  fallback <- is.na(transliterated) & !is.na(value)
-  transliterated[fallback] <- value[fallback]
+  transliterated <- moose_ascii_fold(value)
   transliterated <- tolower(transliterated)
   gsub("[^a-z]", "", transliterated, perl = TRUE)
 }

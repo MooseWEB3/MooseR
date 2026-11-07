@@ -37,14 +37,7 @@ alberta_schools <- local({
 })
 
 normalize_alberta_school <- function(x) {
-  transliterated <- suppressWarnings(iconv(
-    x,
-    from = "",
-    to = "ASCII//TRANSLIT",
-    sub = ""
-  ))
-  fallback <- is.na(transliterated) & !is.na(x)
-  transliterated[fallback] <- x[fallback]
+  transliterated <- moose_ascii_fold(x)
   transliterated <- tolower(transliterated)
   transliterated <- gsub("&", " and ", transliterated, fixed = TRUE)
   transliterated <- gsub("[^a-z0-9]+", " ", transliterated, perl = TRUE)

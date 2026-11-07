@@ -17,8 +17,8 @@ Moose_read_rds(
 \arguments{
 \item{path}{A directory to import, or a single file path.}
 
-\item{file_name}{Optional file name within \code{path}. When supplied, only
-that file is returned.}
+\item{file_name}{Optional file name within \code{path}, retained for backward
+compatibility. When supplied, only that file is returned.}
 
 \item{prefix}{Prefix used for objects created during directory imports.}
 
@@ -32,8 +32,8 @@ replaced. The default is \code{FALSE}.}
 \item{...}{Additional arguments passed to \code{\link[base:readRDS]{base::readRDS()}}.}
 }
 \value{
-For a single file, the restored R object. For a directory, an invisible named
-list containing all restored objects.
+For a single file, the restored R object. For a directory, an
+invisible named list containing all restored objects.
 }
 \description{
 Imports every RDS file in a directory, assigns the restored objects as
@@ -50,4 +50,5 @@ imported <- new.env(parent = emptyenv())
 Moose_read_rds(rds_dir, envir = imported)
 imported$imported_data_001
 unlink(rds_dir, recursive = TRUE)
+
 }

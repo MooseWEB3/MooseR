@@ -16,9 +16,9 @@ non-digit characters allowed between \code{PHN} and the number.}
 An integer vector with the same length as \code{text}.
 }
 \description{
-Uses the same PHN-label proximity rules as
-\code{\link[=Moose_mask_PHN]{Moose_mask_PHN()}} and returns \code{1L} when a PHN
-is found or \code{0L} otherwise. Missing and blank values return \code{0L}.
+Uses the same PHN-label proximity rules as \code{\link[=Moose_mask_PHN]{Moose_mask_PHN()}} and returns
+\code{1L} when a PHN is found or \code{0L} otherwise. Missing and blank values return
+\code{0L}.
 }
 \examples{
 Moose_mask_PHN_flag(c(
@@ -26,4 +26,5 @@ Moose_mask_PHN_flag(c(
   "No PHN is present",
   NA_character_
 ))
+
 }

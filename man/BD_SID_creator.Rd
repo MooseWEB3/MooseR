@@ -43,8 +43,9 @@ see \strong{Accent handling} below.
 \section{Accent handling}{
 
 By default, only ASCII letters are kept. To turn “José” into “JO” rather than
-dropping the accented character, set \code{strip_accents = TRUE} (uses base \code{iconv}
-to transliterate where possible).
+dropping the accented character, set \code{strip_accents = TRUE}. Accented Latin
+letters (Latin-1 and Latin Extended-A) are then replaced by their unaccented
+forms, with the same result on every computer.
 }
 
 \examples{

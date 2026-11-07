@@ -27,30 +27,83 @@ Moose_google_travel(
 }
 \arguments{
 \item{dataset}{A data frame or tibble.}
-\item{start_latitude, start_longitude}{Column names containing origin latitude and longitude.}
-\item{end_latitude, end_longitude}{Column names containing destination latitude and longitude.}
-\item{api_key}{A Google Maps Platform API key. Defaults to the \code{GOOGLE_MAPS_API_KEY} environment variable. Used only by \code{backend = "google"}; it is never sent in proxy mode.}
-\item{backend}{Routing backend. \code{"google"} calls Google's fixed official endpoint directly. \code{"mooser_proxy"} calls the fixed MooseR HTTPS proxy using \code{username} and \code{password}.}
-\item{username, password}{HTTP Basic Authentication credentials for \code{backend = "mooser_proxy"}. Supply both or neither. When omitted in proxy mode, the function reads \code{MOOSER_GOOGLE_USER} and \code{MOOSER_GOOGLE_PASSWORD}. They are never sent to Google directly. Do not write credentials into package code or scripts committed to Git.}
-\item{travel_mode}{Google Routes travel mode. One of \code{"DRIVE"}, \code{"WALK"}, \code{"BICYCLE"}, \code{"TWO_WHEELER"}, or \code{"TRANSIT"}. Google currently bills \code{"TWO_WHEELER"} requests in the Compute Routes Enterprise tier.}
-\item{routing_preference}{Driving-route preference. The default, \code{"TRAFFIC_UNAWARE"}, does not use current traffic. \code{"TRAFFIC_AWARE"} and \code{"TRAFFIC_AWARE_OPTIMAL"} use traffic-aware routing and currently trigger the Compute Routes Pro tier. This argument is omitted from requests for non-driving travel modes. Check Google's current pricing before large jobs.}
+
+\item{start_latitude, start_longitude}{Column names containing origin
+latitude and longitude.}
+
+\item{end_latitude, end_longitude}{Column names containing destination
+latitude and longitude.}
+
+\item{api_key}{A Google Maps Platform API key. Defaults to the
+\code{GOOGLE_MAPS_API_KEY} environment variable. Used only by
+\code{backend = "google"}; it is never sent in proxy mode.}
+
+\item{backend}{Routing backend. \code{"google"} calls Google's fixed official
+endpoint directly. \code{"mooser_proxy"} calls the fixed MooseR HTTPS proxy
+using \code{username} and \code{password}.}
+
+\item{username, password}{HTTP Basic Authentication credentials for
+\code{backend = "mooser_proxy"}. Supply both or neither. When omitted in proxy
+mode, the function reads \code{MOOSER_GOOGLE_USER} and
+\code{MOOSER_GOOGLE_PASSWORD}. They are never sent to Google directly. Do not
+write credentials into package code or scripts committed to Git.}
+
+\item{travel_mode}{Google Routes travel mode. One of \code{"DRIVE"}, \code{"WALK"},
+\code{"BICYCLE"}, \code{"TWO_WHEELER"}, or \code{"TRANSIT"}. Google currently bills
+\code{"TWO_WHEELER"} requests in the Compute Routes Enterprise tier.}
+
+\item{routing_preference}{Driving-route preference. The default,
+\code{"TRAFFIC_UNAWARE"}, does not use current traffic. \code{"TRAFFIC_AWARE"} and
+\code{"TRAFFIC_AWARE_OPTIMAL"} use traffic-aware routing and currently trigger
+the Compute Routes Pro tier. This argument is omitted from requests for
+non-driving travel modes. Check Google's current pricing before large jobs.}
+
 \item{distance_column}{Name of the output distance column, in metres.}
+
 \item{time_column}{Name of the output travel-time column, in seconds.}
+
 \item{overwrite}{Logical. Allow existing output columns to be replaced.}
-\item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request and no-route failures. Invalid or missing coordinates always return \code{NA}.}
+
+\item{on_error}{One of \code{"warn"}, \code{"stop"}, or \code{"na"}. Controls request and
+no-route failures. Invalid or missing coordinates always return \code{NA}.}
+
 \item{timeout}{Positive number of seconds allowed for each Google request.}
+
 \item{delay}{Non-negative seconds to pause between unique route requests.}
+
 \item{progress}{Logical. Print request progress.}
 }
-\value{The input data frame with two numeric columns appended.}
-\description{\code{Moose_google_travel()} is currently in development and has not been formally released. Its interface and returned results may change.}
-\details{Looks up one Google Routes API route for each unique valid origin-destination coordinate pair. By default, current traffic conditions are not used, which keeps requests in the Compute Routes Essentials tier when no other requested feature raises the billing tier.
+\value{
+The input data frame with two numeric columns appended.
+}
+\description{
+\code{Moose_google_travel()} is currently in development and has not been
+formally released. Its interface and returned results may change.
+}
+\details{
+Looks up one Google Routes API route for each unique valid
+origin-destination coordinate pair. By default, current traffic conditions
+are not used, which keeps requests in the Compute Routes Essentials tier
+when no other requested feature raises the billing tier.
 
-Google Maps Platform billing must be enabled and the Routes API must be enabled for the project associated with \code{api_key}. Keep API keys outside source code and restrict them to the Routes API and appropriate server IPs.
+Google Maps Platform billing must be enabled and the Routes API must be
+enabled for the project associated with \code{api_key}. Keep API keys outside
+source code and restrict them to the Routes API and appropriate server IPs.
 
-\code{backend = "google"} sends requests only to Google's fixed Routes API endpoint and uses \code{api_key}. \code{backend = "mooser_proxy"} sends requests only to the fixed MooseR HTTPS proxy and uses HTTP Basic Authentication. The Google API key is neither required nor sent by the client in proxy mode. The proxy must be deployed and configured separately before that mode can work.
+\code{backend = "google"} sends requests only to Google's fixed Routes API
+endpoint and uses \code{api_key}. \code{backend = "mooser_proxy"} sends requests only
+to the fixed MooseR HTTPS proxy and uses HTTP Basic Authentication; the
+Google API key is neither required nor sent by the client in proxy mode. The
+proxy must be deployed and configured separately before that mode can work.
 
-Requests transmit the supplied coordinates to Google, either directly or through the MooseR proxy. Google Maps Platform content is subject to Google's attribution, caching, and storage rules. Review \href{https://cloud.google.com/maps-platform/terms}{Google Maps Platform Terms} and \href{https://developers.google.com/maps/documentation/routes/policies}{Routes API policies} before storing, displaying, or redistributing results.}
+Requests transmit the supplied coordinates to Google, either directly or
+through the MooseR proxy. Google Maps Platform content is subject to Google's
+attribution, caching, and storage rules. Review the
+\href{https://cloud.google.com/maps-platform/terms}{Google Maps Platform Terms}
+and the
+\href{https://developers.google.com/maps/documentation/routes/policies}{Routes API policies}
+before storing, displaying, or redistributing results.
+}
 \examples{
 \dontrun{
 Sys.setenv(GOOGLE_MAPS_API_KEY = "your_restricted_key")
@@ -61,6 +114,7 @@ trips <- data.frame(
   end_lat = 53.5444,
   end_lon = -113.4909
 )
+
 Moose_google_travel(
   trips,
   start_latitude = "start_lat",
@@ -83,4 +137,5 @@ Moose_google_travel(
   backend = "mooser_proxy"
 )
 }
+
 }

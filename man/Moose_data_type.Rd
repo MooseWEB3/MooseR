@@ -34,4 +34,5 @@ Moose_data_type(
   example_data,
   c("age", "group", "visit_date", "enrolled")
 )
+
 }

@@ -7,14 +7,14 @@
 \format{
 A named list with eight character vectors:
 \describe{
-  \item{cities}{19 cities.}
-  \item{specialized_municipalities}{6 specialized municipalities.}
-  \item{municipal_districts}{63 municipal districts and counties.}
-  \item{towns}{105 towns.}
-  \item{villages}{80 villages.}
-  \item{summer_villages}{51 summer villages.}
-  \item{improvement_districts}{7 improvement districts.}
-  \item{special_areas}{3 Special Areas.}
+\item{cities}{19 cities.}
+\item{specialized_municipalities}{6 specialized municipalities.}
+\item{municipal_districts}{63 municipal districts and counties.}
+\item{towns}{105 towns.}
+\item{villages}{80 villages.}
+\item{summer_villages}{51 summer villages.}
+\item{improvement_districts}{7 improvement districts.}
+\item{special_areas}{3 Special Areas.}
 }
 }
 \source{
@@ -27,7 +27,7 @@ alberta_municipalities
 \description{
 A named list containing the 334 official Alberta municipalities recorded in
 the Alberta Municipal Affairs 2024 Municipal Codes, updated June 3, 2024.
-The administrative body \code{Special Areas Board} is not included. Communities
+The administrative body \verb{Special Areas Board} is not included. Communities
 without official municipality status, such as Fort McMurray, are also not
 part of this dataset.
 }
@@ -35,5 +35,6 @@ part of this dataset.
 names(alberta_municipalities)
 alberta_municipalities$cities
 unlist(alberta_municipalities, use.names = FALSE)
+
 }
 \keyword{datasets}

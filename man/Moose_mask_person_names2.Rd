@@ -38,7 +38,7 @@ not represented by the same row's known-name columns are left unchanged.
 }
 \details{
 Exact matching is case-insensitive and supports individual fields,
-\code{First Last}, and \code{Last, First} forms. Similar matching uses Levenshtein edit
+\verb{First Last}, and \verb{Last, First} forms. Similar matching uses Levenshtein edit
 distance on individual name tokens after removing accents and punctuation.
 By default, one edit is allowed only for known names containing at least
 five letters. Set \code{max_distance = 0L} to disable spelling-error tolerance.
@@ -54,4 +54,5 @@ Moose_mask_person_names2(
   data = records,
   name_columns = c("first_name", "last_name")
 )
+
 }

@@ -22,11 +22,12 @@ package set.}
 Invisibly returns the package names that were requested.
 }
 \description{
-Loads the package set commonly used with MooseR workflows. Missing packages are
-installed by default.
+Loads the package set commonly used with MooseR workflows. Missing packages
+are installed by default.
 }
 \examples{
 \dontrun{
 load_mooser_packages()
 }
+
 }

@@ -34,8 +34,7 @@ a column is changed.}
 \item{verbose}{Logical. If \code{TRUE}, report which columns were converted.}
 
 \item{two_digit_year_cutoff}{Whole number from 0 to 99. Passed to
-\code{\link[=Moose_todate]{Moose_todate()}} and
-\code{\link[=Moose_todatetime]{Moose_todatetime()}}.}
+\code{\link[=Moose_todate]{Moose_todate()}} and \code{\link[=Moose_todatetime]{Moose_todatetime()}}.}
 }
 \value{
 A copy of \code{data} with confidently detected date columns converted
@@ -58,4 +57,5 @@ raw_data <- data.frame(
 boosted <- Moose_boost_data(raw_data)
 class(boosted$visit_date)
 class(boosted$created_at)
+
 }

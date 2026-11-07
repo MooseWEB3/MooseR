@@ -33,7 +33,7 @@ replaced. The default is \code{FALSE}.}
 \item{clean_names}{Logical. Clean imported column names using MooseR's
 existing CSV-name rules.}
 
-\item{...}{Additional arguments passed to \code{\link[utils:read.table]{utils::read.csv()}}.}
+\item{...}{Additional arguments passed to \code{\link[utils:read.csv]{utils::read.csv()}}.}
 }
 \value{
 For a single file, the imported data frame. For a directory, an
@@ -59,4 +59,5 @@ imported <- new.env(parent = emptyenv())
 Moose_read_csv(csv_dir, envir = imported)
 imported$imported_data_001
 unlink(csv_dir, recursive = TRUE)
+
 }

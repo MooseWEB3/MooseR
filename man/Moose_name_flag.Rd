@@ -26,8 +26,7 @@ supplementary rules, matching the default behavior of
 \code{\link[=Moose_mask_person_names]{Moose_mask_person_names()}}.}
 
 \item{sensitivity}{Character. Controls whether broad, uncontextualized
-title-case pairs are accepted. See
-\code{\link[=Moose_mask_person_names]{Moose_mask_person_names()}}.}
+title-case pairs are accepted. See \code{\link[=Moose_mask_person_names]{Moose_mask_person_names()}}.}
 
 \item{data}{Optional data frame containing row-aligned known-name columns.
 Supply this together with \code{name_columns}.}
@@ -35,7 +34,7 @@ Supply this together with \code{name_columns}.}
 \item{name_columns}{Optional character vector naming columns in \code{data}, in
 natural name order, such as \code{c("first_name", "last_name")}. Values are
 matched against \code{text} in the same row using case-insensitive whole-word
-matching. Full names and \code{Lastname, Firstname} forms are also matched.}
+matching. Full names and \verb{Lastname, Firstname} forms are also matched.}
 }
 \value{
 An integer vector with the same length as \code{text}, containing \code{1L}
@@ -55,32 +54,32 @@ For large data sets, call this function on an ungrouped data frame so
 group.
 In regex mode, standalone all-uppercase phrases are ignored. All-uppercase
 names are accepted only after a supported title or, when \code{apply_rules} is
-\code{TRUE}, a supported workflow phrase such as \code{Reviewed by}.
-Comma-separated names such as \code{Smith, John}, \code{SMITH, JOHN}, and
-\code{St-Pierre, Anne-Marie} are detected. Canadian geographic forms such as
-\code{Edmonton, Alberta} and \code{Avenue, Calgary} are excluded.
+\code{TRUE}, a supported workflow phrase such as \verb{Reviewed by}.
+Comma-separated names such as \verb{Smith, John}, \verb{SMITH, JOHN}, and
+\verb{St-Pierre, Anne-Marie} are detected. Canadian geographic forms such as
+\verb{Edmonton, Alberta} and \verb{Avenue, Calgary} are excluded.
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
 \code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such
-as \code{Normal Saline IV}, and clinical document labels such as \code{RN Report}, are
+as \verb{Normal Saline IV}, and clinical document labels such as \verb{RN Report}, are
 excluded in both engines.
 Non-person location phrases ending in \code{Residence}, \code{Store}, \code{Side}, or
 \code{Airport}, and
 clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, or
 \code{Intoxication}, are also excluded.
-Common title-cased medical phrases, including \code{Chief Complaint},
-\code{Heat Exhaustion}, \code{Wellness Check}, \code{Safety Alerted}, \code{Not Feeling},
-\code{Bus Stop}, \code{Language Barrier}, \code{Cognitive Impairment}, \code{Emerge Call},
-\code{Contact Droplet}, \code{Patient Name},
-\code{Situational Crisis}, and
-\code{Non Small Cell Lung} are excluded through curated
+Common title-cased medical phrases, including \verb{Chief Complaint},
+\verb{Heat Exhaustion}, \verb{Wellness Check}, \verb{Safety Alerted}, \verb{Not Feeling},
+\verb{Bus Stop}, \verb{Language Barrier}, \verb{Cognitive Impairment}, \verb{Emerge Call},
+\verb{Contact Droplet}, \verb{Patient Name},
+\verb{Situational Crisis}, and
+\verb{Non Small Cell Lung} are excluded through curated
 non-person whitelists.
 This whitelist takes precedence over the title-case name pattern, so audit
 data where a real person's name could contain one of these terms.
 The 334 official Alberta municipality names are also excluded in both
 engines.
-The Alberta place name \code{Fort McMurray} and the common spelling
-\code{Fort McMurry} are also excluded.
+The Alberta place name \verb{Fort McMurray} and the common spelling
+\verb{Fort McMurry} are also excluded.
 The 1,150 unique facility names in the Alberta Health Services Find
 Healthcare directory are excluded when the complete facility name occurs
 in the text.
@@ -112,4 +111,5 @@ Moose_name_flag(
   data = records,
   name_columns = c("first_name", "last_name")
 )
+
 }

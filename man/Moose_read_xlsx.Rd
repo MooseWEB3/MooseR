@@ -19,8 +19,8 @@ Moose_read_xlsx(
 \arguments{
 \item{path}{A directory to import, or a single file path.}
 
-\item{file_name}{Optional file name within \code{path}. When supplied, only
-that file is returned.}
+\item{file_name}{Optional file name within \code{path}, retained for backward
+compatibility. When supplied, only that file is returned.}
 
 \item{prefix}{Prefix used for objects created during directory imports.}
 
@@ -34,14 +34,14 @@ replaced. The default is \code{FALSE}.}
 \item{clean_names}{Logical. Clean imported column names using MooseR's
 existing CSV-name rules.}
 
-\item{sheet}{Sheet name or position passed to \code{readxl::read_excel()}.
-The default imports the first worksheet from every workbook.}
+\item{sheet}{Sheet name or position passed to \code{readxl::read_excel()}. The
+default imports the first worksheet from every workbook.}
 
 \item{...}{Additional arguments passed to \code{readxl::read_excel()}.}
 }
 \value{
-For a single file, the imported worksheet. For a directory, an invisible
-named list containing all imported worksheets.
+For a single file, the imported worksheet. For a directory, an
+invisible named list containing all imported worksheets.
 }
 \description{
 Imports every XLSX workbook in a directory, assigns each selected worksheet
@@ -55,4 +55,5 @@ worksheet without assigning it.
 Moose_read_xlsx("C:/data")
 Moose_read_xlsx("C:/data", sheet = "Data")
 }
+
 }

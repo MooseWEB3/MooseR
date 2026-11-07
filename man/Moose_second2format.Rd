@@ -7,11 +7,24 @@
 Moose_second2format(seconds)
 }
 \arguments{
-\item{seconds}{A numeric vector of non-negative, finite seconds. \code{NA} and \code{NaN} are allowed and return \code{NA_character_}. A logical vector containing only \code{NA} is also accepted. Negative values, infinite values, character input, matrices and classed objects are rejected.}
+\item{seconds}{A numeric vector of non-negative, finite seconds. \code{NA} and
+\code{NaN} are allowed and return \code{NA_character_}. A logical vector containing
+only \code{NA} is also accepted. Negative values, infinite values, character
+input, matrices and classed objects are rejected.}
 }
-\value{A character vector with the same length, order and names as \code{seconds}.}
-\description{Converts durations in seconds to \code{HH:MM:SS} strings. Hours are cumulative, so durations do not wrap at 24 hours. Each component has at least two digits; hours can have more than two digits for long durations.}
-\details{Fractional seconds are rounded to the nearest whole second, with half seconds rounded up, before splitting into hours, minutes and seconds. This is an elapsed duration, independent of dates and time zones.}
+\value{
+A character vector with the same length, order and names as \code{seconds}.
+}
+\description{
+Converts durations in seconds to \code{HH:MM:SS} strings. Hours are cumulative,
+so durations do not wrap at 24 hours. Each component has at least two digits;
+hours can have more than two digits for long durations.
+}
+\details{
+Fractional seconds are rounded to the nearest whole second, with half
+seconds rounded up, before splitting into hours, minutes and seconds.
+This is an elapsed duration, independent of dates and time zones.
+}
 \examples{
 Moose_second2format(1000) # "00:16:40"
 Moose_second2format(c(0, 60, 3600, 90061, NA))

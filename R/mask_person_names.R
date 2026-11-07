@@ -223,7 +223,8 @@ mask_person_names <- function(text,
 #'   describing why each candidate was accepted.
 #'
 #' @return A data frame containing document number, detected name, and
-#'   character offsets.
+#'   character offsets. When `explain = TRUE`, it also contains rule and
+#'   confidence columns.
 #'
 #' @export
 detect_person_names <- function(text,

@@ -14,4 +14,5 @@ Returns the default package list used by \code{load_mooser_packages()}.
 }
 \examples{
 default_mooser_packages()
+
 }

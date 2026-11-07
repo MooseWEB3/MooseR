@@ -7,20 +7,20 @@
 \format{
 A data frame with one row per grid point and 9 columns:
 \describe{
-  \item{grid}{Character. \code{calgary} (about 280 m spacing) or \code{alberta}
-    (about 1 km spacing).}
-  \item{longitude,latitude}{Numeric. Grid point in decimal degrees.}
-  \item{lon_min,lon_max,lat_min,lat_max}{Numeric. Cell represented by the
-    point: half the grid spacing on each side.}
-  \item{fmc_travel_time_minutes}{Numeric. Free-flow OSRM driving time to
-    Foothills Medical Centre, in minutes, rounded to one decimal place.}
-  \item{fmc_travel_distance_km}{Numeric. Road distance to Foothills Medical
-    Centre, in kilometres, rounded to two decimal places.}
+\item{grid}{Character. \code{calgary} (about 280 m spacing) or \code{alberta}
+(about 1 km spacing).}
+\item{longitude,latitude}{Numeric. Grid point in decimal degrees.}
+\item{lon_min,lon_max,lat_min,lat_max}{Numeric. Cell represented by the
+point: half the grid spacing on each side.}
+\item{fmc_travel_time_minutes}{Numeric. Free-flow OSRM driving time to
+Foothills Medical Centre, in minutes, rounded to one decimal place.}
+\item{fmc_travel_distance_km}{Numeric. Road distance to Foothills Medical
+Centre, in kilometres, rounded to two decimal places.}
 }
 }
 \source{
 Derived from \link{fmc_travel_grid} by
-\verb{data-raw/create-fmc-travel-points.R}. Routes computed with OSRM on
+\code{data-raw/create-fmc-travel-points.R}. Routes computed with OSRM on
 OpenStreetMap data, (c) OpenStreetMap contributors, available under the
 Open Database License (\url{https://www.openstreetmap.org/copyright}).
 }

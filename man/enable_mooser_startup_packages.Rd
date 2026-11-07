@@ -24,4 +24,5 @@ automatically.
 \dontrun{
 enable_mooser_startup_packages()
 }
+
 }

@@ -8,7 +8,7 @@
 #'   Default removes straight, curly, and backtick quotes.
 #' @return The same data type with quotes removed from relevant columns.
 #' @examples
-#' df <- data.frame(a = "O'Neil", b = factor("\u201dHello\u201d"), n = 1)
+#' df <- data.frame(a = "O'Neil", b = factor("\u201cHello\u201d"), n = 1)
 #' BD_quote_rm(df)
 #' @export
 BD_quote_rm <- function(data,

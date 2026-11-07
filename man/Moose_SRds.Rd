@@ -16,7 +16,7 @@ Moose_LRds(file)
 when \code{file} is \code{NULL}.}
 
 \item{compress}{Logical or one of \code{"gzip"}, \code{"bzip2"}, or \code{"xz"}. Controls
-compression passed to \code{\link[base:readRDS]{base::saveRDS()}}.}
+compression passed to \code{\link[base:saveRDS]{base::saveRDS()}}.}
 
 \item{overwrite}{Logical. If \code{FALSE}, stop rather than replace an existing
 file.}
@@ -37,4 +37,5 @@ saved_path <- Moose_SRds(iris, rds_file)
 restored <- Moose_LRds(saved_path)
 identical(iris, restored)
 unlink(saved_path)
+
 }

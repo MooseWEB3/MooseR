@@ -35,8 +35,9 @@ after spaCy or regex masking.}
 \item{sensitivity}{Character. \code{"high_recall"} preserves the broad legacy
 behavior. \code{"balanced"} requires contextual evidence for otherwise
 uncontextualized title-case pairs. \code{"high_precision"} disables those
-broad pairs while retaining titles, workflow phrases, patient abbreviations,
-comma-separated names, known-name columns, and spaCy \code{PERSON} entities.}
+broad pairs while retaining titles, workflow phrases, patient
+abbreviations, comma-separated names, known-name columns, and spaCy
+\code{PERSON} entities.}
 
 \item{data}{Optional data frame containing row-aligned known-name columns.
 Supply this together with \code{name_columns}.}
@@ -44,7 +45,7 @@ Supply this together with \code{name_columns}.}
 \item{name_columns}{Optional character vector naming columns in \code{data}, in
 natural name order, such as \code{c("first_name", "last_name")}. Values are
 matched against \code{text} in the same row using case-insensitive whole-word
-matching. Full names and \code{Lastname, Firstname} forms are also matched.}
+matching. Full names and \verb{Lastname, Firstname} forms are also matched.}
 }
 \value{
 A character vector, or a data frame when
@@ -54,41 +55,42 @@ A character vector, or a data frame when
 Uses spaCy named-entity recognition when available. On locked-down
 computers where Python cannot be initialized, \code{engine = "auto"} falls
 back to a pure R regular-expression engine.
-
+}
+\details{
 In regex mode, uncontextualized all-uppercase phrases are not treated as
 names. All-uppercase names are accepted after a supported title, such as
 \code{RN} or \code{Dr.}, or after a supported workflow phrase when \code{apply_rules} is
 \code{TRUE}.
-Comma-separated names such as \code{Smith, John}, \code{SMITH, JOHN}, and
-\code{St-Pierre, Anne-Marie} are detected in both engines. Canadian geographic
-forms such as \code{Edmonton, Alberta} and \code{Avenue, Calgary} are excluded.
+Comma-separated names such as \verb{Smith, John}, \verb{SMITH, JOHN}, and
+\verb{St-Pierre, Anne-Marie} are detected in both engines. Canadian geographic
+forms such as \verb{Edmonton, Alberta} and \verb{Avenue, Calgary} are excluded.
 Healthcare organization names ending in words such as \code{Hospital}, \code{Clinic},
 \code{Centre}, \code{Health}, or \code{Foundation}, and clinical phrases containing words
 such as \code{Chest}, \code{Pain}, \code{Disease}, or \code{Syndrome}, and treatment phrases such
-as \code{Normal Saline IV}, and clinical document labels such as \code{RN Report}, are
+as \verb{Normal Saline IV}, and clinical document labels such as \verb{RN Report}, are
 excluded from name matching in both engines.
 Non-person location phrases ending in \code{Residence}, \code{Store}, \code{Side}, or
 \code{Airport}, and
 clinical states containing \code{Syncopal}, \code{Syncope}, \code{Intoxicated}, or
 \code{Intoxication}, are also excluded.
-Common title-cased medical phrases, including \code{Chief Complaint},
-\code{Heat Exhaustion}, \code{Wellness Check}, \code{Safety Alerted}, \code{Not Feeling},
-\code{Bus Stop}, \code{Language Barrier}, \code{Cognitive Impairment}, \code{Emerge Call},
-\code{Contact Droplet}, \code{Patient Name},
-\code{Situational Crisis}, and
-\code{Non Small Cell Lung} are excluded through curated
+Common title-cased medical phrases, including \verb{Chief Complaint},
+\verb{Heat Exhaustion}, \verb{Wellness Check}, \verb{Safety Alerted}, \verb{Not Feeling},
+\verb{Bus Stop}, \verb{Language Barrier}, \verb{Cognitive Impairment}, \verb{Emerge Call},
+\verb{Contact Droplet}, \verb{Patient Name},
+\verb{Situational Crisis}, and
+\verb{Non Small Cell Lung} are excluded through curated
 non-person whitelists.
 This whitelist takes precedence over the title-case name pattern, so audit
 data where a real person's name could contain one of these terms.
 The 334 official Alberta municipality names are also excluded in both
-engines, including names such as \code{Medicine Hat}, \code{Red Deer}, and
-\code{Rocky Mountain House}.
-The Alberta place name \code{Fort McMurray} and the common spelling
-\code{Fort McMurry} are also excluded.
+engines, including names such as \verb{Medicine Hat}, \verb{Red Deer}, and
+\verb{Rocky Mountain House}.
+The Alberta place name \verb{Fort McMurray} and the common spelling
+\verb{Fort McMurry} are also excluded.
 The 1,150 unique facility names in the Alberta Health Services Find
 Healthcare directory are excluded when the complete facility name occurs
-in the text, including \code{Peter Lougheed Centre}, \code{Grand Manor}, and
-\code{Chartwell Griesbach}.
+in the text, including \verb{Peter Lougheed Centre}, \verb{Grand Manor}, and
+\verb{Chartwell Griesbach}.
 The 2,616 unique school names in the Alberta Education School Information
 Report are also excluded when the complete school name occurs in the text.
 The 12,435 English and French brand and active-ingredient names for marketed
@@ -109,4 +111,5 @@ mask_person_names(
   )
 )
 }
+
 }

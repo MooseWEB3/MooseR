@@ -7,27 +7,27 @@
 \format{
 A data frame with 112 rows and 14 columns:
 \describe{
-  \item{facility_id}{Character. Unique AHS facility identifier.}
-  \item{hospital_name}{Character. Official facility name in the source.}
-  \item{address}{Character. Full street address, city, province and postal code.}
-  \item{street_address}{Character. Street address supplied by AHS.}
-  \item{city}{Character. Municipality or community supplied by AHS.}
-  \item{province}{Character. Always \code{Alberta}.}
-  \item{postal_code}{Character. Canadian postal code, including its space.}
-  \item{latitude}{Numeric. AHS web-map latitude in decimal degrees.}
-  \item{longitude}{Numeric. AHS web-map longitude in decimal degrees;
-    negative values are west of Greenwich.}
-  \item{inclusion_basis}{Character. \code{ahs_hospitals_service} for 104 Alberta
-    locations in the Hospitals service directory, or \code{specialist_supplement}
-    for eight additional inpatient specialist facilities.}
-  \item{inclusion_source_url}{Character. Official source supporting inclusion.}
-  \item{source_url}{Character. AHS page from which the location fields were read.}
-  \item{retrieved_on}{Date. Location retrieval date in the America/Edmonton
-    time zone, not the date AHS last updated the record.}
-  \item{emergency_24h}{Integer flag: \code{1L} for a general or pediatric emergency
-    department with a published regular 24-hour, seven-day schedule; \code{0L}
-    for no emergency department or a department with limited scheduled hours.
-    Reviewed October 12, 2026. Temporary closures do not change the flag.}
+\item{facility_id}{Character. Unique AHS facility identifier.}
+\item{hospital_name}{Character. Official facility name in the source.}
+\item{address}{Character. Full street address, city, province and postal code.}
+\item{street_address}{Character. Street address supplied by AHS.}
+\item{city}{Character. Municipality or community supplied by AHS.}
+\item{province}{Character. Always \code{Alberta}.}
+\item{postal_code}{Character. Canadian postal code, including its space.}
+\item{latitude}{Numeric. AHS web-map latitude in decimal degrees.}
+\item{longitude}{Numeric. AHS web-map longitude in decimal degrees;
+negative values are west of Greenwich.}
+\item{inclusion_basis}{Character. \code{ahs_hospitals_service} for 104 Alberta
+locations in the Hospitals service directory, or \code{specialist_supplement}
+for eight additional inpatient specialist facilities.}
+\item{inclusion_source_url}{Character. Official source supporting inclusion.}
+\item{source_url}{Character. AHS page from which the location fields were read.}
+\item{retrieved_on}{Date. Location retrieval date in the America/Edmonton
+time zone, not the date AHS last updated the record.}
+\item{emergency_24h}{Integer flag: \code{1L} for a general or pediatric emergency
+department with a published regular 24-hour, seven-day schedule; \code{0L}
+for no emergency department or a department with limited scheduled hours.
+Reviewed October 12, 2026. Temporary closures do not change the flag.}
 }
 }
 \source{
@@ -92,5 +92,6 @@ data("alberta_hospitals", package = "MooseR")
 head(alberta_hospitals[c("hospital_name", "address", "latitude", "longitude")])
 subset(alberta_hospitals, city == "Edmonton")
 subset(alberta_hospitals, emergency_24h == 1L)
+
 }
 \keyword{datasets}

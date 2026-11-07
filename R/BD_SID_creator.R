@@ -19,8 +19,9 @@
 #'
 #' @section Accent handling:
 #' By default, only ASCII letters are kept. To turn “José” into “JO” rather than
-#' dropping the accented character, set `strip_accents = TRUE` (uses base `iconv`
-#' to transliterate where possible).
+#' dropping the accented character, set `strip_accents = TRUE`. Accented Latin
+#' letters (Latin-1 and Latin Extended-A) are then replaced by their unaccented
+#' forms, with the same result on every computer.
 #'
 #' @param first_name,last_name Vectors coercible to character. Only letters are kept.
 #'   If fewer than 2 letters remain, that component is treated as missing.
@@ -46,10 +47,8 @@ BD_SID_creator <- function(first_name, last_name, DOB_ready, gender, strip_accen
   # --- helpers (vectorized) ---
   .maybe_strip_accents <- function(x) {
     if (!strip_accents) return(x)
-    # Try transliteration; if it fails, fall back to original
-    x2 <- tryCatch(iconv(x, from = "", to = "ASCII//TRANSLIT"), error = function(e) x)
-    x2[is.na(x2)] <- x[is.na(x2)]
-    x2
+    # Same result on every platform, unlike iconv(to = "ASCII//TRANSLIT").
+    moose_ascii_fold(x)
   }
 
   clean_name_vec <- function(x) {

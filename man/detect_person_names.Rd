@@ -23,14 +23,15 @@ detect_person_names(
 \item{sensitivity}{Character. Controls whether broad, uncontextualized
 title-case pairs are accepted. See \code{\link[=mask_person_names]{mask_person_names()}}.}
 
-\item{explain}{Logical. If \code{TRUE}, append \code{rule} and \code{confidence}
-columns describing why each candidate was accepted.}
+\item{explain}{Logical. If \code{TRUE}, append \code{rule} and \code{confidence} columns
+describing why each candidate was accepted.}
 }
 \value{
-A data frame containing document number, detected name, and character
-offsets. When \code{explain = TRUE}, it also contains rule and confidence columns.
+A data frame containing document number, detected name, and
+character offsets. When \code{explain = TRUE}, it also contains rule and
+confidence columns.
 }
 \description{
 Detects conventional and comma-separated personal names, including
-\code{Lastname, Firstname} forms.
+\verb{Lastname, Firstname} forms.
 }

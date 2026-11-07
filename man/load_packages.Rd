@@ -24,4 +24,5 @@ the requested list.
 \dontrun{
 load_packages(c("tidyverse", "MooseR", "lubridate"))
 }
+
 }

@@ -15,7 +15,9 @@ generation, and date formatting.
 The core data-cleaning helpers are intentionally lightweight. The personal-name
 masking workflow can use `reticulate` plus spaCy when Python is available, but it
 also has a pure R regex fallback for locked-down work computers where Python
-cannot be changed. MooseR requires R 4.1.0 or later.
+cannot be changed. MooseR requires R 4.1.0 or later. It is tested with
+R 4.6.1 (`R CMD check --as-cran` passes with no errors, warnings or notes) and
+uses only base-R functions and arguments that already exist in R 4.3.0.
 
 ### Installation
 
@@ -936,7 +938,10 @@ légères. Le processus de masquage des noms de personnes peut utiliser
 `reticulate` et spaCy lorsque Python est disponible. Il comprend également une
 solution de rechange entièrement en R utilisant des expressions régulières
 pour les ordinateurs de travail verrouillés où Python ne peut pas être
-modifié. MooseR nécessite R 4.1.0 ou une version ultérieure.
+modifié. MooseR nécessite R 4.1.0 ou une version ultérieure. Il est testé
+avec R 4.6.1 (`R CMD check --as-cran` réussit sans erreur, avertissement ni
+note) et n'utilise que des fonctions et arguments de R de base qui existent
+déjà dans R 4.3.0.
 
 ### Installation
 
@@ -1407,7 +1412,9 @@ processo de mascaramento de nomes de pessoas pode utilizar `reticulate` e spaCy
 quando Python está disponível. Também inclui uma alternativa integralmente em
 R, baseada em expressões regulares, para computadores de trabalho bloqueados
 onde Python não pode ser alterado. MooseR requer R 4.1.0 ou uma versão
-posterior.
+posterior. É testado com R 4.6.1 (`R CMD check --as-cran` passa sem erros,
+avisos ou notas) e utiliza apenas funções e argumentos do R base que já
+existem no R 4.3.0.
 
 ### Instalação
 

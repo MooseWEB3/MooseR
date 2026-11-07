@@ -27,9 +27,10 @@ moose_check_number <- function(x, argument, minimum, inclusive = TRUE) {
 }
 
 # Coordinates from a data column: numbers, numeric strings or factors. Values
-# that are not numbers become NA.
+# that are not numbers become NA. NULL is rejected explicitly because
+# is.atomic(NULL) is TRUE before R 4.4.0 and FALSE afterwards.
 moose_as_coordinate <- function(x) {
-  if (!is.atomic(x) || !is.null(dim(x))) {
+  if (is.null(x) || !is.atomic(x) || !is.null(dim(x))) {
     stop("Coordinate columns must be atomic vectors.", call. = FALSE)
   }
   suppressWarnings(as.numeric(as.character(x)))

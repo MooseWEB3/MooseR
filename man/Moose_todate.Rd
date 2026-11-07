@@ -22,8 +22,8 @@ Moose_todatetime(
 )
 }
 \arguments{
-\item{x}{Input vector. Supports \code{Date}, \code{POSIXt}, character, factor,
-integer, and numeric values.}
+\item{x}{Input vector. Supports \code{Date}, \code{POSIXt}, character, factor, integer,
+and numeric values.}
 
 \item{day_first}{Logical fallback for ambiguous numeric dates. MooseR first
 examines the input vector for unambiguous values such as \code{13/02/2024} or
@@ -31,18 +31,17 @@ examines the input vector for unambiguous values such as \code{13/02/2024} or
 If the evidence is tied or absent, \code{TRUE} prefers day/month/year and
 \code{FALSE} prefers month/day/year.}
 
-\item{numeric_origin}{Character. One of \code{"auto"}, \code{"excel"},
-\code{"unix"}, or \code{"r"}. In \code{"auto"} mode, compact values such as
-\code{20240131} and \code{240131} are parsed as \code{YYYYMMDD} and
-\code{YYMMDD}, large values are parsed as Unix seconds, Excel-like serial
-values are parsed using Excel's Windows origin, and smaller values are parsed
-as R days since 1970-01-01.}
+\item{numeric_origin}{Character. One of \code{"auto"}, \code{"excel"}, \code{"unix"}, or
+\code{"r"}. In \code{"auto"} mode, compact values such as \code{20240131} and \code{240131}
+are parsed as \code{YYYYMMDD} and \code{YYMMDD}, large values are parsed as Unix
+seconds, Excel-like serial values are parsed using Excel's Windows origin,
+and smaller values are parsed as R days since 1970-01-01.}
 
 \item{tz}{Time zone used for date-time parsing and conversion.}
 
 \item{two_digit_year_cutoff}{Whole number from 0 to 99. Two-digit years at
-or below this value are interpreted as 2000s; larger values are interpreted
-as 1900s. The default, \code{68}, follows the POSIX/R convention.}
+or below this value are interpreted as 2000s; larger values are
+interpreted as 1900s. The default, \code{68}, follows the POSIX/R convention.}
 }
 \value{
 \code{Moose_todate()} returns a \code{Date} vector. \code{Moose_todatetime()}
@@ -50,22 +49,21 @@ returns a \code{POSIXct} vector.
 }
 \description{
 \code{Moose_todate()} converts common date inputs to \code{Date}.
-\code{Moose_todatetime()} converts common date or date-time inputs to
-\code{POSIXct}.
+\code{Moose_todatetime()} converts common date or date-time inputs to \code{POSIXct}.
 }
 \details{
 With the default cutoff, two-digit years from \code{00} to \code{68} are
-interpreted as 2000 to 2068, and values from \code{69} to \code{99} are
-interpreted as 1969 to 1999. Four-digit years are never parsed as two-digit
-years. Prefer four-digit years whenever the century must be unambiguous.
+interpreted as 2000 to 2068, and values from \code{69} to \code{99} are interpreted
+as 1969 to 1999. Four-digit years are never parsed as two-digit years.
+Prefer four-digit years whenever the century must be unambiguous.
 
 Numeric dates with the year last are interpreted consistently across the
-input vector. MooseR counts unambiguous day-first and month-first values, then
-applies the better-supported order to ambiguous values. Ties use
+input vector. MooseR counts unambiguous day-first and month-first values,
+then applies the better-supported order to ambiguous values. Ties use
 \code{day_first}.
 
-Inputs already stored as \code{Date} or \code{POSIXt} with a year from 0000 to
-0099 are treated as having originated from a two-digit year and are normalized
+Inputs already stored as \code{Date} or \code{POSIXt} with a year from 0000 to 0099
+are treated as having originated from a two-digit year and are normalized
 using \code{two_digit_year_cutoff}.
 Month-name inputs use the current R \code{LC_TIME} locale.
 }
@@ -80,4 +78,5 @@ Moose_todate(c(20240105, 45296))
 Moose_todatetime(c("2024-01-05 13:30:00", "2024/01/06 8:05"))
 Moose_todatetime("09/01/26 13:30:00")
 Moose_todatetime(c(202401051330, 1704450600))
+
 }
